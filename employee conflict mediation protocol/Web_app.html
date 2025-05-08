@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflict Mediation Protocol Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script>
+        tailwind.config = {
+          darkMode: 'class',
+          theme: {
+            extend: {
+              colors: {
+                'brand-blue': {
+                  light: '#3b82f6',
+                  DEFAULT: '#2563eb',
+                  dark: '#1d4ed8',
+                },
+                'brand-gray': {
+                  light: '#f9fafb',
+                  DEFAULT: '#f3f4f6',
+                  dark: '#1f2937',
+                  darker: '#111827'
+                }
+              },
+              fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+              },
+            }
+          }
+        }
+      </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+```
+    body {
+        font-family: 'Inter', sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .section-card {
+        transition: all 0.3s ease;
+        border: 1px solid theme('colors.gray.200');
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .dark .section-card {
+        border: 1px solid theme('colors.gray.700');
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .section-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    }
+    .dark .section-card:hover {
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        border-radius: 6px;
+        color: black;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out, bottom 0.5s ease-in-out, transform 0.5s ease-in-out, color 0.3s ease; 
+        min-width: 250px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-weight: 500;
+    }
+    .toast.show {
+        opacity: 1;
+        bottom: 35px;
+    }
+    .toast.success { background-color: theme('colors.green.200'); } 
+    .toast.error { background-color: theme('colors.red.200'); }   
+    .toast.info { background-color: theme('colors.blue.200'); }  
+
+    
+    .dark .toast {
+        color: white; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); 
+    }
+    .dark .toast.success { background-color: theme('colors.green.700'); } 
+    .dark .toast.error { background-color: theme('colors.red.700'); }   
+    .dark .toast.info { background-color: theme('colors.blue.700'); }  
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        backdrop-filter: blur(4px);
+        background-color: rgba(17, 24, 39, 0.6);
+        padding-top: 5vh;
+    }
+    .modal-content {
+        background-color: theme('colors.white');
+        margin: 5% auto;
+        padding: 24px;
+        border: none;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 12px;
+        position: relative;
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        transform: translateY(-20px) scale(0.98);
+        opacity: 0;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .dark .modal-content {
+        background-color: theme('colors.brand-gray.dark');
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    .modal.show .modal-content {
+         transform: translateY(0) scale(1);
+         opacity: 1;
+    }
+    .modal-close {
+        color: theme('colors.gray.400');
+        position: absolute;
+        top: 12px;
+        right: 15px;
+        font-size: 32px;
+        font-weight: bold;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+    .modal-close:hover,
+    .modal-close:focus {
+        color: theme('colors.gray.700');
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .dark .modal-close {
+        color: theme('colors.gray.500');
+    }
+    .dark .modal-close:hover,
+    .dark .modal-close:focus {
+        color: theme('colors.gray.300');
+    }
+
+    .markdown-preview h1, .markdown-preview h2, .markdown-preview h3, .markdown-preview h4 { margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; line-height: 1.3; }
+    .markdown-preview ul, .markdown-preview ol { margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-preview p { margin-bottom: 0.75rem; line-height: 1.6; }
+    .markdown-preview pre { background-color: theme('colors.brand-gray.DEFAULT'); padding: 0.75rem; border-radius: 6px; overflow-x: auto; margin-bottom: 0.75rem; transition: background-color 0.3s ease; }
+    .dark .markdown-preview pre { background-color: theme('colors.brand-gray.darker'); }
+    .markdown-preview code { font-family: monospace; background-color: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; }
+    .dark .markdown-preview code { background-color: rgba(255,255,255,0.1); }
+    .markdown-preview blockquote { border-left: 4px solid theme('colors.gray.300'); padding-left: 1rem; margin-left: 0; color: theme('colors.gray.600'); transition: border-color 0.3s ease, color 0.3s ease; font-style: italic; }
+    .dark .markdown-preview blockquote { border-left-color: theme('colors.gray.600'); color: theme('colors.gray.400'); }
+
+    button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: theme('colors.gray.400') !important;
+        border-color: theme('colors.gray.400') !important;
+        color: theme('colors.gray.600') !important;
+    }
+    .dark button:disabled {
+        background-color: theme('colors.gray.600') !important;
+        border-color: theme('colors.gray.600') !important;
+        color: theme('colors.gray.400') !important;
+    }
+
+    #themeToggleBtn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        line-height: 1;
+        color: theme('colors.gray.500');
+        transition: color 0.3s ease, transform 0.2s ease;
+        border-radius: 50%;
+    }
+    #themeToggleBtn:hover {
+        color: theme('colors.brand-blue.DEFAULT');
+        transform: scale(1.1) rotate(10deg);
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+    .dark #themeToggleBtn {
+        color: theme('colors.gray.400');
+    }
+    .dark #themeToggleBtn:hover {
+        color: theme('colors.brand-blue.light');
+        background-color: rgba(96, 165, 250, 0.1);
+    }
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: theme('colors.brand-blue.DEFAULT');
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    .dark input:focus, .dark select:focus, .dark textarea:focus {
+        border-color: theme('colors.brand-blue.light');
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.4);
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease-in-out;
+        text-align: center;
+        display: inline-block;
+        border-width: 1px;
+        border-style: solid;
+    }
+
+    
+    .btn-primary,
+    .btn-danger,
+    .btn-success,
+    .btn-purple,
+    .btn-indigo {
+        background-color: theme('colors.black');
+        color: theme('colors.white');
+        border-color: theme('colors.black');
+    }
+    .btn-primary:hover,
+    .btn-danger:hover,
+    .btn-success:hover,
+    .btn-purple:hover,
+    .btn-indigo:hover {
+        background-color: theme('colors.gray.800');
+        border-color: theme('colors.gray.800');
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+     
+    .dark .btn-primary,
+    .dark .btn-danger,
+    .dark .btn-success,
+    .dark .btn-purple,
+    .dark .btn-indigo {
+         background-color: theme('colors.white');
+         border-color: theme('colors.white');
+         color: theme('colors.black');
+    }
+    .dark .btn-primary:hover,
+    .dark .btn-danger:hover,
+    .dark .btn-success:hover,
+    .dark .btn-purple:hover,
+    .dark .btn-indigo:hover {
+        background-color: theme('colors.gray.200');
+        border-color: theme('colors.gray.200');
+        color: theme('colors.black');
+    }
+
+</style>
+```
+
+</head>
+<body class="bg-brand-gray-DEFAULT dark:bg-brand-gray-darker min-h-screen flex flex-col text-gray-800 dark:text-gray-200">
+    <header class="bg-white dark:bg-brand-gray-dark shadow-sm p-4 sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100">Conflict Protocol Builder</h1>
+            <button id="themeToggleBtn" title="Toggle Theme">
+                <span class="light-icon">☀️</span>
+                <span class="dark-icon hidden">🌙</span>
+            </button>
+        </div>
+    </header>
+
+```
+<main class="flex-1 max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-8 w-full">
+    <section class="bg-white dark:bg-brand-gray-dark rounded-xl shadow-lg p-6 md:p-8 md:w-1/2 flex flex-col section-card">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">Create Protocol</h2>
+        <form id="protocolForm" class="space-y-5 flex-1">
+            <div>
+                <label for="protocolTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Protocol Title <span class="text-red-500">*</span></label>
+                <input type="text" id="protocolTitle" placeholder="e.g., Team Conflict Resolution Process" required class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-150 ease-in-out">
+                <p id="titleError" class="text-red-500 text-xs hidden mt-1">Title is required and must be at least 5 characters.</p>
+            </div>
+            <div>
+                <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                <select id="department" class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150 ease-in-out">
+                    <option value="">Select Department (Optional)</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="General">General / Company-Wide</option>
+                </select>
+            </div>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-5 mt-5 space-y-5">
+                <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Add Section</h3>
+                <div>
+                    <label for="templateSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Use Template</label>
+                    <select id="templateSelect" class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150 ease-in-out">
+                        <option value="">Select a Template (Optional)</option>
+                        <option value="resolution">Resolution Guidelines</option>
+                        <option value="roles">Roles and Responsibilities</option>
+                        <option value="steps">Mediation Steps</option>
+                        <option value="intro">Introduction</option>
+                        <option value="confidentiality">Confidentiality Clause</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sectionTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section Title <span class="text-red-500">*</span></label>
+                    <input type="text" id="sectionTitle" placeholder="e.g., Step 1: Initial Meeting" required class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-150 ease-in-out">
+                    <p id="sectionTitleError" class="text-red-500 text-xs hidden mt-1">Section title is required.</p>
+                </div>
+                <div>
+                    <label for="sectionContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section Content (Markdown Supported) <span class="text-red-500">*</span></label>
+                    <textarea id="sectionContent" rows="5" placeholder="Enter section details... Use Markdown: **bold**, *italic*, - list." required class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-150 ease-in-out"></textarea>
+                    <p id="sectionContentError" class="text-red-500 text-xs hidden mt-1">Section content is required and must be at least 10 characters.</p>
+                </div>
+                <button type="submit" class="w-full btn btn-primary">Add Section</button>
+            </div>
+        </form>
+        <button id="resetButton" class="w-full mt-6 btn btn-primary">Reset Protocol</button>
+    </section>
+
+    <section class="bg-white dark:bg-brand-gray-dark rounded-xl shadow-lg p-6 md:p-8 md:w-1/2 flex flex-col section-card">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-5 border-b border-gray-200 dark:border-gray-700 pb-3">Protocol Preview</h2>
+        <div id="preview" class="space-y-4 flex-1 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 markdown-preview bg-brand-gray-DEFAULT dark:bg-brand-gray-darker min-h-[300px]">
+            <h3 id="previewTitle" class="text-lg font-bold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-2 mb-3">Protocol Title</h3>
+            <p id="previewDepartment" class="text-sm text-gray-600 dark:text-gray-400 mb-4 italic">Department: Not selected</p>
+            <div id="previewSections" class="space-y-5">
+                <p class="text-gray-500 dark:text-gray-400 italic">Add sections using the form to see them here.</p>
+            </div>
+        </div>
+        <div class="mt-6 flex flex-wrap gap-3 justify-end border-t border-gray-200 dark:border-gray-700 pt-5">
+            <button id="copyMarkdownBtn" class="btn btn-primary text-sm">Copy Markdown</button>
+            <button id="downloadTxtBtn" class="btn btn-primary text-sm">Download .txt</button>
+            <button id="downloadMdBtn" class="btn btn-primary text-sm">Download .md</button>
+        </div>
+    </section>
+</main>
+
+<div id="toastContainer"></div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content bg-white dark:bg-brand-gray-dark rounded-xl shadow-xl">
+        <span class="modal-close text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" id="modalCloseBtn">&times;</span>
+        <h3 class="text-xl font-semibold mb-5 text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-3">Edit Section</h3>
+        <input type="hidden" id="editSectionId">
+        <div class="mb-4">
+            <label for="editSectionTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section Title <span class="text-red-500">*</span></label>
+            <input type="text" id="editSectionTitle" required class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-150 ease-in-out">
+            <p id="editSectionTitleError" class="text-red-500 text-xs hidden mt-1">Section title is required.</p>
+        </div>
+        <div class="mb-4">
+            <label for="editSectionContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section Content (Markdown Supported) <span class="text-red-500">*</span></label>
+            <textarea id="editSectionContent" rows="6" required class="mt-1 w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-blue-DEFAULT focus:border-brand-blue-DEFAULT bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-150 ease-in-out"></textarea>
+            <p id="editSectionContentError" class="text-red-500 text-xs hidden mt-1">Section content is required and must be at least 10 characters.</p>
+        </div>
+        <button type="button" id="saveEditBtn" class="w-full btn btn-primary mt-2">Save Changes</button>
+    </div>
+</div>
+
+<script>
+    const htmlElement = document.documentElement;
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const lightIcon = themeToggleBtn.querySelector('.light-icon');
+    const darkIcon = themeToggleBtn.querySelector('.dark-icon');
+    const editModal = document.getElementById('editModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const protocolForm = document.getElementById('protocolForm');
+    const resetButton = document.getElementById('resetButton');
+    const previewDiv = document.getElementById('preview');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewDepartment = document.getElementById('previewDepartment');
+    const previewSectionsDiv = document.getElementById('previewSections');
+    const protocolTitleInput = document.getElementById('protocolTitle');
+    const departmentSelect = document.getElementById('department');
+    const templateSelect = document.getElementById('templateSelect');
+    const sectionTitleInput = document.getElementById('sectionTitle');
+    const sectionContentInput = document.getElementById('sectionContent');
+    const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
+    const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+    const downloadMdBtn = document.getElementById('downloadMdBtn');
+    const toastContainer = document.getElementById('toastContainer');
+    const editSectionIdInput = document.getElementById('editSectionId');
+    const editSectionTitleInput = document.getElementById('editSectionTitle');
+    const editSectionContentInput = document.getElementById('editSectionContent');
+    const saveEditBtn = document.getElementById('saveEditBtn');
+
+    const titleError = document.getElementById('titleError');
+    const sectionTitleError = document.getElementById('sectionTitleError');
+    const sectionContentError = document.getElementById('sectionContentError');
+    const editSectionTitleError = document.getElementById('editSectionTitleError');
+    const editSectionContentError = document.getElementById('editSectionContentError');
+
+    const showdownConverter = new showdown.Converter({
+        simplifiedAutoLink: true,
+        strikethrough: true,
+        tables: true,
+        tasklists: true,
+        ghCompatibleHeaderId: true,
+        simpleLineBreaks: true
+    });
+
+    let protocol = {
+        title: '',
+        department: '',
+        sections: []
+    };
+
+    const templates = {
+        resolution: { title: "Resolution Guidelines", content: "1. **Identify the core issue.**\n2. **Listen actively to all parties.**\n3. **Brainstorm potential solutions.**\n4. **Agree on a path forward.**\n5. **Document the agreement.**" },
+        roles: { title: "Roles and Responsibilities", content: "- **Mediator:** Facilitates discussion, remains neutral.\n- **Participants:** Engage respectfully, adhere to guidelines.\n- **HR Representative (if applicable):** Provides policy guidance." },
+        steps: { title: "Mediation Steps", content: "1. **Introduction & Ground Rules:** Set expectations.\n2. **Opening Statements:** Each party shares their perspective.\n3. **Joint Discussion:** Facilitated dialogue.\n4. **Private Caucuses (Optional):** Separate meetings with the mediator.\n5. **Agreement Drafting:** Documenting the resolution.\n6. **Closing:** Review and next steps." },
+        intro: { title: "Introduction", content: "This document outlines the protocol for mediating conflicts within the [Department/Company]. Our goal is to provide a structured, fair, and confidential process for resolving disagreements constructively." },
+        confidentiality: { title: "Confidentiality Clause", content: "All discussions during the mediation process are confidential, except where disclosure is required by law or company policy (e.g., harassment, illegal activity). Information shared in private caucuses will not be revealed to the other party without explicit permission." }
+    };
+
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            htmlElement.classList.add('dark');
+            lightIcon.classList.add('hidden');
+            darkIcon.classList.remove('hidden');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            htmlElement.classList.remove('dark');
+            lightIcon.classList.remove('hidden');
+            darkIcon.classList.add('hidden');
+            localStorage.setItem('theme', 'light');
+        }
+        renderPreview();
+    };
+
+    const toggleTheme = () => {
+        const currentTheme = htmlElement.classList.contains('dark') ? 'dark' : 'light';
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    };
+
+    const initializeTheme = () => {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+    };
+
+    themeToggleBtn.addEventListener('click', toggleTheme);
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
+    function showToast(message, type = 'info', duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        toast.offsetHeight;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, { once: true });
+        }, duration);
+    }
+
+    function validateInput(inputElement, errorElement, minLength, message) {
+        const value = inputElement.value.trim();
+        if (value.length < minLength) {
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            inputElement.classList.add('border-red-500', 'dark:border-red-500');
+            inputElement.classList.remove('border-gray-300', 'dark:border-gray-600');
+            return false;
+        } else {
+            errorElement.classList.add('hidden');
+            inputElement.classList.remove('border-red-500', 'dark:border-red-500');
+            inputElement.classList.add('border-gray-300', 'dark:border-gray-600');
+            return true;
+        }
+    }
+
+    function validateForm() {
+        const isTitleValid = validateInput(protocolTitleInput, titleError, 5, 'Title must be at least 5 characters.');
+        return isTitleValid;
+    }
+
+    function validateSectionForm() {
+        const isSectionTitleValid = validateInput(sectionTitleInput, sectionTitleError, 1, 'Section title is required.');
+        const isSectionContentValid = validateInput(sectionContentInput, sectionContentError, 10, 'Section content must be at least 10 characters.');
+        return isSectionTitleValid && isSectionContentValid;
+    }
+
+    function validateEditForm() {
+        const isEditTitleValid = validateInput(editSectionTitleInput, editSectionTitleError, 1, 'Section title is required.');
+        const isEditContentValid = validateInput(editSectionContentInput, editSectionContentError, 10, 'Section content must be at least 10 characters.');
+        return isEditTitleValid && isEditContentValid;
+    }
+
+    function saveProtocol() {
+        localStorage.setItem('mediationProtocol', JSON.stringify(protocol));
+    }
+
+    function loadProtocol() {
+        const savedProtocol = localStorage.getItem('mediationProtocol');
+        if (savedProtocol) {
+            protocol = JSON.parse(savedProtocol);
+            protocol.sections.forEach((section, index) => {
+                if (!section.id) {
+                    section.id = Date.now() + index;
+                }
+            });
+        } else {
+            protocol = { title: '', department: '', sections: [] };
+        }
+        protocolTitleInput.value = protocol.title;
+        departmentSelect.value = protocol.department;
+        renderPreview();
+    }
+
+    function renderPreview() {
+        previewTitle.textContent = protocol.title || 'Protocol Title';
+        previewDepartment.textContent = protocol.department ? `Department: ${departmentSelect.options[departmentSelect.selectedIndex].text}` : 'Department: Not selected';
+
+        if (protocol.sections.length === 0) {
+            previewSectionsDiv.innerHTML = `<p class="text-gray-500 dark:text-gray-400 italic">Add sections using the form to see them here.</p>`;
+        } else {
+            previewSectionsDiv.innerHTML = '';
+            protocol.sections.forEach((section, index) => {
+                const sectionElement = document.createElement('div');
+                sectionElement.className = 'section-card bg-white dark:bg-brand-gray-dark p-4 rounded-lg border border-gray-200 dark:border-gray-700 relative group';
+                sectionElement.dataset.id = section.id;
+
+                const titleElement = document.createElement('h4');
+                titleElement.className = 'text-md font-semibold text-gray-800 dark:text-gray-100 mb-2';
+                titleElement.textContent = section.title;
+
+                const contentElement = document.createElement('div');
+                contentElement.className = 'text-sm text-gray-700 dark:text-gray-300 prose prose-sm dark:prose-invert max-w-none';
+                contentElement.innerHTML = showdownConverter.makeHtml(section.content);
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200';
+
+                const editButton = document.createElement('button');
+                editButton.innerHTML = '✏️';
+                editButton.className = 'text-xs p-1 rounded bg-yellow-100 dark:bg-yellow-700 text-yellow-800 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-600 transition';
+                editButton.title = 'Edit Section';
+                editButton.onclick = () => openEditModal(section.id);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '🗑️';
+                deleteButton.className = 'text-xs p-1 rounded bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-700 transition';
+                deleteButton.title = 'Delete Section';
+                deleteButton.onclick = () => deleteSection(section.id);
+
+                buttonContainer.appendChild(editButton);
+                buttonContainer.appendChild(deleteButton);
+
+                sectionElement.appendChild(titleElement);
+                sectionElement.appendChild(contentElement);
+                sectionElement.appendChild(buttonContainer);
+                previewSectionsDiv.appendChild(sectionElement);
+            });
+        }
+        updateActionButtonsState();
+    }
+
+    function updateActionButtonsState() {
+        const hasContent = protocol.title.trim().length > 0 || protocol.sections.length > 0;
+        copyMarkdownBtn.disabled = !hasContent;
+        downloadTxtBtn.disabled = !hasContent;
+        downloadMdBtn.disabled = !hasContent;
+        resetButton.disabled = !hasContent && !protocol.department;
+    }
+
+    protocolTitleInput.addEventListener('input', () => {
+        protocol.title = protocolTitleInput.value;
+        validateInput(protocolTitleInput, titleError, 5, 'Title must be at least 5 characters.');
+        renderPreview();
+        saveProtocol();
+    });
+
+    departmentSelect.addEventListener('change', () => {
+        protocol.department = departmentSelect.value;
+        renderPreview();
+        saveProtocol();
+    });
+
+    templateSelect.addEventListener('change', () => {
+        const selectedTemplate = templateSelect.value;
+        if (selectedTemplate && templates[selectedTemplate]) {
+            sectionTitleInput.value = templates[selectedTemplate].title;
+            sectionContentInput.value = templates[selectedTemplate].content;
+            sectionTitleError.classList.add('hidden');
+            sectionTitleInput.classList.remove('border-red-500', 'dark:border-red-500');
+            sectionTitleInput.classList.add('border-gray-300', 'dark:border-gray-600');
+            sectionContentError.classList.add('hidden');
+            sectionContentInput.classList.remove('border-red-500', 'dark:border-red-500');
+            sectionContentInput.classList.add('border-gray-300', 'dark:border-gray-600');
+        }
+    });
+
+    protocolForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!validateSectionForm()) {
+            showToast('Please fix the errors in the section form.', 'error');
+            return;
+        }
+
+        const newSection = {
+            id: Date.now(),
+            title: sectionTitleInput.value.trim(),
+            content: sectionContentInput.value.trim()
+        };
+        protocol.sections.push(newSection);
+        renderPreview();
+        saveProtocol();
+
+        sectionTitleInput.value = '';
+        sectionContentInput.value = '';
+        templateSelect.value = '';
+        sectionTitleError.classList.add('hidden');
+        sectionTitleInput.classList.remove('border-red-500', 'dark:border-red-500');
+        sectionTitleInput.classList.add('border-gray-300', 'dark:border-gray-600');
+        sectionContentError.classList.add('hidden');
+        sectionContentInput.classList.remove('border-red-500', 'dark:border-red-500');
+        sectionContentInput.classList.add('border-gray-300', 'dark:border-gray-600');
+
+        showToast('Section added successfully!', 'success');
+    });
+
+    resetButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset the entire protocol? This cannot be undone.')) {
+            protocol = { title: '', department: '', sections: [] };
+            protocolTitleInput.value = '';
+            departmentSelect.value = '';
+            sectionTitleInput.value = '';
+            sectionContentInput.value = '';
+            templateSelect.value = '';
+            titleError.classList.add('hidden');
+            protocolTitleInput.classList.remove('border-red-500', 'dark:border-red-500');
+            protocolTitleInput.classList.add('border-gray-300', 'dark:border-gray-600');
+            sectionTitleError.classList.add('hidden');
+            sectionTitleInput.classList.remove('border-red-500', 'dark:border-red-500');
+            sectionTitleInput.classList.add('border-gray-300', 'dark:border-gray-600');
+            sectionContentError.classList.add('hidden');
+            sectionContentInput.classList.remove('border-red-500', 'dark:border-red-500');
+            sectionContentInput.classList.add('border-gray-300', 'dark:border-gray-600');
+
+            renderPreview();
+            saveProtocol();
+            showToast('Protocol reset.', 'info');
+        }
+    });
+
+    function deleteSection(id) {
+        if (confirm('Are you sure you want to delete this section?')) {
+            protocol.sections = protocol.sections.filter(section => section.id !== id);
+            renderPreview();
+            saveProtocol();
+            showToast('Section deleted.', 'info');
+        }
+    }
+
+    function openEditModal(id) {
+        const section = protocol.sections.find(s => s.id === id);
+        if (section) {
+            editSectionIdInput.value = id;
+            editSectionTitleInput.value = section.title;
+            editSectionContentInput.value = section.content;
+            editSectionTitleError.classList.add('hidden');
+            editSectionTitleInput.classList.remove('border-red-500', 'dark:border-red-500');
+            editSectionTitleInput.classList.add('border-gray-300', 'dark:border-gray-600');
+            editSectionContentError.classList.add('hidden');
+            editSectionContentInput.classList.remove('border-red-500', 'dark:border-red-500');
+            editSectionContentInput.classList.add('border-gray-300', 'dark:border-gray-600');
+
+            editModal.style.display = 'block';
+            setTimeout(() => editModal.classList.add('show'), 10);
+        }
+    }
+
+    function closeEditModal() {
+        editModal.classList.remove('show');
+        editModal.addEventListener('transitionend', () => {
+             if (!editModal.classList.contains('show')) {
+                editModal.style.display = 'none';
+             }
+        }, { once: true });
+    }
+
+    modalCloseBtn.addEventListener('click', closeEditModal);
+    editModal.addEventListener('click', (event) => {
+        if (event.target === editModal) {
+            closeEditModal();
+        }
+    });
+
+    saveEditBtn.addEventListener('click', () => {
+        if (!validateEditForm()) {
+            showToast('Please fix the errors in the edit form.', 'error');
+            return;
+        }
+        const id = parseInt(editSectionIdInput.value, 10);
+        const sectionIndex = protocol.sections.findIndex(s => s.id === id);
+        if (sectionIndex !== -1) {
+            protocol.sections[sectionIndex].title = editSectionTitleInput.value.trim();
+            protocol.sections[sectionIndex].content = editSectionContentInput.value.trim();
+            renderPreview();
+            saveProtocol();
+            closeEditModal();
+            showToast('Section updated successfully!', 'success');
+        } else {
+            showToast('Error finding section to update.', 'error');
+        }
+    });
+
+    function generateMarkdown() {
+        let markdown = `# ${protocol.title || 'Untitled Protocol'}\n\n`;
+        if (protocol.department) {
+            markdown += `**Department:** ${departmentSelect.options[departmentSelect.selectedIndex].text}\n\n`;
+        }
+        protocol.sections.forEach(section => {
+            markdown += `## ${section.title}\n\n${section.content}\n\n`;
+        });
+        return markdown.trim();
+    }
+
+    copyMarkdownBtn.addEventListener('click', () => {
+        const markdown = generateMarkdown();
+        navigator.clipboard.writeText(markdown)
+            .then(() => showToast('Markdown copied to clipboard!', 'success'))
+            .catch(err => showToast('Failed to copy Markdown.', 'error'));
+    });
+
+    function downloadFile(filename, content, mimeType) {
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:${mimeType};charset=utf-8,` + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+    downloadTxtBtn.addEventListener('click', () => {
+        const markdown = generateMarkdown();
+        const textContent = markdown
+            .replace(/^#+\s*/gm, '')
+            .replace(/(\*\*|__)(.*?)\1/g, '$2')
+            .replace(/(\*|_)(.*?)\1/g, '$2')
+            .replace(/^-+\s*/gm, '')
+            .replace(/`{1,3}(.*?)`{1,3}/g, '$1')
+            .replace(/!\[.*?\]\(.*?\)/g, '')
+            .replace(/\[(.*?)\]\(.*?\)/g, '$1');
+        const filename = `${protocol.title.replace(/[^a-z0-9]/gi, '_') || 'protocol'}.txt`;
+        downloadFile(filename, textContent, 'text/plain');
+        showToast('Downloading .txt file.', 'info');
+    });
+
+    downloadMdBtn.addEventListener('click', () => {
+        const markdown = generateMarkdown();
+        const filename = `${protocol.title.replace(/[^a-z0-9]/gi, '_') || 'protocol'}.md`;
+        downloadFile(filename, markdown, 'text/markdown');
+        showToast('Downloading .md file.', 'info');
+    });
+
+    initializeTheme();
+    loadProtocol();
+
+</script>
+```
+
+</body>
+</html>
