@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Highlight Reel Pro 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --timeline-block-width: 60; 
+      --transition-standard: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    
+    :root.light {
+      --bg-main: #f8fafc;
+      --bg-sec: rgba(255,255,255,0.85);
+      --bg-card: rgba(255,255,255,0.9);
+      --text-main: #1e293b;
+      --accent: #f43f5e;
+      --accent-2: #6366f1;
+      --accent-3: #10b981;
+      --border-light: rgba(226, 232, 240, 0.8);
+      --asset-bg: #f1f5f9;
+      --preview-bg: #fefefe;
+      --timeline-bg: #f8fafc;
+      --timeline-grid: rgba(203, 213, 225, 0.5);
+      --shadow-color: rgba(0, 0, 0, 0.08);
+      --overlay-opacity: 0.0;
+      --static-gradient: linear-gradient(135deg, #e0f2fe, #f3e8ff, #fce7f3, #fff1f2, #fffbeb);
+    }
+    
+    :root.dark {
+      --bg-main: #0f172a;
+      --bg-sec: rgba(15, 23, 42, 0.95);
+      --bg-card: rgba(30, 41, 59, 0.9);
+      --text-main: #f1f5f9;
+      --accent: #fb7185;
+      --accent-2: #818cf8;
+      --accent-3: #34d399;
+      --border-light: rgba(51, 65, 85, 0.6);
+      --asset-bg: #1e293b;
+      --preview-bg: #0f172a;
+      --timeline-bg: #1e1b4b;
+      --timeline-grid: rgba(71, 85, 105, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.25);
+      --overlay-opacity: 0.3;
+      --static-gradient: linear-gradient(135deg, #1e3a8a, #3730a3, #581c87, #831843, #78350f);
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-main);
+      background-image: var(--static-gradient); 
+      background-attachment: fixed;
+      background-size: cover;
+      color: var(--text-main);
+      transition: var(--transition-standard);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, var(--overlay-opacity));
+      backdrop-filter: blur(10px) saturate(1.5); 
+      pointer-events: none;
+      z-index: -1;
+      transition: var(--transition-standard);
+    }
+    
+    .glass-panel {
+      background: var(--bg-sec);
+      backdrop-filter: blur(10px) saturate(1.8);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      transition: var(--transition-standard);
+    }
+    
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      transition: var(--transition-standard);
+    }
+    
+    .btn {
+      transition: all 0.2s ease-in-out;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--accent-2);
+      color: white;
+    }
+    
+    .btn-tertiary {
+      background: var(--accent-3);
+      color: white;
+    }
+    
+    .timeline-container {
+      background: var(--timeline-bg);
+      background-image: 
+        linear-gradient(to right, var(--timeline-grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--timeline-grid) 1px, transparent 1px);
+      background-size: 60px 20px;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: auto;
+      scroll-snap-type: x proximity;
+      transition: var(--transition-standard);
+      min-height: 200px; 
+      md:min-height: 280px;
+    }
+    
+    .asset-card {
+      background: var(--asset-bg);
+      border: 1px solid var(--border-light);
+      transition: all 0.2s ease-in-out;
+      animation: scale-in 0.3s ease-out forwards;
+    }
+    
+    .asset-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px var(--shadow-color);
+      border-color: var(--accent-2);
+    }
+    
+    .trending-badge {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-2);
+      border-radius: 8px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+    
+    .konva-container {
+      border: 2px solid transparent;
+      border-radius: 12px;
+      transition: var(--transition-standard);
+    }
+    
+    .drag-target {
+      border: 2px dashed var(--accent-2);
+      background-color: rgba(99, 102, 241, 0.05);
+    }
+    
+    .timeline-marker {
+      height: 100%;
+      width: 2px;
+      background: var(--accent);
+      position: absolute;
+      top: 0;
+      transition: left 0.2s ease;
+      pointer-events: none;
+    }
+    
+    .platform-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+    
+    .platform-instagram {
+      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+      color: white;
+    }
+    
+    .platform-tiktok {
+      background: linear-gradient(135deg, #25F4EE, #FE2C55, #000000);
+      color: white;
+    }
+    
+    .platform-youtube {
+      background: #FF0000;
+      color: white;
+    }
+    
+    .preview-window {
+      width: 100%;
+      height: 192px;
+      md:height: 240px;
+      background: var(--preview-bg);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .preview-content {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent-3);
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      transform: translateX(120%);
+      transition: transform 0.3s ease-out;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .fade-in {
+      animation: fade-in 0.5s ease forwards;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body class="opacity-0 transition-opacity duration-500" onload="document.body.classList.add('opacity-100')">
+  <header class="glass-panel sticky top-0 z-10 mb-4 border-b border-t-0 border-l-0 border-r-0 rounded-none fade-in">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-y-2">
+      <div class="flex items-center">
+        <div class="text-3xl mr-3">🎬</div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">Highlight Reel Pro</span>
+        </h1>
+        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded bg-gradient-to-r from-amber-500 to-pink-500 text-white">2025</span>
+      </div>
+      
+      <div class="flex items-center justify-end flex-grow w-full md:w-auto md:flex-grow-0 mt-2 md:mt-0 gap-2 md:gap-3">
+        <div class="relative">
+          <select id="platform-select" class="appearance-none pl-9 pr-10 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-accent focus:ring-opacity-50 focus:border-accent outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            <option value="instagram">Instagram Reels (90s)</option>
+            <option value="tiktok">TikTok (180s)</option>
+            <option value="youtube">YouTube Shorts (60s)</option>
+          </select>
+          <div class="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <i class="fas fa-tv text-gray-400"></i>
+          </div>
+        </div>
+        
+        <div class="flex gap-1">
+          <button id="theme-toggle" class="btn p-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" aria-label="Toggle theme">
+            <i id="theme-icon" class="fas fa-moon text-amber-500"></i>
+          </button>
+          
+          <button id="clear-timeline" class="btn p-2 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-500 border border-red-200 dark:border-red-800/50" aria-label="Clear timeline">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+          
+          <button id="save-reel" class="btn p-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-500 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50" aria-label="Save reel">
+            <i class="fas fa-save"></i>
+          </button>
+          
+          <button id="export-reel" class="btn p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50" aria-label="Export reel">
+            <i class="fas fa-file-export"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex flex-col md:flex-row flex-1 max-w-7xl mx-auto px-4 gap-4 pb-6 w-full">
+    <aside class="w-full md:w-1/4 glass-panel p-4 order-2 md:order-1 fade-in" style="animation-delay: 100ms">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold flex items-center">
+          <i class="fas fa-film mr-2 text-indigo-500"></i>Assets
+        </h2>
+        <span class="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300">
+          Drag to timeline
+        </span>
+      </div>
+      
+      <div class="relative mb-3">
+        <input id="asset-search" placeholder="Search assets..." class="w-full p-2 pl-8 rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-accent focus:ring-opacity-50 focus:border-accent outline-none bg-white dark:bg-gray-800 text-sm" />
+        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+      </div>
+      
+      <div class="mt-2 mb-3 flex flex-wrap gap-2 text-xs">
+        <button class="filter-btn px-2 py-1 rounded-full bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-accent hover:text-white" data-filter="">All</button>
+        <button class="filter-btn px-2 py-1 rounded-full bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-accent hover:text-white" data-filter="video">Videos</button>
+        <button class="filter-btn px-2 py-1 rounded-full bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-accent hover:text-white" data-filter="transition">Transitions</button>
+        <button class="filter-btn px-2 py-1 rounded-full bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-accent hover:text-white" data-filter="text">Text</button>
+      </div>
+      
+      <div id="asset-library" class="space-y-2 max-h-[40vh] md:max-h-[calc(100vh-350px)] overflow-y-auto pr-1"></div>
+      
+      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 text-sm">
+        <div class="flex items-center gap-2 mb-1 text-blue-600 dark:text-blue-300">
+          <i class="fas fa-lightbulb"></i>
+          <span class="font-medium">Pro Tip</span>
+        </div>
+        <p class="text-blue-700 dark:text-blue-200 opacity-90">
+          Double-click any asset on the timeline to remove it instantly.
+        </p>
+      </div>
+    </aside>
+    
+    <section class="w-full md:w-2/4 flex flex-col order-1 md:order-2 fade-in" style="animation-delay: 200ms">
+      <div class="glass-panel p-4 flex flex-col h-full">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xl font-semibold flex items-center">
+            <i class="fas fa-clock mr-2 text-rose-500"></i>Timeline
+          </h2>
+          <div class="flex items-center gap-1 text-sm">
+            <span id="duration-counter" class="px-2 py-1 rounded-lg bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700">
+              0s / <span id="max-duration">90s</span>
+            </span>
+            <span id="platform-indicator" class="platform-tag platform-instagram">Instagram</span>
+          </div>
+        </div>
+        
+        <div class="relative flex-grow">
+          <div id="timeline-container" class="timeline-container w-full h-full relative">
+            <div id="timeline-canvas" class="konva-container"></div>
+            <div id="timeline-marker" class="timeline-marker"></div>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between mt-3 gap-2">
+          <div class="flex gap-1">
+            <button id="scroll-start" class="btn p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700" title="Jump to Start">
+              <i class="fas fa-step-backward"></i>
+            </button>
+            <button id="play-preview" class="btn py-2 px-3 rounded-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+              <i class="fas fa-play mr-1"></i> Preview
+            </button>
+            <button id="scroll-end" class="btn p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700" title="Jump to End">
+              <i class="fas fa-step-forward"></i>
+            </button>
+          </div>
+          
+          <div class="flex gap-1">
+            <button id="zoom-out" class="btn p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700" title="Zoom Out">
+              <i class="fas fa-search-minus"></i>
+            </button>
+            <button id="zoom-in" class="btn p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700" title="Zoom In">
+              <i class="fas fa-search-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <aside class="w-full md:w-1/4 glass-panel p-4 order-3 fade-in" style="animation-delay: 300ms">
+      <h2 class="text-xl font-semibold flex items-center mb-4">
+        <i class="fas fa-chart-line mr-2 text-emerald-500"></i>Preview & Insights
+      </h2>
+      
+      <div class="mb-5">
+        <h3 class="font-medium flex items-center mb-2 text-sm">
+          <i class="fas fa-eye mr-2 text-purple-500"></i>Visual Preview
+        </h3>
+        <div class="preview-window">
+          <div id="preview" class="preview-content flex flex-col items-center justify-center text-center p-4">
+            <div class="text-4xl mb-3">👋</div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Drag assets to the timeline to see a preview</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-5">
+        <h3 class="font-medium flex items-center mb-2 text-sm">
+          <i class="fas fa-fire mr-2 text-orange-500"></i>Engagement Score
+        </h3>
+        <div class="flex items-center">
+          <div id="impact-score" class="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-rose-500">0</div>
+          <div class="ml-3">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Estimated Engagement</div>
+            <div id="score-label" class="text-sm font-medium text-gray-700 dark:text-gray-300">Add content</div>
+          </div>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full mt-2 overflow-hidden">
+          <div id="score-bar" class="h-full w-0 bg-gradient-to-r from-amber-500 to-rose-500 rounded-full transition-all duration-700"></div>
+        </div>
+      </div>
+      
+      <div class="mb-5">
+        <h3 class="font-medium flex items-center mb-3 text-sm">
+          <i class="fas fa-bolt mr-2 text-amber-500"></i>Trending Today
+        </h3>
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
+          <div class="flex">
+            <div class="trending-badge text-white text-xs px-2 py-1 rounded-full mr-2">
+              <i class="fas fa-chart-line mr-1"></i>Trending
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+              <i class="fas fa-fire mr-1"></i>+28% Engagement
+            </div>
+          </div>
+          <p id="trending-transition" class="mt-2 font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500"></p>
+          <p class="mt-1 text-xs text-gray-600 dark:text-gray-300">
+            Try adding this transition style to increase your reel's performance.
+          </p>
+        </div>
+      </div>
+      
+      <div id="timeline-hints" class="text-sm opacity-80"></div>
+    </aside>
+  </main>
+  
+  <div id="notification" class="notification">
+    <div class="flex items-center">
+      <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
+      <span id="notification-text">Operation completed successfully</span>
+    </div>
+  </div>
+  
+  <script>
+    const htmlEl = document.documentElement;
+    const iconEl = document.getElementById('theme-icon');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    function setTheme(theme) {
+      htmlEl.className = theme;
+      iconEl.className = theme === 'light' 
+        ? "fas fa-moon text-amber-500" 
+        : "fas fa-sun text-amber-400";
+      localStorage.setItem('theme', theme);
+    }
+    
+    setTheme(savedTheme);
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      setTheme(htmlEl.className === 'light' ? 'dark' : 'light');
+    });
+    
+    const container = document.getElementById('timeline-container');
+    const marker = document.getElementById('timeline-marker');
+    const stage = new Konva.Stage({
+      container: 'timeline-canvas',
+      width: container.clientWidth,
+      height: 280
+    });
+    
+    const gridLayer = new Konva.Layer();
+    const mainLayer = new Konva.Layer();
+    stage.add(gridLayer);
+    stage.add(mainLayer);
+    
+    const playhead = new Konva.Line({
+      points: [0, 0, 0, 280],
+      stroke: 'rgba(255, 99, 132, 0.8)',
+      strokeWidth: 2,
+      dash: [5, 3],
+      listening: false
+    });
+    mainLayer.add(playhead);
+    
+    let pxPerSec = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--timeline-block-width'));
+    let platform = 'instagram';
+    let isPlaying = false;
+    let playInterval;
+    let currentPlayTime = 0;
+    
+    const assets = [
+      { id: 'clip1', type: 'video', name: 'Intro Shot', duration: 5, color: '#f43f5e', thumbnail: '🏞️' },
+      { id: 'clip2', type: 'video', name: 'Action Clip', duration: 8, color: '#6366f1', thumbnail: '🎬' },
+      { id: 'clip3', type: 'video', name: 'B-Roll', duration: 4, color: '#ec4899', thumbnail: '📹' },
+      { id: 'clip4', type: 'video', name: 'Closeup', duration: 6, color: '#8b5cf6', thumbnail: '👁️' },
+      { id: 'clip5', type: 'video', name: 'Landscape View', duration: 7, color: '#3b82f6', thumbnail: '🌄' },
+      { id: 'clip6', type: 'video', name: 'Slow Motion', duration: 5, color: '#14b8a6', thumbnail: '⏱️' },
+      { id: 'trans1', type: 'transition', name: 'Smooth Fade', duration: 1, color: '#facc15', thumbnail: '🔄' },
+      { id: 'trans2', type: 'transition', name: 'Slide Effect', duration: 1, color: '#22d3ee', thumbnail: '➡️' },
+      { id: 'trans3', type: 'transition', name: 'Zoom Blur', duration: 1.5, color: '#f97316', thumbnail: '🔍' },
+      { id: 'trans4', type: 'transition', name: 'Spin', duration: 1, color: '#84cc16', thumbnail: '🔄' },
+      { id: 'text1', type: 'text', name: 'Title Card', duration: 3, color: '#10b981', thumbnail: '📝' },
+      { id: 'text2', type: 'text', name: 'Call to Action', duration: 2, color: '#06b6d4', thumbnail: '✨' }
+    ];
+    
+    const trending = [
+      { name: '3D Zoom Transition', description: 'Dynamic depth effect that creates dimension' },
+      { name: 'Glitch Effect', description: 'Digital distortion for high-tech vibes' },
+      { name: 'Parallax Slide', description: 'Foreground and background move at different speeds' },
+      { name: 'Color Splash', description: 'Transition from B&W to vibrant color' },
+      { name: 'Whip Pan', description: 'Fast blur between scenes for dynamic energy' },
+      { name: 'Morphing Transition', description: 'Smooth shape transformation between clips' }
+    ];
+    
+    const maxDur = { instagram: 90, tiktok: 180, youtube: 60 };
+    
+    let timeline = [];
+    
+    const lib = document.getElementById('asset-library');
+    
+    function renderAssets(filter = '') {
+      lib.innerHTML = '';
+      assets
+        .filter(a => a.name.toLowerCase().includes(filter.toLowerCase()) || a.type.includes(filter))
+        .forEach(a => {
+          const card = document.createElement('div');
+          card.className = 'asset-card p-3 rounded-lg flex items-center gap-3 cursor-grab';
+          card.draggable = true;
+          card.dataset.id = a.id;
+          
+          card.innerHTML = `
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background:${a.color}30">
+              ${a.thumbnail}
+            </div>
+            <div class="flex-grow">
+              <p class="font-medium text-sm">${a.name}</p>
+              <div class="flex items-center gap-1">
+                <span class="px-1.5 py-0.5 text-xs rounded-full" style="background:${a.color}20; color:${a.color}">${a.type}</span>
+                <span class="text-xs opacity-70">${a.duration}s</span>
+              </div>
+            </div>
+            <div class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 opacity-70">
+              <i class="fas fa-plus text-xs"></i>
+            </div>
+          `;
+          
+          card.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('id', a.id);
+            card.classList.add('ring-2', 'ring-accent-2', 'opacity-60');
+          });
+          
+          card.addEventListener('dragend', () => {
+            card.classList.remove('ring-2', 'ring-accent-2', 'opacity-60');
+          });
+          
+          lib.appendChild(card);
+        });
+    }
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => 
+          b.classList.remove('bg-accent', 'text-white'));
+        btn.classList.add('bg-accent', 'text-white');
+        renderAssets(btn.dataset.filter);
+      });
+    });
+    
+    document.getElementById('asset-search').addEventListener('input', e => {
+      renderAssets(e.target.value);
+      document.querySelectorAll('.filter-btn').forEach(b => 
+        b.classList.remove('bg-accent', 'text-white'));
+      document.querySelector('.filter-btn[data-filter=""]').classList.add('bg-accent', 'text-white');
+    });
+    
+    renderAssets();
+    
+    function adjustStageWidth() {
+      const totalDur = timeline.reduce((s, i) => s + i.duration, 0);
+      const minWidth = container.clientWidth;
+      const desired = Math.max(minWidth, totalDur * pxPerSec);
+      
+      stage.width(desired);
+      stage.container().style.width = desired + 'px';
+    }
+    
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      const text = document.getElementById('notification-text');
+      text.textContent = message;
+      
+      notification.className = 'notification show';
+      notification.style.borderLeftColor = type === 'success' ? 'var(--accent-3)' : 'var(--accent)';
+      
+      setTimeout(() => {
+        notification.className = 'notification';
+      }, 3000);
+    }
+    
+    function updateTimeline() {
+      document.getElementById('duration-counter').innerHTML = 
+        `${timeline.reduce((s, i) => s + i.duration, 0)}s / <span id="max-duration">${maxDur[platform]}s</span>`;
+      
+      const indicator = document.getElementById('platform-indicator');
+      indicator.className = `platform-tag platform-${platform}`;
+      indicator.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+    }
+    
+    function updateTrending() {
+      const trend = trending[Math.floor(Math.random() * trending.length)];
+      const el = document.getElementById('trending-transition');
+      el.textContent = trend.name;
+      el.nextElementSibling.textContent = trend.description;
+    }
+    
+    function updateEngagementScore() {
+      const total = timeline.reduce((s, i) => s + i.duration, 0);
+      const variety = timeline.filter(i => i.type !== 'video').length;
+      const clipCount = timeline.filter(i => i.type === 'video').length;
+      
+      let score = 0;
+      if (total > 0) {
+        score = Math.min(100, Math.round((clipCount * 10) + (variety * 15)));
+      }
+      
+      const el = document.getElementById('impact-score');
+      const label = document.getElementById('score-label');
+      const bar = document.getElementById('score-bar');
+      
+      el.textContent = score;
+      bar.style.width = `${score}%`;
+      
+      if (score === 0) {
+        label.textContent = 'Add content';
+      } else if (score < 30) {
+        label.textContent = 'Low impact';
+        label.className = 'text-sm font-medium text-rose-500';
+      } else if (score < 60) {
+        label.textContent = 'Average impact';
+        label.className = 'text-sm font-medium text-amber-500';
+      } else if (score < 85) {
+        label.textContent = 'Good impact';
+        label.className = 'text-sm font-medium text-emerald-500';
+      } else {
+        label.textContent = 'Excellent impact!';
+        label.className = 'text-sm font-medium text-indigo-500';
+      }
+    }
+    
+    function renderPreview() {
+      const preview = document.getElementById('preview');
+      
+      if (!timeline.length) {
+        preview.innerHTML = `
+          <div class="text-4xl mb-3">👋</div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Drag assets to the timeline to see a preview</p>
+        `;
+        return;
+      }
+      
+      preview.innerHTML = '';
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'w-full h-full flex flex-col';
+      
+      const previewTimeline = document.createElement('div');
+      previewTimeline.className = 'flex h-20 mb-2 rounded-lg overflow-hidden';
+      
+      timeline.forEach(item => {
+        const itemBlock = document.createElement('div');
+        itemBlock.className = 'h-full flex-shrink-0 flex items-center justify-center text-white text-center';
+        itemBlock.style.backgroundColor = item.color;
+        itemBlock.style.width = `${(item.duration / timeline.reduce((s, i) => s + i.duration, 0)) * 100}%`;
+        
+        const asset = assets.find(a => a.id === item.id);
+        itemBlock.innerHTML = asset ? asset.thumbnail : '❓';
+        
+        previewTimeline.appendChild(itemBlock);
+      });
+      
+      const info = document.createElement('div');
+      info.className = 'flex-grow flex flex-col justify-center items-center';
+      
+      const totalDuration = timeline.reduce((s, i) => s + i.duration, 0);
+      const clips = timeline.filter(i => i.type === 'video').length;
+      
+      info.innerHTML = `
+        <div class="text-2xl mb-2">📱 ${platform.charAt(0).toUpperCase() + platform.slice(1)} Reel</div>
+        <div class="flex gap-4 text-sm">
+          <div class="flex items-center">
+            <i class="fas fa-clock mr-1 text-amber-500"></i>
+            <span>${totalDuration}s</span>
+          </div>
+          <div class="flex items-center">
+            <i class="fas fa-film mr-1 text-rose-500"></i>
+            <span>${clips} clips</span>
+          </div>
+          <div class="flex items-center">
+            <i class="fas fa-magic mr-1 text-indigo-500"></i>
+            <span>${timeline.filter(i => i.type === 'transition').length} transitions</span>
+          </div>
+        </div>
+      `;
+      
+      previewContainer.appendChild(previewTimeline);
+      previewContainer.appendChild(info);
+      preview.appendChild(previewContainer);
+    }
+    
+    function drawGrid() {
+      gridLayer.destroyChildren();
+      
+      const width = stage.width();
+      const height = stage.height();
+      
+      for (let i = 0; i <= width; i += pxPerSec) {
+        const line = new Konva.Line({
+          points: [i, 0, i, height],
+          stroke: 'rgba(156, 163, 175, 0.2)',
+          strokeWidth: i % (pxPerSec * 5) === 0 ? 1 : 0.5,
+          listening: false
+        });
+        
+        gridLayer.add(line);
+        
+        if (i % (pxPerSec * 5) === 0) {
+          const seconds = i / pxPerSec;
+          const text = new Konva.Text({
+            x: i + 5,
+            y: 5,
+            text: `${seconds}s`,
+            fontSize: 10,
+            fill: 'rgba(156, 163, 175, 0.7)',
+            listening: false
+          });
+          gridLayer.add(text);
+        }
+      }
+      
+      gridLayer.batchDraw();
+    }
+    
+    function update() {
+      layout();
+      updateTimeline();
+      renderPreview();
+      updateEngagementScore();
+      updateTrending();
+      showHints();
+      drawGrid();
+    }
+    
+    function showHints() {
+      const hints = document.getElementById('timeline-hints');
+      
+      if (!timeline.length) {
+        hints.innerHTML = '<p class="text-center italic">Drag assets from the library to start building your reel</p>';
+        return;
+      }
+      
+      const totalDur = timeline.reduce((s, i) => s + i.duration, 0);
+      const remaining = maxDur[platform] - totalDur;
+      
+      if (remaining <= 5) {
+        hints.innerHTML = `<p class="text-amber-500"><i class="fas fa-exclamation-triangle mr-1"></i> Almost at maximum length (${remaining}s remaining)</p>`;
+      } else {
+        hints.innerHTML = `<p><i class="fas fa-info-circle mr-1"></i> ${remaining}s remaining for your ${platform} reel</p>`;
+      }
+    }
+    
+    function layout() {
+      timeline.sort((a, b) => a.group.x() - b.group.x());
+      let pos = 0;
+      
+      timeline.forEach(item => {
+        item.group.x(pos);
+        pos += item.duration * pxPerSec;
+      });
+      
+      mainLayer.batchDraw();
+      adjustStageWidth();
+    }
+    
+    container.addEventListener('dragover', e => {
+      e.preventDefault();
+      container.classList.add('drag-target');
+    });
+    
+    container.addEventListener('dragleave', () => {
+      container.classList.remove('drag-target');
+    });
+    
+    container.addEventListener('drop', e => {
+      e.preventDefault();
+      container.classList.remove('drag-target');
+      const id = e.dataTransfer.getData('id');
+      const asset = assets.find(x => x.id === id);
+      
+      if (!asset) return;
+      
+      const used = timeline.reduce((s, i) => s + i.duration, 0);
+      if (used + asset.duration > maxDur[platform]) {
+        showNotification(`Maximum duration (${maxDur[platform]}s) exceeded for ${platform}`, 'error');
+        return;
+      }
+      
+      const stagePos = stage.container().getBoundingClientRect();
+      const relX = e.clientX - stagePos.left;
+      
+      const group = new Konva.Group({
+        x: relX,
+        y: 0,
+        draggable: true
+      });
+      
+      const rect = new Konva.Rect({
+        x: 0,
+        y: 40,
+        width: asset.duration * pxPerSec,
+        height: 120,
+        fill: asset.color,
+        cornerRadius: 10,
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOpacity: 0.2,
+        shadowOffset: { x: 0, y: 3 }
+      });
+      
+      const label = new Konva.Text({
+        x: 10,
+        y: 10,
+        text: asset.name,
+        fontSize: 14,
+        fontStyle: 'bold',
+        fill: 'rgba(31, 41, 55, 0.8)',
+        listening: false
+      });
+      
+      const duration = new Konva.Text({
+        x: 10,
+        y: 30,
+        text: `${asset.duration}s`,
+        fontSize: 12,
+        fill: 'rgba(31, 41, 55, 0.6)',
+        listening: false
+      });
+      
+      const icon = new Konva.Text({
+        x: 10,
+        y: 80,
+        text: asset.thumbnail,
+        fontSize: 24,
+        listening: false
+      });
+      
+      const deleteBtn = new Konva.Group({
+        x: asset.duration * pxPerSec - 25,
+        y: 10,
+        width: 20,
+        height: 20
+      });
+      
+      const deleteBg = new Konva.Circle({
+        radius: 10,
+        fill: 'rgba(239, 68, 68, 0.9)',
+        shadowColor: 'black',
+        shadowBlur: 5,
+        shadowOpacity: 0.3
+      });
+      
+      const deleteIcon = new Konva.Text({
+        text: '✕',
+        fontSize: 12,
+        fill: 'white',
+        align: 'center',
+        verticalAlign: 'middle',
+        x: -5,
+        y: -6
+      });
+      
+      deleteBtn.add(deleteBg, deleteIcon);
+      group.add(rect, label, duration, icon, deleteBtn);
+      mainLayer.add(group);
+      
+      const block = { ...asset, group };
+      timeline.push(block);
+      
+      group.on('dragend', () => {
+        layout();
+      });
+      
+      group.on('mouseenter', () => {
+        document.body.style.cursor = 'move';
+        rect.shadowOpacity(0.4);
+        rect.shadowBlur(15);
+        mainLayer.batchDraw();
+      });
+      
+      group.on('mouseleave', () => {
+        document.body.style.cursor = 'default';
+        rect.shadowOpacity(0.2);
+        rect.shadowBlur(10);
+        mainLayer.batchDraw();
+      });
+      
+      deleteBtn.on('click', () => {
+        group.destroy();
+        timeline = timeline.filter(b => b !== block);
+        update();
+      });
+      
+      group.on('dblclick', () => {
+        group.destroy();
+        timeline = timeline.filter(b => b !== block);
+        update();
+      });
+      
+      update();
+      
+      setTimeout(() => { 
+        container.scrollLeft = container.scrollWidth;
+      }, 100);
+      
+      showNotification(`Added ${asset.name} to timeline`);
+    });
+    
+    stage.on('click', () => {
+      const pos = stage.getPointerPosition();
+      if (pos) {
+        playhead.points([pos.x, 0, pos.x, stage.height()]);
+        marker.style.left = `${pos.x}px`;
+        mainLayer.batchDraw();
+        
+        stopPlayback();
+        
+        currentPlayTime = pos.x / pxPerSec;
+      }
+    });
+    
+    function playTimeline() {
+      if (isPlaying) return;
+      
+      if (timeline.length === 0) {
+        showNotification("Add clips to timeline first", "error");
+        return;
+      }
+      
+      isPlaying = true;
+      document.getElementById('play-preview').innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+      
+      const totalDuration = timeline.reduce((s, i) => s + i.duration, 0);
+      
+      playhead.points([currentPlayTime * pxPerSec, 0, currentPlayTime * pxPerSec, stage.height()]);
+      marker.style.left = `${currentPlayTime * pxPerSec}px`;
+      mainLayer.batchDraw();
+      
+      playInterval = setInterval(() => {
+        currentPlayTime += 0.05;
+        
+        playhead.points([currentPlayTime * pxPerSec, 0, currentPlayTime * pxPerSec, stage.height()]);
+        marker.style.left = `${currentPlayTime * pxPerSec}px`;
+        mainLayer.batchDraw();
+        
+        const containerRect = container.getBoundingClientRect();
+        const playheadX = currentPlayTime * pxPerSec;
+        
+        if (playheadX > container.scrollLeft + containerRect.width - 50) {
+          container.scrollLeft = playheadX - containerRect.width / 2;
+        }
+        
+        if (currentPlayTime >= totalDuration) {
+          stopPlayback();
+          currentPlayTime = 0;
+          
+          playhead.points([0, 0, 0, stage.height()]);
+          marker.style.left = '0px';
+          mainLayer.batchDraw();
+          container.scrollLeft = 0;
+        }
+      }, 50);
+    }
+    
+    function stopPlayback() {
+      if (!isPlaying) return;
+      
+      clearInterval(playInterval);
+      isPlaying = false;
+      document.getElementById('play-preview').innerHTML = '<i class="fas fa-play mr-1"></i> Preview';
+    }
+    
+    function saveReel() {
+      if (timeline.length === 0) {
+        showNotification("Nothing to save", "error");
+        return;
+      }
+      
+      const data = {
+        platform,
+        timeline: timeline.map(i => ({
+          id: i.id,
+          x: i.group.x() / pxPerSec 
+        }))
+      };
+      
+      localStorage.setItem('reel', JSON.stringify(data));
+      showNotification("Reel saved successfully!");
+    }
+    
+    function loadReel() {
+      const saved = localStorage.getItem('reel');
+      if (!saved) return;
+      
+      try {
+        const data = JSON.parse(saved);
+        
+        timeline.forEach(item => item.group.destroy());
+        timeline = [];
+        
+        platform = data.platform;
+        document.getElementById('platform-select').value = platform;
+        
+        data.timeline.forEach(item => {
+          const asset = assets.find(a => a.id === item.id);
+          if (!asset) return;
+          
+          const group = new Konva.Group({
+            x: item.x * pxPerSec,
+            y: 0,
+            draggable: true
+          });
+          
+          const rect = new Konva.Rect({
+            x: 0,
+            y: 40,
+            width: asset.duration * pxPerSec,
+            height: 120,
+            fill: asset.color,
+            cornerRadius: 10,
+            shadowColor: 'black',
+            shadowBlur: 10,
+            shadowOpacity: 0.2,
+            shadowOffset: { x: 0, y: 3 }
+          });
+          
+          const label = new Konva.Text({
+            x: 10,
+            y: 10,
+            text: asset.name,
+            fontSize: 14,
+            fontStyle: 'bold',
+            fill: 'rgba(31, 41, 55, 0.8)',
+            listening: false
+          });
+          
+          const duration = new Konva.Text({
+            x: 10,
+            y: 30,
+            text: `${asset.duration}s`,
+            fontSize: 12,
+            fill: 'rgba(31, 41, 55, 0.6)',
+            listening: false
+          });
+          
+          const icon = new Konva.Text({
+            x: 10,
+            y: 80,
+            text: asset.thumbnail,
+            fontSize: 24,
+            listening: false
+          });
+          
+          const deleteBtn = new Konva.Group({
+            x: asset.duration * pxPerSec - 25,
+            y: 10,
+            width: 20,
+            height: 20
+          });
+          
+          const deleteBg = new Konva.Circle({
+            radius: 10,
+            fill: 'rgba(239, 68, 68, 0.9)',
+            shadowColor: 'black',
+            shadowBlur: 5,
+            shadowOpacity: 0.3
+          });
+          
+          const deleteIcon = new Konva.Text({
+            text: '✕',
+            fontSize: 12,
+            fill: 'white',
+            align: 'center',
+            verticalAlign: 'middle',
+            x: -5,
+            y: -6
+          });
+          
+          deleteBtn.add(deleteBg, deleteIcon);
+          group.add(rect, label, duration, icon, deleteBtn);
+          mainLayer.add(group);
+          
+          const block = { ...asset, group };
+          timeline.push(block);
+          
+          group.on('dragend', () => layout());
+          
+          group.on('mouseenter', () => {
+            document.body.style.cursor = 'move';
+            rect.shadowOpacity(0.4);
+            rect.shadowBlur(15);
+            mainLayer.batchDraw();
+          });
+          
+          group.on('mouseleave', () => {
+            document.body.style.cursor = 'default';
+            rect.shadowOpacity(0.2);
+            rect.shadowBlur(10);
+            mainLayer.batchDraw();
+          });
+          
+          deleteBtn.on('click', () => {
+            group.destroy();
+            timeline = timeline.filter(b => b !== block);
+            update();
+          });
+          
+          group.on('dblclick', () => {
+            group.destroy();
+            timeline = timeline.filter(b => b !== block);
+            update();
+          });
+        });
+        
+        update();
+        showNotification("Reel loaded successfully!");
+      } catch (error) {
+        console.error("Error loading saved reel:", error);
+        showNotification("Error loading saved reel", "error");
+      }
+    }
+    
+    document.getElementById('platform-select').addEventListener('change', e => {
+      platform = e.target.value;
+      update();
+    });
+    
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      pxPerSec *= 1.2;
+      update();
+    });
+    
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      pxPerSec = Math.max(20, pxPerSec * 0.8);
+      update();
+    });
+    
+    document.getElementById('clear-timeline').addEventListener('click', () => {
+      if (timeline.length === 0) return;
+      
+      if (confirm("Are you sure you want to clear the timeline?")) {
+        timeline.forEach(item => item.group.destroy());
+        timeline = [];
+        update();
+        showNotification("Timeline cleared");
+      }
+    });
+    
+    document.getElementById('save-reel').addEventListener('click', saveReel);
+    document.getElementById('export-reel').addEventListener('click', () => {
+      if (timeline.length === 0) {
+        showNotification("Nothing to export", "error");
+        return;
+      }
+      
+      const data = {
+        platform,
+        timeline: timeline.map(item => ({
+          id: item.id,
+          type: item.type,
+          name: item.name,
+          duration: item.duration,
+          position: item.group.x() / pxPerSec
+        }))
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${platform}_reel_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      
+      showNotification("Reel exported successfully!");
+    });
+    
+    document.getElementById('scroll-start').addEventListener('click', () => {
+      container.scrollLeft = 0;
+    });
+    
+    document.getElementById('scroll-end').addEventListener('click', () => {
+      container.scrollLeft = container.scrollWidth;
+    });
+    
+    document.getElementById('play-preview').addEventListener('click', () => {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        playTimeline();
+      }
+    });
+    
+    container.addEventListener('wheel', e => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+    
+    let isDown = false, startX, scrollLeft;
+    
+    container.addEventListener('mousedown', e => {
+      if (e.target.tagName === 'CANVAS') return;
+      isDown = true;
+      container.classList.add('cursor-grabbing');
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    });
+    
+    container.addEventListener('mouseleave', () => {
+      isDown = false;
+      container.classList.remove('cursor-grabbing');
+    });
+    
+    container.addEventListener('mouseup', () => {
+      isDown = false;
+      container.classList.remove('cursor-grabbing');
+    });
+    
+    container.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX);
+      container.scrollLeft = scrollLeft - walk;
+    });
+    
+    window.addEventListener('resize', () => {
+      adjustStageWidth();
+      drawGrid();
+      mainLayer.batchDraw();
+    });
+    
+    drawGrid();
+    update();
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        loadReel();
+      } catch (e) {
+        console.error("Error loading saved reel:", e);
+      }
+      
+      document.querySelector('.filter-btn[data-filter=""]').classList.add('bg-accent', 'text-white');
+    });
+  </script>
+</body>
+</html>
