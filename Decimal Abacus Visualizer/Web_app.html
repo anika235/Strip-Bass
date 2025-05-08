@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decimal Abacus Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: linear-gradient(-45deg, #f4f8fb, #e3f2fd, #bbdefb, #d1e9fc);
+            --bg-dark: linear-gradient(-45deg, #181c24, #232a36, #1a2639, #263245);
+            --text-light: #2a6b9a;
+            --text-dark: #e3f2fd;
+            --primary-light: #2a6b9a;
+            --primary-dark: #4fc3f7;
+            --accent-light: #ff9800;
+            --accent-dark: #ffb74d;
+            --bead-inactive-light: linear-gradient(145deg, #b0bec5 60%, #eceff1 100%);
+            --bead-inactive-dark: linear-gradient(145deg, #37474f 60%, #546e7a 100%);
+            --bead-active-light: linear-gradient(145deg, #ffd54f 60%, #ff9800 100%);
+            --bead-active-dark: linear-gradient(145deg, #4fc3f7 60%, #039be5 100%);
+            --bead-border-light: #fffde7;
+            --bead-border-dark: #263245;
+            --bead-active-border-light: #ffe082;
+            --bead-active-border-dark: #ffb74d;
+            --shadow-light: rgba(42, 107, 154, 0.15);
+            --shadow-dark: rgba(0, 0, 0, 0.25);
+            --separator-bg-light: rgba(255, 255, 255, 0.9);
+            --separator-bg-dark: rgba(35, 42, 54, 0.9);
+            --rod-bg-light: linear-gradient(180deg, #b3c6e0 0%, #e3f2fd 100%);
+            --rod-bg-dark: linear-gradient(180deg, #263245 0%, #232a36 100%);
+            --rod-whole-bg-light: linear-gradient(180deg, #2a6b9a 0%, #b3c6e0 100%);
+            --rod-whole-bg-dark: linear-gradient(180deg, #4fc3f7 0%, #263245 100%);
+            --rod-decimal-bg-light: linear-gradient(180deg, #ffb74d 0%, #fff3e0 100%);
+            --rod-decimal-bg-dark: linear-gradient(180deg, #ff9800 0%, #232a36 100%);
+            --feedback-bg-light: rgba(227, 242, 253, 0.9);
+            --feedback-bg-dark: rgba(38, 50, 69, 0.9);
+            --feedback-correct-light: #28a745;
+            --feedback-correct-dark: #66bb6a;
+            --feedback-incorrect-light: #dc3545;
+            --feedback-incorrect-dark: #ef5350;
+            --highlight-error: rgba(220, 53, 69, 0.5);
+            --bead-height: 18px;
+            --bead-gap: 8px;
+            --bead-total-height: calc(var(--bead-height) + var(--bead-gap));
+            --rod-height: calc(var(--bead-total-height) * 9 + var(--bead-total-height) * 9);
+            --bead-move-distance: calc(var(--bead-total-height) * 9);
+        }
+
+```
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes pulseError {
+        0% { box-shadow: 0 0 0 0 var(--highlight-error); }
+        70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding: 20px 10px;
+        min-height: 100vh;
+        background: var(--bg-light);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite, fadeIn 0.8s ease-in-out;
+        color: var(--text-light);
+        transition: background 0.5s ease, color 0.5s ease;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image:
+            linear-gradient(to right, rgba(42, 107, 154, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(42, 107, 154, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
+        z-index: -1;
+        opacity: 0.6;
+        transition: background-image 0.5s ease;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 20px;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    header h1 {
+        font-size: 2.2rem;
+        color: var(--primary-light);
+        margin-bottom: 5px;
+        font-weight: 600;
+        transition: color 0.5s ease;
+    }
+
+    header p {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        opacity: 0.8;
+        margin-top: 0;
+        transition: color 0.5s ease, opacity 0.5s ease;
+    }
+
+    #display {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        color: var(--primary-light);
+        font-weight: 700;
+        letter-spacing: 1px;
+        background: var(--separator-bg-light);
+        padding: 15px 35px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px var(--shadow-light);
+        text-align: center;
+        min-width: 150px;
+        max-width: 90vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        animation: fadeIn 1s ease-in-out 0.1s backwards;
+        backdrop-filter: blur(5px);
+        transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    #controls {
+        margin-bottom: 25px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        animation: fadeIn 1.2s ease-in-out 0.2s backwards;
+    }
+
+    button {
+        padding: 10px 22px;
+        font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(90deg, var(--primary-light) 60%, color-mix(in srgb, var(--primary-light) 70%, white 30%) 100%);
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 2px 8px var(--shadow-light);
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    button:before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, color-mix(in srgb, var(--primary-light) 80%, black 20%) 60%, var(--primary-light) 100%);
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.2s ease;
+    }
+
+    button:hover {
+        box-shadow: 0 4px 14px var(--shadow-light);
+        transform: translateY(-2px);
+    }
+    button:hover:before { opacity: 1; }
+    button:active {
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 0 1px 4px var(--shadow-light);
+    }
+
+    #target-number {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-align: center;
+        min-width: 120px;
+        background: linear-gradient(90deg, #e53935 0%, #ff5252 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(229, 57, 53, 0.1);
+        box-shadow: 0 2px 6px rgba(229, 57, 53, 0.08);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(3px);
+        background-color: rgba(255, 255, 255, 0.8);
+        display: none;
+    }
+    #target-number.visible { display: inline-block; }
+
+    #abacus {
+        display: flex;
+        gap: 15px;
+        position: relative;
+        padding: 25px 20px 30px 20px;
+        background: var(--separator-bg-light);
+        border-radius: 20px;
+        box-shadow: 0 8px 28px var(--shadow-light);
+        margin-bottom: 25px;
+        animation: fadeIn 1.4s ease-in-out 0.3s backwards;
+        backdrop-filter: blur(8px);
+        transition: background-color 0.5s ease, box-shadow 0.5s ease;
+        align-items: flex-end;
+        min-height: calc(var(--rod-height) + 60px);
+    }
+
+    .rod {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 40px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .rod.highlight-error .rod-bar {
+        animation: pulseError 1s ease-out;
+        border-radius: 4px;
+    }
+
+    .rod-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-light);
+        letter-spacing: 0.3px;
+        padding: 4px 0;
+        border-radius: 6px;
+        width: 100%;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        transition: color 0.5s ease;
+    }
+
+    .rod-bar {
+        width: 8px;
+        height: var(--rod-height);
+        background: var(--rod-bg-light);
+        position: relative;
+        border-radius: 4px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+        transition: background 0.5s ease;
+    }
+
+    .rod.whole .rod-bar { background: var(--rod-whole-bg-light); }
+    .rod.decimal .rod-bar { background: var(--rod-decimal-bg-light); }
+
+    .bead {
+        width: 32px;
+        height: var(--bead-height);
+        background: var(--bead-inactive-light);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1.5px solid var(--bead-border-light);
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+    }
+
+    .bead[data-bead-index="0"] { bottom: 0; }
+    .bead[data-bead-index="1"] { bottom: var(--bead-total-height); }
+    .bead[data-bead-index="2"] { bottom: calc(var(--bead-total-height) * 2); }
+    .bead[data-bead-index="3"] { bottom: calc(var(--bead-total-height) * 3); }
+    .bead[data-bead-index="4"] { bottom: calc(var(--bead-total-height) * 4); }
+    .bead[data-bead-index="5"] { bottom: calc(var(--bead-total-height) * 5); }
+    .bead[data-bead-index="6"] { bottom: calc(var(--bead-total-height) * 6); }
+    .bead[data-bead-index="7"] { bottom: calc(var(--bead-total-height) * 7); }
+    .bead[data-bead-index="8"] { bottom: calc(var(--bead-total-height) * 8); }
+
+    .bead.active {
+        background: var(--bead-active-light);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        border-color: var(--bead-active-border-light);
+        transform: translate(-50%, calc(-1 * var(--bead-move-distance)));
+    }
+
+    .separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: calc(var(--rod-height) + 30px);
+        position: relative;
+        z-index: 2;
+        margin: 0 5px;
+        align-self: flex-end;
+        margin-bottom: -15px;
+    }
+
+    #decimal-line {
+        width: 2px;
+        height: calc(var(--rod-height) + 10px);
+        background: linear-gradient(180deg, var(--accent-light) 50%, var(--primary-light) 50%);
+        border-radius: 1px;
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        box-shadow: 0 0 0 1px var(--separator-bg-light);
+        transition: background 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    #decimal-point {
+        position: absolute;
+        left: 50%;
+        bottom: calc(var(--bead-move-distance) - 9px);
+        transform: translate(-50%, 50%);
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--accent-light);
+        z-index: 3;
+        background: var(--separator-bg-light);
+        border-radius: 50%;
+        width: 18px; height: 18px; line-height: 18px;
+        text-align: center;
+        box-shadow: 0 1px 4px var(--shadow-light);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.5s ease, background-color 0.5s ease, box-shadow 0.5s ease;
+    }
+     #decimal-point::before {
+        content: '·';
+        display: block;
+        line-height: 1;
+    }
+
+    #feedback {
+        margin-top: 15px;
+        font-size: 1.1rem;
+        min-height: 28px;
+        background: var(--feedback-bg-light);
+        border-radius: 10px;
+        padding: 8px 20px;
+        box-shadow: 0 1px 4px var(--shadow-light);
+        text-align: center;
+        min-width: 100px;
+        max-width: 90vw;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        word-break: break-word;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        animation: fadeIn 0.5s ease-in-out;
+        backdrop-filter: blur(5px);
+        transition: background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
+    }
+    #feedback.correct { color: var(--feedback-correct-light); }
+    #feedback.incorrect { color: var(--feedback-incorrect-light); }
+
+    @media (max-width: 768px) {
+        :root {
+            --bead-height: 16px;
+            --bead-gap: 6px;
+            --bead-total-height: calc(var(--bead-height) + var(--bead-gap));
+            --rod-height: calc(var(--bead-total-height) * 9 + var(--bead-total-height) * 9);
+            --bead-move-distance: calc(var(--bead-total-height) * 9);
+        }
+        header h1 { font-size: 1.8rem; }
+        header p { font-size: 1rem; }
+        #display { font-size: 2rem; padding: 12px 25px; }
+        #abacus { gap: 10px; padding: 20px 15px 25px 15px; min-height: calc(var(--rod-height) + 50px); }
+        .rod { width: 35px; }
+        .bead { width: 28px; }
+        .rod-bar { width: 7px; }
+        .separator { width: 15px; height: calc(var(--rod-height) + 30px); }
+        #decimal-line { height: calc(var(--rod-height) + 10px); }
+        #decimal-point { bottom: calc(var(--bead-move-distance) - 8px); }
+    }
+
+    @media (max-width: 600px) {
+         :root {
+            --bead-width-mobile: 16px;
+            --bead-height-mobile: 24px;
+            --bead-gap-mobile: 6px;
+            --bead-total-width-mobile: calc(var(--bead-width-mobile) + var(--bead-gap-mobile));
+            --rod-bar-width-mobile: calc(var(--bead-total-width-mobile) * 9);
+         }
+        body { padding: 15px 5px; }
+        header h1 { font-size: 1.6rem; }
+        header p { font-size: 0.9rem; }
+        #display { font-size: 1.8rem; padding: 10px 20px; }
+        #controls { gap: 8px; }
+        button { padding: 8px 18px; font-size: 0.9rem; }
+        #target-number { font-size: 1rem; padding: 6px 12px; }
+
+        #abacus {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 15px 10px;
+            min-height: auto;
+        }
+
+        .rod {
+            flex-direction: row;
+            width: 100%;
+            height: auto;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(42, 107, 154, 0.1);
+        }
+         .rod:last-child { border-bottom: none; }
+
+        .rod-label {
+            margin-bottom: 0;
+            margin-right: 10px;
+            width: 80px;
+            min-width: 70px;
+            text-align: right;
+            font-size: 0.85rem;
+            padding: 0;
+        }
+
+        .rod-bar {
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            width: auto;
+            min-width: var(--rod-bar-width-mobile);
+            flex-grow: 1;
+            height: calc(var(--bead-height-mobile) + 6px);
+            padding: 0 5px;
+            box-shadow: none;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+        }
+
+        .bead {
+            position: relative;
+            left: auto; bottom: auto;
+            transform: none !important;
+            width: var(--bead-width-mobile);
+            height: var(--bead-height-mobile);
+            border-radius: 8px;
+            margin-bottom: 0;
+            margin-right: var(--bead-gap-mobile);
+            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.2s ease, order 0.3s ease;
+            flex-shrink: 0;
+        }
+         .bead:last-child { margin-right: 0; }
+
+         .bead.active {
+            order: -1;
+        }
+         .bead:not(.active) {
+            order: 1;
+        }
+
+        .separator {
+            flex-direction: row;
+            width: 100%;
+            height: 15px;
+            margin: 5px 0;
+            order: 4;
+            position: relative;
+            padding: 5px 0;
+            align-self: auto;
+            margin-bottom: 0;
+        }
+
+        #decimal-line {
+            width: 90%;
+            height: 2px;
+            bottom: auto;
+            top: 50%;
+            left: 5%;
+            transform: translateY(-50%);
+             background: linear-gradient(90deg, var(--primary-light) 50%, var(--accent-light) 50%);
+        }
+
+        #decimal-point {
+            bottom: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4rem;
+            width: 16px; height: 16px; line-height: 16px;
+        }
+        #abacus > .rod:nth-child(1) { order: 0; }
+        #abacus > .rod:nth-child(2) { order: 1; }
+        #abacus > .rod:nth-child(3) { order: 2; }
+        #abacus > .rod:nth-child(4) { order: 3; }
+        #abacus > .rod:nth-child(6) { order: 5; }
+        #abacus > .rod:nth-child(7) { order: 6; }
+
+         .rod.highlight-error {
+            background-color: var(--highlight-error);
+            border-radius: 5px;
+            animation: none;
+            transition: background-color 0.3s ease;
+         }
+         .rod.highlight-error .rod-bar { animation: none; }
+    }
+
+    #help-btn,
+    #theme-toggle {
+        background: linear-gradient(90deg, var(--accent-light) 60%, color-mix(in srgb, var(--accent-light) 70%, white 30%) 100%);
+        color: var(--primary-light);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-light) 50%, transparent 50%);
+        padding: 10px 15px;
+    }
+
+    #help-btn:before,
+    #theme-toggle:before {
+        background: linear-gradient(90deg, color-mix(in srgb, var(--accent-light) 80%, black 20%) 60%, var(--accent-light) 100%);
+    }
+
+    #theme-toggle {
+         font-size: 1.2rem;
+         line-height: 1;
+    }
+
+    #help-modal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(42, 107, 154, 0.25);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(3px);
+    }
+    #help-modal.visible { opacity: 1; pointer-events: all; }
+
+    .help-content {
+        background: #fff;
+        color: var(--text-light);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px var(--shadow-light);
+        padding: 32px 36px 24px 36px;
+        max-width: 450px;
+        width: 90vw;
+        text-align: left;
+        position: relative;
+        font-size: 1rem;
+        line-height: 1.6;
+        transform: translateY(20px);
+        transition: transform 0.3s ease, background 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
+    }
+    #help-modal.visible .help-content { transform: translateY(0); }
+
+    .help-content h2 {
+        margin-top: 0;
+        color: var(--primary-light);
+        font-size: 1.3rem;
+        text-align: center;
+        font-weight: 600;
+        transition: color 0.5s ease;
+    }
+    .help-content ul { padding-left: 20px; margin-bottom: 15px; }
+     .help-content li { margin-bottom: 8px; }
+    .help-content button {
+        margin-top: 18px;
+        background: var(--primary-light);
+        color: #fff;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        transition: background 0.3s ease;
+    }
+    .help-content button:hover { background: color-mix(in srgb, var(--primary-light) 80%, black 20%); }
+
+    body.dark-mode {
+        background: var(--bg-dark);
+        color: var(--text-dark);
+    }
+    body.dark-mode::before {
+        background-image:
+            linear-gradient(to right, rgba(79, 195, 247, 0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(79, 195, 247, 0.04) 1px, transparent 1px);
+    }
+    body.dark-mode header h1 { color: var(--primary-dark); }
+    body.dark-mode header p { color: var(--text-dark); opacity: 0.7; }
+    body.dark-mode #display {
+        background: var(--separator-bg-dark);
+        color: var(--primary-dark);
+        box-shadow: 0 8px 25px var(--shadow-dark);
+    }
+    body.dark-mode button {
+         background: linear-gradient(90deg, var(--primary-dark) 60%, color-mix(in srgb, var(--primary-dark) 70%, white 30%) 100%);
+         color: #1a2639;
+         box-shadow: 0 2px 8px var(--shadow-dark);
+    }
+     body.dark-mode button:before {
+         background: linear-gradient(90deg, color-mix(in srgb, var(--primary-dark) 80%, black 20%) 60%, var(--primary-dark) 100%);
+     }
+     body.dark-mode button:hover { box-shadow: 0 4px 14px var(--shadow-dark); }
+     body.dark-mode button:active { box-shadow: 0 1px 4px var(--shadow-dark); }
+
+    body.dark-mode #target-number {
+        background: linear-gradient(90deg, #ff8a80 0%, #ff5252 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        border: 1px solid rgba(255, 82, 82, 0.15);
+        box-shadow: 0 2px 6px rgba(255, 82, 82, 0.1);
+        background-color: rgba(35, 42, 54, 0.8);
+    }
+    body.dark-mode #abacus {
+        background: var(--separator-bg-dark);
+        box-shadow: 0 8px 28px var(--shadow-dark);
+    }
+    body.dark-mode .rod-label { color: var(--accent-dark); }
+    body.dark-mode .rod-bar { background: var(--rod-bg-dark); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); }
+    body.dark-mode .rod.whole .rod-bar { background: var(--rod-whole-bg-dark); }
+    body.dark-mode .rod.decimal .rod-bar { background: var(--rod-decimal-bg-dark); }
+    body.dark-mode .bead {
+        background: var(--bead-inactive-dark);
+        border-color: var(--bead-border-dark);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    body.dark-mode .bead.active {
+        background: var(--bead-active-dark);
+        border-color: var(--bead-active-border-dark);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+    body.dark-mode #decimal-line {
+        background: linear-gradient(180deg, var(--accent-dark) 50%, var(--primary-dark) 50%);
+        box-shadow: 0 0 0 1px var(--separator-bg-dark);
+    }
+     body.dark-mode #decimal-point {
+        color: var(--accent-dark);
+        background: var(--separator-bg-dark);
+        box-shadow: 0 1px 4px var(--shadow-dark);
+    }
+     @media (max-width: 600px) {
+         body.dark-mode #decimal-line {
+             background: linear-gradient(90deg, var(--primary-dark) 50%, var(--accent-dark) 50%);
+         }
+         body.dark-mode .rod {
+             border-bottom-color: rgba(79, 195, 247, 0.1);
+         }
+         body.dark-mode .rod.highlight-error {
+             background-color: color-mix(in srgb, var(--highlight-error) 70%, transparent 30%);
+         }
+     }
+
+    body.dark-mode #feedback {
+        background: var(--feedback-bg-dark);
+        color: var(--text-dark);
+        box-shadow: 0 1px 4px var(--shadow-dark);
+    }
+    body.dark-mode #feedback.correct { color: var(--feedback-correct-dark); }
+    body.dark-mode #feedback.incorrect { color: var(--feedback-incorrect-dark); }
+
+    body.dark-mode #help-btn,
+    body.dark-mode #theme-toggle {
+        background: linear-gradient(90deg, var(--accent-dark) 60%, color-mix(in srgb, var(--accent-dark) 70%, white 30%) 100%);
+        color: #1a2639;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-dark) 50%, transparent 50%);
+    }
+     body.dark-mode #help-btn:before,
+     body.dark-mode #theme-toggle:before {
+         background: linear-gradient(90deg, color-mix(in srgb, var(--accent-dark) 80%, black 20%) 60%, var(--accent-dark) 100%);
+     }
+    body.dark-mode .help-content {
+        background: #232a36;
+        color: var(--text-dark);
+        box-shadow: 0 8px 32px var(--shadow-dark);
+    }
+    body.dark-mode .help-content h2 { color: var(--primary-dark); }
+    body.dark-mode .help-content button {
+        background: var(--primary-dark);
+        color: #1a2639;
+    }
+    body.dark-mode .help-content button:hover { background: color-mix(in srgb, var(--primary-dark) 80%, black 20%); }
+
+</style>
+```
+
+</head>
+
+<body>
+    <header>
+        <h1>Decimal Abacus Visualizer</h1>
+        <p>Explore whole numbers and decimals interactively</p>
+    </header>
+
+```
+<div id="display">0</div>
+
+<div id="controls">
+    <button id="toggle-target">Enable Target Mode</button>
+    <button id="new-target" style="display: none;">New Target</button>
+    <span id="target-number"></span>
+    <button id="help-btn" title="How to use">Help</button>
+    <button id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+</div>
+
+<div id="abacus">
+</div>
+
+<div id="feedback" style="display:none;"></div>
+
+<div id="help-modal">
+    <div class="help-content">
+        <h2>How to Use the Decimal Abacus</h2>
+        <ul>
+            <li>Each rod represents a place value (Thousands to Hundredths).</li>
+            <li>Click beads to move them:
+                <ul>
+                   <li>Clicking a lower (inactive) bead moves it and those below it UP (activating them).</li>
+                   <li>Clicking an upper (active) bead moves it and those above it DOWN (deactivating them).</li>
+                </ul>
+             </li>
+            <li>The number display updates automatically.</li>
+            <li>The vertical dotted line separates whole numbers and decimals.</li>
+            <li><b>Target Mode:</b> Click "Enable Target Mode" for a challenge. Try to match the target number by moving beads. "New Target" gives a new number.</li>
+            <li>Hints appear below the abacus if you're close but not quite right. Incorrect rods will briefly highlight.</li>
+            <li>Use the <b>🌙/☀️</b> button to toggle light/dark mode.</li>
+        </ul>
+        <button id="close-help">Got it!</button>
+    </div>
+</div>
+
+<script>
+    const placeValues = [
+        { name: 'Thousands', value: 1000, type: 'whole' },
+        { name: 'Hundreds', value: 100, type: 'whole' },
+        { name: 'Tens', value: 10, type: 'whole' },
+        { name: 'Ones', value: 1, type: 'whole' },
+        { name: 'Tenths', value: 0.1, type: 'decimal' },
+        { name: 'Hundredths', value: 0.01, type: 'decimal' }
+    ];
+    const beadsPerRod = 9;
+    let rods = [];
+    let targetMode = false;
+    let targetNumber = 0;
+    let highlightTimeout = null;
+
+    const abacusContainer = document.getElementById('abacus');
+    const display = document.getElementById('display');
+    const feedbackEl = document.getElementById('feedback');
+    const toggleTargetBtn = document.getElementById('toggle-target');
+    const newTargetBtn = document.getElementById('new-target');
+    const targetNumberEl = document.getElementById('target-number');
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeHelpBtn = document.getElementById('close-help');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+
+    function initializeAbacus() {
+        abacusContainer.innerHTML = '';
+        rods = [];
+
+        placeValues.forEach((place, index) => {
+            const rodDiv = document.createElement('div');
+            rodDiv.className = `rod ${place.type}`;
+            rodDiv.dataset.index = index;
+
+            const rodLabel = document.createElement('div');
+            rodLabel.className = 'rod-label';
+            rodLabel.textContent = place.name;
+
+            const rodBar = document.createElement('div');
+            rodBar.className = 'rod-bar';
+
+            const beadElements = [];
+            for (let i = 0; i < beadsPerRod; i++) {
+                const bead = document.createElement('div');
+                bead.className = 'bead';
+                bead.dataset.beadIndex = i;
+                bead.addEventListener('click', () => handleBeadClick(index, i));
+                rodBar.appendChild(bead);
+                beadElements.push(bead);
+            }
+
+            rodDiv.appendChild(rodLabel);
+            rodDiv.appendChild(rodBar);
+            abacusContainer.appendChild(rodDiv);
+
+            if (place.name === 'Ones') {
+                const separator = document.createElement('div');
+                separator.className = 'separator';
+                separator.innerHTML = `<div id="decimal-line"></div><div id="decimal-point"></div>`;
+                abacusContainer.appendChild(separator);
+            }
+
+            rods.push({
+                place: place,
+                value: 0,
+                element: rodDiv,
+                beads: beadElements
+            });
+        });
+
+        updateAbacusVisuals();
+        updateNumberDisplay();
+    }
+
+    function handleBeadClick(rodIndex, beadIndex) {
+        const rod = rods[rodIndex];
+        const clickedBeadValue = beadIndex + 1;
+
+        const isClickedBeadActive = beadIndex < rod.value;
+
+        if (isClickedBeadActive) {
+            rod.value = beadIndex;
+        } else {
+            rod.value = clickedBeadValue;
+        }
+
+        updateAbacusVisuals(rodIndex);
+        updateNumberDisplay();
+        if (targetMode) {
+            checkTarget();
+        }
+        clearHighlight();
+    }
+
+    toggleTargetBtn.addEventListener('click', () => {
+        targetMode = !targetMode;
+        toggleTargetBtn.textContent = targetMode ? 'Disable Target Mode' : 'Enable Target Mode';
+        newTargetBtn.style.display = targetMode ? 'inline-block' : 'none';
+        targetNumberEl.classList.toggle('visible', targetMode);
+
+        feedbackEl.textContent = '';
+        feedbackEl.style.display = 'none';
+        feedbackEl.className = '';
+        clearHighlight();
+
+        if (targetMode) {
+            generateTarget();
+        } else {
+             targetNumberEl.textContent = '';
+        }
+    });
+
+    newTargetBtn.addEventListener('click', () => {
+         if (targetMode) generateTarget();
+         clearHighlight();
+         feedbackEl.textContent = '';
+         feedbackEl.style.display = 'none';
+         feedbackEl.className = '';
+    });
+
+    helpBtn.addEventListener('click', () => helpModal.classList.add('visible'));
+    closeHelpBtn.addEventListener('click', () => helpModal.classList.remove('visible'));
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.remove('visible');
+    });
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && helpModal.classList.contains('visible')) {
+            helpModal.classList.remove('visible');
+        }
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+        const isDarkMode = document.body.classList.toggle('dark-mode');
+        themeToggleBtn.textContent = isDarkMode ? '☀️' : '🌙';
+    });
+
+    function updateAbacusVisuals(rodIndex = -1) {
+        const updateList = rodIndex === -1 ? rods : [rods[rodIndex]];
+
+        updateList.forEach(rod => {
+            rod.beads.forEach((bead, beadIdx) => {
+                const isActive = beadIdx < rod.value;
+                bead.classList.toggle('active', isActive);
+            });
+        });
+    }
+
+    function calculateCurrentValue() {
+         let total = 0;
+        rods.forEach(rod => {
+            total += rod.value * rod.place.value;
+        });
+        const decimalPlaces = placeValues.filter(p => p.value < 1).length || 0;
+        return parseFloat(total.toFixed(decimalPlaces));
+    }
+
+    function updateNumberDisplay() {
+        const currentValue = calculateCurrentValue();
+        const decimalPlaces = placeValues.filter(p => p.value < 1).length || 0;
+
+        let formattedValue;
+        if (currentValue === 0) {
+            formattedValue = '0';
+        } else {
+            formattedValue = currentValue.toFixed(decimalPlaces);
+            if (decimalPlaces > 0 && formattedValue.includes('.')) {
+                 formattedValue = formattedValue.replace(/(\.[0-9]*[1-9])0+$/, '$1').replace(/\.$/, '');
+            }
+             if (formattedValue.endsWith('.' + '0'.repeat(decimalPlaces)) && decimalPlaces > 0) {
+                 formattedValue = formattedValue.substring(0, formattedValue.length - (decimalPlaces + 1));
+             }
+        }
+        display.textContent = formattedValue;
+    }
+
+    function generateTarget() {
+        const maxWhole = 9999;
+        const maxDecimal = 0.99;
+        const decimalPlaces = placeValues.filter(p => p.value < 1).length || 0;
+
+        const wholePart = Math.floor(Math.random() * (maxWhole + 1));
+        let decimalPart = 0;
+        if (decimalPlaces > 0) {
+            decimalPart = Math.floor(Math.random() * (Math.pow(10, decimalPlaces))) / Math.pow(10, decimalPlaces);
+        }
+
+        targetNumber = parseFloat((wholePart + decimalPart).toFixed(decimalPlaces));
+
+        let formattedTarget = targetNumber.toFixed(decimalPlaces);
+         if (decimalPlaces > 0 && formattedTarget.includes('.')) {
+             formattedTarget = formattedTarget.replace(/(\.[0-9]*[1-9])0+$/, '$1').replace(/\.$/, '');
+         }
+         if (formattedTarget.endsWith('.' + '0'.repeat(decimalPlaces)) && decimalPlaces > 0) {
+             formattedTarget = formattedTarget.substring(0, formattedTarget.length - (decimalPlaces + 1));
+         }
+
+        targetNumberEl.textContent = `Target: ${formattedTarget || '0'}`;
+        checkTarget();
+    }
+
+    function checkTarget() {
+        if (!targetMode) return;
+
+        const currentValue = calculateCurrentValue();
+        const decimalPlaces = placeValues.filter(p => p.value < 1).length || 0;
+        const tolerance = Math.pow(10, -(decimalPlaces + 1));
+        let text = '';
+        let isCorrect = false;
+        let incorrectRodIndex = -1;
+
+        if (Math.abs(currentValue - targetNumber) < tolerance) {
+            text = 'Correct!';
+            feedbackEl.className = 'correct';
+            isCorrect = true;
+            clearHighlight();
+        } else {
+            const hintData = getHint(currentValue, targetNumber);
+            text = hintData.hint;
+            incorrectRodIndex = hintData.rodIndex;
+            feedbackEl.className = 'incorrect';
+            highlightRod(incorrectRodIndex);
+        }
+
+        feedbackEl.textContent = text;
+        feedbackEl.style.display = text ? 'block' : 'none';
+    }
+
+    function getHint(current, target) {
+        let targetVals = [];
+        let currentVals = [];
+        let remainderT = target;
+        let remainderC = current;
+        const decimalPlaces = placeValues.filter(p => p.value < 1).length || 0;
+        const epsilon = Math.pow(10, -(decimalPlaces + 2));
+
+        for (const pv of placeValues) {
+            let tv = 0;
+            let cv = 0;
+            if (pv.value >= 1) {
+                tv = Math.floor(remainderT / pv.value + epsilon);
+                cv = Math.floor(remainderC / pv.value + epsilon);
+                remainderT -= tv * pv.value;
+                remainderC -= cv * pv.value;
+            } else {
+                tv = Math.floor(remainderT / pv.value + epsilon);
+                cv = Math.floor(remainderC / pv.value + epsilon);
+                remainderT -= tv * pv.value;
+                remainderC -= cv * pv.value;
+            }
+             tv = Math.max(0, Math.min(9, Math.round(tv)));
+             cv = Math.max(0, Math.min(9, Math.round(cv)));
+
+            targetVals.push(tv);
+            currentVals.push(cv);
+             remainderT = parseFloat(remainderT.toFixed(decimalPlaces + 1));
+             remainderC = parseFloat(remainderC.toFixed(decimalPlaces + 1));
+        }
+
+        for (let i = 0; i < placeValues.length; i++) {
+            if (targetVals[i] !== currentVals[i]) {
+                if (rods[i].value !== currentVals[i]) {
+                     console.warn(`Mismatch detected: Rod ${i} value ${rods[i].value} vs calculated ${currentVals[i]}`);
+                     return { hint: (current < target ? 'Value is too low' : 'Value is too high'), rodIndex: -1 };
+                }
+                return {
+                    hint: `Adjust the ${placeValues[i].name} place`,
+                    rodIndex: i
+                };
+            }
+        }
+
+        console.warn("Hint fallback triggered. Current:", current, "Target:", target, "CVals:", currentVals, "TVals:", targetVals);
+        return { hint: (current < target ? 'Value is too low' : 'Value is too high'), rodIndex: -1 };
+    }
+
+    function highlightRod(rodIndex) {
+         clearHighlight();
+         if (rodIndex >= 0 && rodIndex < rods.length) {
+             const rodElement = rods[rodIndex].element;
+             rodElement.classList.add('highlight-error');
+
+             highlightTimeout = setTimeout(() => {
+                 rodElement.classList.remove('highlight-error');
+             }, 1500);
+         }
+     }
+
+     function clearHighlight() {
+         if (highlightTimeout) {
+             clearTimeout(highlightTimeout);
+             highlightTimeout = null;
+         }
+         rods.forEach(rod => rod.element.classList.remove('highlight-error'));
+     }
+
+    initializeAbacus();
+</script>
+```
+
+</body>
+</html>
