@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You've Got 10 Minutes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .timer-critical {
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+      .modal {
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        visibility: hidden;
+        opacity: 0;
+      }
+      .modal-content {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        transform: scale(0.95) translateY(10px);
+        opacity: 0;
+      }
+      .modal.active {
+        visibility: visible;
+        opacity: 1;
+      }
+      .modal.active .modal-content {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+
+      #drawingCanvas {
+        cursor: crosshair;
+        touch-action: none;
+      }
+      .color-swatch.active {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px white, 0 0 0 4px #3b82f6;
+        transform: scale(1.1);
+      }
+      .thickness-btn.active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #2563eb;
+      }
+      .control-disabled .color-swatch,
+      .control-disabled .thickness-btn {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-slate-100 via-sky-100 to-indigo-100 p-4 selection:bg-blue-500 selection:text-white flex flex-col items-center justify-center min-h-screen m-0"
+  >
+    <div
+      class="bg-white p-6 md:p-8 rounded-xl shadow-xl hover:shadow-2xl w-full max-w-2xl transition-all duration-300 ease-out hover:-translate-y-1"
+    >
+      <h1
+        class="text-4xl sm:text-5xl font-extrabold mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600"
+      >
+        You've Got 10 Minutes
+      </h1>
+      <p class="text-md sm:text-lg mb-6 text-center text-gray-600">
+        A random creative challenge awaits. The clock is ticking!
+      </p>
+
+      <div
+        class="prompt-container mb-6 p-4 bg-sky-50 border border-sky-200 rounded-lg shadow-sm"
+      >
+        <h2
+          class="text-xl font-semibold text-sky-800 mb-2 text-center"
+          aria-live="polite"
+        >
+          Your Challenge:
+        </h2>
+        <p
+          id="promptDisplay"
+          class="text-lg text-gray-700 text-center font-medium"
+        ></p>
+        <p
+          id="toolDisplay"
+          class="text-sm text-sky-600 text-center mt-1 italic"
+        ></p>
+      </div>
+
+      <div
+        id="timerElement"
+        class="text-5xl sm:text-6xl font-bold text-center mb-6 text-indigo-700 transition-colors duration-300"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        10:00
+      </div>
+
+      <div id="inputContainer" class="mb-4">
+        <textarea
+          id="inputArea"
+          class="w-full h-48 sm:h-56 p-3 border-2 border-gray-300 bg-slate-50 rounded-lg shadow-sm transition-all duration-200 ease-in-out hover:border-blue-400 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:border-gray-300 disabled:hover:shadow-sm"
+          placeholder="Start creating here..."
+          aria-label="Input area for your creative response"
+        ></textarea>
+
+        <div id="drawingInterface" class="hidden">
+          <canvas
+            id="drawingCanvas"
+            width="600"
+            height="350"
+            class="border-2 border-gray-300 bg-slate-50 rounded-lg shadow-sm w-full h-auto block"
+            aria-label="Drawing canvas"
+          ></canvas>
+          <div
+            id="drawingControls"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4"
+          >
+            <div>
+              <p
+                class="text-sm font-medium text-gray-600 text-center mb-2"
+              >
+                Color
+              </p>
+              <div
+                id="colorPalette"
+                class="flex justify-center flex-wrap gap-2"
+              ></div>
+            </div>
+            <div>
+              <p
+                class="text-sm font-medium text-gray-600 text-center mb-2"
+              >
+                Thickness
+              </p>
+              <div
+                id="thicknessControls"
+                class="flex justify-center space-x-2"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="messageDisplay"
+        class="text-lg mt-6 mb-4 text-center min-h-[2.5em] flex items-center justify-center font-medium text-gray-700"
+        aria-live="polite"
+      >
+        Let the creativity flow!
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-4 mt-4 mb-2">
+        <button
+          id="completeBtn"
+          class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200 ease-in-out text-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          aria-label="Complete the challenge"
+        >
+          I'm Done!
+        </button>
+        <button
+          id="restartBtn"
+          class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-sky-300 transition-all duration-200 ease-in-out text-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+          aria-label="Restart with a new challenge"
+        >
+          New Challenge
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="successModal"
+      class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="modal-content bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center max-w-md w-full"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-16 w-16 text-green-500 mx-auto mb-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <h2 id="modal-title" class="text-3xl font-bold text-green-600 mb-3">
+          Awesome Work!
+        </h2>
+        <p id="modalMessageText" class="text-gray-700 text-lg mb-6">
+          You successfully completed the challenge!
+        </p>
+        <button
+          id="closeModalBtn"
+          class="bg-green-500 text-white px-8 py-3 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 text-lg font-semibold transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+          aria-label="Close message and start a new challenge"
+        >
+          Try Another!
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const prompts = [
+        "Create a short story about a lost astronaut finding a surprising new world.",
+        "Design a poster for a music festival on Mars.",
+        "Write a poem about the moment before a storm breaks.",
+        "Code a simple animation of a growing plant.",
+        "Sketch a creature that lives in the clouds and eats dreams.",
+        "Compose a jingle for a teleportation device.",
+        "Write a diary entry from the perspective of a time traveler stuck in the past.",
+        "Draw a map of a hidden treasure island with cryptic clues.",
+        "Code a basic to-do list interface with add and remove functionality.",
+        "Create a dialogue between a robot and a squirrel arguing over a nut.",
+        "Imagine a new social media app: what's its core feature and name?",
+        "Describe a city where gravity works differently.",
+        "Write a haiku about silence.",
+        "Design a logo for a company that sells bottled starlight.",
+        "Outline a plot for a mystery novel set in a library.",
+        "Draw your favorite animal wearing a tiny hat.",
+        "Sketch a self-portrait in a cubist style.",
+      ];
+
+      const tools = [
+        "Writing",
+        "Drawing",
+        "Coding",
+        "Designing",
+        "Brainstorming",
+        "Storytelling",
+        "Sketching",
+      ];
+
+      const promptElement = document.getElementById("promptDisplay");
+      const toolElement = document.getElementById("toolDisplay");
+      const timerElement = document.getElementById("timerElement");
+      const inputAreaElement = document.getElementById("inputArea");
+      const drawingInterfaceElement =
+        document.getElementById("drawingInterface");
+      const drawingCanvasElement = document.getElementById("drawingCanvas");
+      const drawingControlsElement =
+        document.getElementById("drawingControls");
+      const colorPaletteDiv = document.getElementById("colorPalette");
+      const thicknessControlsDiv =
+        document.getElementById("thicknessControls");
+
+      const messageElement = document.getElementById("messageDisplay");
+      const restartBtn = document.getElementById("restartBtn");
+      const completeBtn = document.getElementById("completeBtn");
+
+      const successModal = document.getElementById("successModal");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+
+      let timeLeft = 600;
+      let timerInterval;
+      let challengeActive = false;
+      let currentActiveInputType = "text";
+
+      let ctx;
+      let isDrawing = false;
+      let canDraw = false;
+      let lastX = 0;
+      let lastY = 0;
+      const drawingColors = [
+        "black",
+        "#EF4444",
+        "#3B82F6",
+        "#22C55E",
+        "#EAB308",
+        "#8B5CF6",
+      ];
+      let selectedColor = drawingColors[0];
+      const drawingLineWidths = { Thin: 2, Medium: 5, Thick: 10 };
+      let currentLineWidth = drawingLineWidths.Medium;
+
+      function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function displayNewPrompt() {
+        const randomPrompt = getRandomItem(prompts);
+        const randomTool = getRandomItem(tools);
+        promptElement.textContent = randomPrompt;
+        toolElement.textContent = `(Suggested Tool: ${randomTool})`;
+
+        if (
+          randomTool.toLowerCase().includes("draw") ||
+          randomTool.toLowerCase().includes("sketch")
+        ) {
+          currentActiveInputType = "draw";
+          inputAreaElement.classList.add("hidden");
+          drawingInterfaceElement.classList.remove("hidden");
+          initializeDrawingArea();
+          clearCanvas();
+        } else {
+          currentActiveInputType = "text";
+          inputAreaElement.classList.remove("hidden");
+          drawingInterfaceElement.classList.add("hidden");
+          inputAreaElement.value = "";
+        }
+      }
+
+      function initializeDrawingArea() {
+        if (!ctx) {
+          ctx = drawingCanvasElement.getContext("2d");
+          setupDrawingCanvasProperties();
+          createDrawingColorPalette();
+          createDrawingThicknessControls();
+          addDrawingEventListeners();
+        }
+        canDraw = true;
+        drawingControlsElement.classList.remove("control-disabled");
+      }
+
+      function setupDrawingCanvasProperties() {
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = currentLineWidth;
+      }
+
+      function createDrawingColorPalette() {
+        colorPaletteDiv.innerHTML = "";
+        drawingColors.forEach((color) => {
+          const swatch = document.createElement("div");
+          swatch.className =
+            "color-swatch w-7 h-7 sm:w-8 sm:h-8 rounded-full cursor-pointer border-2 border-transparent transition-all duration-150 ease-out hover:scale-110";
+          swatch.style.backgroundColor = color;
+          swatch.dataset.color = color;
+          if (color === selectedColor) swatch.classList.add("active");
+          swatch.addEventListener("click", () => {
+            if (!canDraw) return;
+            selectedColor = color;
+            ctx.strokeStyle = selectedColor;
+            document
+              .querySelectorAll("#colorPalette .color-swatch.active")
+              .forEach((s) => s.classList.remove("active"));
+            swatch.classList.add("active");
+          });
+          colorPaletteDiv.appendChild(swatch);
+        });
+      }
+
+      function createDrawingThicknessControls() {
+        thicknessControlsDiv.innerHTML = "";
+        Object.entries(drawingLineWidths).forEach(([name, width]) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "thickness-btn px-2 py-1 sm:px-3 sm:py-1.5 rounded-md cursor-pointer border-2 border-gray-300 bg-gray-50 text-gray-700 text-xs sm:text-sm font-medium transition-all duration-150 ease-out hover:bg-gray-100";
+          btn.textContent = name;
+          if (width === currentLineWidth) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            if (!canDraw) return;
+            currentLineWidth = width;
+            ctx.lineWidth = currentLineWidth;
+            document
+              .querySelectorAll("#thicknessControls .thickness-btn.active")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+          });
+          thicknessControlsDiv.appendChild(btn);
+        });
+      }
+
+      function getScaledPosition(canvas, eventInput) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (eventInput.clientX - rect.left) * scaleX,
+          y: (eventInput.clientY - rect.top) * scaleY,
+        };
+      }
+
+      function startDraw(e) {
+        if (!canDraw || !challengeActive) return;
+        isDrawing = true;
+        const pos = getScaledPosition(drawingCanvasElement, e.touches ? e.touches[0] : e);
+        [lastX, lastY] = [pos.x, pos.y];
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+      }
+
+      function draw(e) {
+        if (!isDrawing || !canDraw || !challengeActive) return;
+        e.preventDefault();
+        const pos = getScaledPosition(drawingCanvasElement, e.touches ? e.touches[0] : e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        [lastX, lastY] = [pos.x, pos.y];
+      }
+
+      function stopDraw() {
+        if (!isDrawing) return;
+        isDrawing = false;
+      }
+
+      function addDrawingEventListeners() {
+        drawingCanvasElement.addEventListener("mousedown", startDraw);
+        drawingCanvasElement.addEventListener("mousemove", draw);
+        drawingCanvasElement.addEventListener("mouseup", stopDraw);
+        drawingCanvasElement.addEventListener("mouseleave", stopDraw);
+
+        drawingCanvasElement.addEventListener("touchstart", (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
+        drawingCanvasElement.addEventListener("touchmove", (e) => { e.preventDefault(); draw(e); }, { passive: false });
+        drawingCanvasElement.addEventListener("touchend", stopDraw);
+        drawingCanvasElement.addEventListener("touchcancel", stopDraw);
+      }
+
+      function clearCanvas() {
+        if (ctx) {
+          ctx.clearRect(
+            0,
+            0,
+            drawingCanvasElement.width,
+            drawingCanvasElement.height
+          );
+        }
+      }
+
+      function triggerConfetti() {
+        const duration = 2 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = {
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          zIndex: 1000,
+        };
+        function randomInRange(min, max) {
+          return Math.random() * (max - min) + min;
+        }
+        const interval = setInterval(function () {
+          const timeLeftConfetti = animationEnd - Date.now();
+          if (timeLeftConfetti <= 0) return clearInterval(interval);
+          const particleCount = 50 * (timeLeftConfetti / duration);
+          confetti(
+            Object.assign({}, defaults, {
+              particleCount,
+              origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            })
+          );
+          confetti(
+            Object.assign({}, defaults, {
+              particleCount,
+              origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            })
+          );
+        }, 250);
+      }
+
+      function showSuccessModal() {
+        successModal.classList.add("active");
+        triggerConfetti();
+      }
+
+      function hideSuccessModal() {
+        successModal.classList.remove("active");
+      }
+
+      function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+        if (!challengeActive) return;
+
+        if (timeLeft === 420) {
+          messageElement.textContent = "You're doing great, keep the momentum!";
+          messageElement.className =
+            "text-lg mt-6 mb-4 text-center min-h-[2.5em] flex items-center justify-center font-medium text-sky-600";
+        } else if (timeLeft === 300) {
+          messageElement.textContent = "Halfway there! Stay focused and strong.";
+          messageElement.className =
+            "text-lg mt-6 mb-4 text-center min-h-[2.5em] flex items-center justify-center font-medium text-teal-600";
+        } else if (timeLeft === 120) {
+          messageElement.textContent = "Just 2 minutes left! Finish strong!";
+          messageElement.className =
+            "text-lg mt-6 mb-4 text-center min-h-[2.5em] flex items-center justify-center font-medium text-amber-600";
+          timerElement.classList.add("text-orange-500");
+        } else if (timeLeft === 60) {
+          messageElement.textContent = "One minute to go! Every second counts!";
+          timerElement.classList.add("timer-critical", "text-red-500");
+        } else if (timeLeft <= 0) {
+          handleTimeUp();
+        }
+        timeLeft--;
+      }
+
+      function disableInputs() {
+        inputAreaElement.disabled = true;
+        canDraw = false;
+        drawingControlsElement.classList.add("control-disabled");
+        completeBtn.disabled = true;
+      }
+
+      function enableInputs() {
+        if (currentActiveInputType === "text") {
+          inputAreaElement.disabled = false;
+          inputAreaElement.focus();
+        } else if (currentActiveInputType === "draw") {
+          canDraw = true;
+          drawingControlsElement.classList.remove("control-disabled");
+        }
+        completeBtn.disabled = false;
+      }
+
+      function handleTimeUp() {
+        clearInterval(timerInterval);
+        challengeActive = false;
+        disableInputs();
+        messageElement.textContent = "Time's up! Great effort!";
+        messageElement.className =
+          "text-2xl mt-6 mb-4 text-center font-bold text-red-700";
+        timerElement.textContent = "0:00";
+        timerElement.classList.remove("text-indigo-700", "text-orange-500");
+        timerElement.classList.add("text-red-600");
+        timerElement.classList.remove("timer-critical");
+      }
+
+      function handleComplete() {
+        if (!challengeActive) return;
+
+        clearInterval(timerInterval);
+        challengeActive = false;
+        disableInputs();
+        messageElement.textContent = "Challenge Completed!";
+        messageElement.className =
+          "text-2xl mt-6 mb-4 text-center font-bold text-green-600";
+        timerElement.classList.remove("timer-critical", "text-orange-500");
+        showSuccessModal();
+      }
+
+      function startChallenge() {
+        hideSuccessModal();
+        displayNewPrompt();
+        timeLeft = 600;
+        challengeActive = true;
+
+        enableInputs();
+
+        messageElement.textContent = "Let the creativity flow!";
+        messageElement.className =
+          "text-lg mt-6 mb-4 text-center min-h-[2.5em] flex items-center justify-center font-medium text-gray-700";
+
+        timerElement.classList.remove(
+          "text-red-600",
+          "text-orange-500",
+          "timer-critical"
+        );
+        timerElement.classList.add("text-indigo-700");
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
+      }
+
+      restartBtn.addEventListener("click", startChallenge);
+      completeBtn.addEventListener("click", handleComplete);
+      closeModalBtn.addEventListener("click", startChallenge);
+
+      window.addEventListener("load", () => {
+        initializeDrawingArea();
+        startChallenge();
+      });
+    </script>
+  </body>
+</html>

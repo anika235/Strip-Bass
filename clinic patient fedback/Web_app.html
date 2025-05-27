@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Patient Feedback Sentiment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        canvas { max-width: 100%; height: auto; }
+        .chart-container { max-width: 600px; margin: 0 auto; }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-gray-900 min-h-screen p-6 transition-colors duration-300">
+    <div class="container mx-auto max-w-4xl bg-white rounded-lg shadow-xl p-6 transition-all duration-300 ease-in-out hover:shadow-2xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-teal-600 flex items-center justify-center">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Clinic Patient Feedback Sentiment
+        </h1>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="space-y-8">
+                <div class="bg-gray-50 rounded-lg shadow-md p-4 md:p-6 transition-all duration-300 ease-in-out hover:shadow-xl">
+                    <form id="feedbackForm" class="space-y-4">
+                        <div>
+                            <label for="chartTitle" class="block text-sm font-medium text-gray-700">Chart Title</label>
+                            <input type="text" id="chartTitle" value="Feedback Sentiment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 transition duration-150 ease-in-out hover:shadow-md focus:shadow-lg" required>
+                        </div>
+                        <div>
+                            <label for="focusArea" class="block text-sm font-medium text-gray-700">Focus Area</label>
+                            <select id="focusArea" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 transition duration-150 ease-in-out hover:shadow-md focus:shadow-lg" required>
+                                <option value="Patient Experience">Patient Experience</option>
+                                <option value="Analytics">Analytics</option>
+                                <option value="Staff Performance">Staff Performance</option>
+                                <option value="Facility">Facility</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="positive" class="block text-sm font-medium text-gray-700">Positive Responses</label>
+                                <input type="number" id="positive" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 transition duration-150 ease-in-out hover:shadow-md focus:shadow-lg" required>
+                            </div>
+                            <div>
+                                <label for="negative" class="block text-sm font-medium text-gray-700">Negative Responses</label>
+                                <input type="number" id="negative" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 transition duration-150 ease-in-out hover:shadow-md focus:shadow-lg" required>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-2">
+                            <button type="submit" class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-md transition-all duration-150 ease-in-out transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50">Add Data</button>
+                            <button id="resetButton" type="button" class="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded-md transition-all duration-150 ease-in-out transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-opacity-50">Reset Chart</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg shadow-md p-4 md:p-6 transition-all duration-300 ease-in-out hover:shadow-xl">
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg shadow-md p-4 md:p-6 transition-all duration-300 ease-in-out hover:shadow-xl h-min">
+                <h2 class="text-lg font-semibold mb-4 text-gray-900">Data Points</h2>
+                <div class="overflow-x-auto">
+                    <table id="dataTable" class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="border p-2 text-gray-700">Focus Area</th>
+                                <th class="border p-2 text-gray-700">Positive</th>
+                                <th class="border p-2 text-gray-700">Negative</th>
+                                <th class="border p-2 text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="text-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sentimentChart;
+        let dataPoints = [];
+        let editingIndex = -1;
+
+        const focusAreaOptions = [
+            { value: "Patient Experience", text: "Patient Experience" },
+            { value: "Analytics", text: "Analytics" },
+            { value: "Staff Performance", text: "Staff Performance" },
+            { value: "Facility", text: "Facility" }
+        ];
+
+        Chart.defaults.color = '#4b5563';
+        Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.1)';
+
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+        sentimentChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Positive',
+                        data: [],
+                        backgroundColor: 'rgba(74, 222, 128, 0.7)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1.5
+                    },
+                    {
+                        label: 'Negative',
+                        data: [],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgba(220, 38, 38, 1)',
+                        borderWidth: 1.5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#374151'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Feedback Sentiment',
+                        font: { size: 18 },
+                        color: '#1f2937'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        suggestedMax: 10,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        angleLines: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        pointLabels: {
+                            color: '#374151'
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            backdropColor: 'rgba(255,255,255,0.75)'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            const title = document.getElementById('chartTitle').value || 'Feedback Sentiment';
+            sentimentChart.options.plugins.title.text = title;
+
+            sentimentChart.data.labels = dataPoints.map(dp => dp.focusArea);
+            sentimentChart.data.datasets[0].data = dataPoints.map(dp => dp.positive);
+            sentimentChart.data.datasets[1].data = dataPoints.map(dp => dp.negative);
+            sentimentChart.update();
+            updateTable();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            dataPoints.forEach((dp, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-100 transition-colors duration-150 ease-in-out border-b border-gray-300';
+
+                if (index === editingIndex) {
+                    let selectOptions = focusAreaOptions.map(opt => `<option value="${opt.value}" ${dp.focusArea === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('');
+                    row.innerHTML = `
+                        <td class="border p-2 border-gray-300">
+                            <select id="edit-focusArea-${index}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 text-sm p-1.5">
+                                ${selectOptions}
+                            </select>
+                        </td>
+                        <td class="border p-2 border-gray-300">
+                            <input type="number" id="edit-positive-${index}" value="${dp.positive}" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 text-sm p-1.5">
+                        </td>
+                        <td class="border p-2 border-gray-300">
+                            <input type="number" id="edit-negative-${index}" value="${dp.negative}" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 text-sm p-1.5">
+                        </td>
+                        <td class="border p-2 border-gray-300">
+                            <button onclick="saveDataPoint(${index})" class="text-green-500 hover:text-green-600 hover:underline mr-2 transition-colors duration-150">Save</button>
+                            <button onclick="cancelEdit(${index})" class="text-gray-500 hover:text-gray-600 hover:underline transition-colors duration-150">Cancel</button>
+                        </td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td class="border p-2 border-gray-300">${dp.focusArea}</td>
+                        <td class="border p-2 border-gray-300">${dp.positive}</td>
+                        <td class="border p-2 border-gray-300">${dp.negative}</td>
+                        <td class="border p-2 border-gray-300">
+                            <button onclick="editDataPoint(${index})" class="text-teal-500 hover:text-teal-600 hover:underline mr-2 transition-colors duration-150">Edit</button>
+                            <button onclick="removeDataPoint(${index})" class="text-rose-500 hover:text-rose-600 hover:underline transition-colors duration-150">Remove</button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const focusArea = document.getElementById('focusArea').value;
+            const positive = parseInt(document.getElementById('positive').value);
+            const negative = parseInt(document.getElementById('negative').value);
+
+            if (positive >= 0 && negative >= 0) {
+                dataPoints.push({ focusArea, positive, negative });
+                updateChart();
+                e.target.reset();
+                document.getElementById('focusArea').value = 'Patient Experience';
+            } else {
+                alert('Please enter valid non-negative numbers.');
+            }
+        });
+
+        window.editDataPoint = function(index) {
+            editingIndex = index;
+            updateTable();
+        };
+
+        window.saveDataPoint = function(index) {
+            const newFocusArea = document.getElementById(`edit-focusArea-${index}`).value;
+            const newPositive = parseInt(document.getElementById(`edit-positive-${index}`).value);
+            const newNegative = parseInt(document.getElementById(`edit-negative-${index}`).value);
+
+            if (newPositive >= 0 && newNegative >= 0) {
+                dataPoints[index] = { focusArea: newFocusArea, positive: newPositive, negative: newNegative };
+                editingIndex = -1;
+                updateChart();
+            } else {
+                alert('Please enter valid non-negative numbers for positive and negative responses.');
+            }
+        };
+
+        window.cancelEdit = function(index) {
+            editingIndex = -1;
+            updateTable();
+        };
+
+        window.removeDataPoint = function(index) {
+            dataPoints.splice(index, 1);
+            updateChart();
+        };
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            dataPoints = [];
+            document.getElementById('chartTitle').value = 'Feedback Sentiment';
+            document.getElementById('feedbackForm').reset();
+            document.getElementById('focusArea').value = 'Patient Experience';
+            updateChart();
+        });
+
+        updateChart();
+    </script>
+</body>
+</html>

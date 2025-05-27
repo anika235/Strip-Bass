@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clothing Size Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .custom-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+      }
+      .modal-content {
+        width: 90%;
+        max-width: 500px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      @media (min-width: 768px) {
+        .grid-container {
+          grid-template-columns: 1fr 2fr;
+        }
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+      }
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #555;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #777;
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-blue-100 to-purple-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen p-4 sm:p-6 transition-colors duration-300"
+  >
+    <div id="editModal" class="custom-modal bg-gray-900/75 dark:bg-black/75 backdrop-blur-sm">
+      <div
+        class="modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50"
+      >
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+          Edit Entry
+        </h3>
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="editIndex" />
+          <div>
+            <label
+              for="editBrand"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Brand</label
+            >
+            <input
+              type="text"
+              id="editBrand"
+              class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="editCategory"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Category</label
+            >
+            <select
+              id="editCategory"
+              class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+              required
+            >
+              <option value="Jeans">Jeans</option>
+              <option value="Shirts">Shirts</option>
+              <option value="Jackets">Jackets</option>
+              <option value="Shoes">Shoes</option>
+            </select>
+          </div>
+          <div>
+            <label
+              for="editUsualSize"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Your Usual Size</label
+            >
+            <input
+              type="text"
+              id="editUsualSize"
+              class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+              required
+              placeholder="e.g., M, 32, 10"
+            />
+          </div>
+          <div>
+            <label
+              for="editBrandSize"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Brand's Size</label
+            >
+            <input
+              type="text"
+              id="editBrandSize"
+              class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+              required
+              placeholder="e.g., L, 34, 11"
+            />
+          </div>
+          <div>
+            <label
+              for="editFit"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Fit Comparison</label
+            >
+            <select
+              id="editFit"
+              class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+              required
+            >
+              <option value="Runs Small">Runs Small</option>
+              <option value="True to Size">True to Size</option>
+              <option value="Runs Large">Runs Large</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              onclick="closeModal('editModal')"
+              class="py-2 px-4 rounded-md font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-150 ease-in-out"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="py-2 px-4 rounded-md font-semibold bg-blue-600 text-white hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="deleteModal" class="custom-modal bg-gray-900/75 dark:bg-black/75 backdrop-blur-sm">
+      <div
+        class="modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 text-center"
+      >
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+          Confirm Deletion
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          Are you sure you want to delete this entry? This action cannot be
+          undone.
+        </p>
+        <div class="modal-actions">
+          <button
+            onclick="closeModal('deleteModal')"
+            class="py-2 px-4 rounded-md font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-150 ease-in-out"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="confirmDeleteAction()"
+            class="py-2 px-4 rounded-md font-semibold bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resetModal" class="custom-modal bg-gray-900/75 dark:bg-black/75 backdrop-blur-sm">
+      <div
+        class="modal-content bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 text-center"
+      >
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+          Confirm Reset
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          Are you sure you want to reset ALL data? This will permanently delete
+          all your entries.
+        </p>
+        <div class="modal-actions">
+          <button
+            onclick="closeModal('resetModal')"
+            class="py-2 px-4 rounded-md font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-150 ease-in-out"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="confirmResetAction()"
+            class="py-2 px-4 rounded-md font-semibold bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg"
+          >
+            Reset All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto">
+      <div
+        class="mb-6 p-4 sm:p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md flex flex-col sm:flex-row justify-between items-center border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl"
+      >
+        <h1
+          class="text-xl sm:text-2xl font-bold text-blue-700 dark:text-teal-300 transition-colors duration-200 hover:text-blue-800 dark:hover:text-teal-200 mb-4 sm:mb-0"
+        >
+          👕 Clothing Size Tracker
+        </h1>
+        <div class="flex items-center">
+          <span
+            class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >Light / Dark</span
+          >
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+            <div
+              class="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-teal-600 transition-all"
+            ></div>
+            <div
+              class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"
+            ></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid-container">
+        <div
+          class="space-y-6 p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+        >
+          <form id="sizeForm" class="space-y-4">
+            <div>
+              <h2
+                class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-3"
+              >
+                Add Clothing Size
+              </h2>
+              <label
+                for="brand"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Brand</label
+              >
+              <input
+                type="text"
+                id="brand"
+                class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="category"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Category</label
+              >
+              <select
+                id="category"
+                class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                required
+              >
+                <option value="Jeans">Jeans</option>
+                <option value="Shirts">Shirts</option>
+                <option value="Jackets">Jackets</option>
+                <option value="Shoes">Shoes</option>
+              </select>
+            </div>
+            <div>
+              <label
+                for="usualSize"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Your Usual Size</label
+              >
+              <input
+                type="text"
+                id="usualSize"
+                class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                required
+                placeholder="e.g., M, 32, 10"
+              />
+            </div>
+            <div>
+              <label
+                for="brandSize"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Brand's Size</label
+              >
+              <input
+                type="text"
+                id="brandSize"
+                class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                required
+                placeholder="e.g., L, 34, 11"
+              />
+            </div>
+            <div>
+              <label
+                for="fit"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Fit Comparison</label
+              >
+              <select
+                id="fit"
+                class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                required
+              >
+                <option value="Runs Small">Runs Small</option>
+                <option value="True to Size">True to Size</option>
+                <option value="Runs Large">Runs Large</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              class="w-full font-semibold bg-blue-600 text-white py-2.5 px-4 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg"
+            >
+              Add Entry
+            </button>
+          </form>
+        </div>
+
+        <div class="space-y-6">
+          <div
+            class="p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+          >
+            <div class="flex justify-between items-center mb-4">
+              <h2
+                class="text-xl font-semibold text-gray-800 dark:text-gray-100"
+              >
+                Size Prediction
+              </h2>
+              <button
+                onclick="showModal('resetModal')"
+                class="font-semibold bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg flex items-center gap-2"
+              >
+                <i class="fas fa-trash-alt"></i> Reset All
+              </button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+              <div class="flex-1">
+                <label
+                  for="predictBrand"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Brand</label
+                >
+                <input
+                  type="text"
+                  id="predictBrand"
+                  class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                  placeholder="Enter brand"
+                />
+              </div>
+              <div class="flex-1">
+                <label
+                  for="predictCategory"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Category</label
+                >
+                <select
+                  id="predictCategory"
+                  class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                >
+                  <option value="Jeans">Jeans</option>
+                  <option value="Shirts">Shirts</option>
+                  <option value="Jackets">Jackets</option>
+                  <option value="Shoes">Shoes</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label
+                  for="predictUsualSize"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Your Usual Size</label
+                >
+                <input
+                  type="text"
+                  id="predictUsualSize"
+                  class="mt-1 w-full p-2.5 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-teal-500 dark:focus:border-teal-500"
+                  placeholder="e.g., M, 32, 10"
+                />
+              </div>
+              <div class="flex items-end">
+                <button
+                  id="predictButton"
+                  class="w-full font-semibold bg-green-600 text-white py-2.5 px-4 rounded-md hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg"
+                >
+                  Predict
+                </button>
+              </div>
+            </div>
+            <p
+              id="predictionResult"
+              class="text-lg font-medium text-center py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-800 dark:text-gray-100"
+            ></p>
+          </div>
+
+          <div
+            class="p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+          >
+            <h2
+              class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100"
+            >
+              Dashboard
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h3
+                  class="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300"
+                >
+                  Fit Trends by Brand
+                </h3>
+                <div
+                  class="relative h-72 md:h-80 bg-white/30 dark:bg-gray-700/30 p-2 rounded-lg shadow"
+                >
+                  <canvas id="fitChart"></canvas>
+                </div>
+              </div>
+              <div>
+                <h3
+                  class="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300"
+                >
+                  Average Size Difference
+                </h3>
+                <div
+                  class="relative h-72 md:h-80 bg-white/30 dark:bg-gray-700/30 p-2 rounded-lg shadow"
+                >
+                  <canvas id="sizeDiffChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <h3
+                  class="text-lg font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Size Entries
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Showing entries, scroll for more
+                </p>
+              </div>
+              <div
+                class="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700"
+              >
+                <table class="w-full border-collapse">
+                  <thead
+                    class="bg-gray-100 dark:bg-gray-700/50 sticky top-0 z-10"
+                  >
+                    <tr>
+                      <th
+                        class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5"
+                      >
+                        Brand
+                      </th>
+                      <th
+                        class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5"
+                      >
+                        Category
+                      </th>
+                      <th
+                        class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5"
+                      >
+                        Usual Size
+                      </th>
+                      <th
+                        class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5"
+                      >
+                        Fit
+                      </th>
+                      <th
+                        class="p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                </table>
+                <div
+                  class="block max-h-60 overflow-y-auto custom-scrollbar"
+                >
+                  <table class="w-full border-collapse">
+                    <tbody
+                      id="sizeTableBody"
+                      class="divide-y divide-gray-200 dark:divide-gray-700"
+                    ></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let clothingData = JSON.parse(localStorage.getItem("clothingData")) || [];
+      let currentEditIndex = null;
+      let currentDeleteIndex = null;
+
+      const themeToggle = document.getElementById("theme-toggle");
+
+      function setInitialTheme() {
+        if (
+          localStorage.theme === "dark" ||
+          (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+          themeToggle.checked = true;
+        } else {
+          document.documentElement.classList.remove("dark");
+          themeToggle.checked = false;
+        }
+      }
+
+      themeToggle.addEventListener("change", () => {
+        if (themeToggle.checked) {
+          document.documentElement.classList.add("dark");
+          localStorage.theme = "dark";
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.theme = "light";
+        }
+        updateCharts();
+      });
+
+      function showModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+      }
+
+      document.getElementById("sizeForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const entry = {
+          brand: document.getElementById("brand").value.trim(),
+          category: document.getElementById("category").value,
+          usualSize: document.getElementById("usualSize").value.trim(),
+          brandSize: document.getElementById("brandSize").value.trim(),
+          fit: document.getElementById("fit").value,
+        };
+        clothingData.push(entry);
+        localStorage.setItem("clothingData", JSON.stringify(clothingData));
+        this.reset();
+        updateDashboard();
+      });
+
+      document.getElementById("editForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const entry = {
+          brand: document.getElementById("editBrand").value.trim(),
+          category: document.getElementById("editCategory").value,
+          usualSize: document.getElementById("editUsualSize").value.trim(),
+          brandSize: document.getElementById("editBrandSize").value.trim(),
+          fit: document.getElementById("editFit").value,
+        };
+        clothingData[currentEditIndex] = entry;
+        localStorage.setItem("clothingData", JSON.stringify(clothingData));
+        closeModal("editModal");
+        updateDashboard();
+      });
+
+      document
+        .getElementById("predictButton")
+        .addEventListener("click", function () {
+          const brand = document.getElementById("predictBrand").value.trim();
+          const category = document.getElementById("predictCategory").value;
+          const usualSize = document
+            .getElementById("predictUsualSize")
+            .value.trim();
+          const predictionResultEl = document.getElementById("predictionResult");
+
+          if (!brand || !category || !usualSize) {
+            predictionResultEl.textContent = "Please fill all fields.";
+            predictionResultEl.className =
+              "text-lg font-medium text-center py-3 px-4 bg-red-100 dark:bg-red-700/50 text-red-700 dark:text-red-300 rounded-md";
+            return;
+          }
+          const prediction = predictSize(brand, category, usualSize);
+          predictionResultEl.textContent = prediction;
+          predictionResultEl.className =
+            "text-lg font-medium text-center py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-800 dark:text-gray-100";
+        });
+
+      function updateDashboard() {
+        updateTable();
+        updateCharts();
+      }
+
+      function updateTable() {
+        const tbody = document.getElementById("sizeTableBody");
+        tbody.innerHTML = "";
+
+        if (clothingData.length === 0) {
+          const row = document.createElement("tr");
+          row.className = "w-full";
+          row.innerHTML = `
+            <td colspan="5" class="p-4 text-center text-gray-500 dark:text-gray-400">
+              No entries yet. Add some data to get started!
+            </td>
+          `;
+          tbody.appendChild(row);
+          return;
+        }
+
+        clothingData.forEach((entry, index) => {
+          const row = document.createElement("tr");
+          row.className =
+            "hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150";
+          row.innerHTML = `
+            <td class="p-3 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 w-1/5 truncate">${entry.brand}</td>
+            <td class="p-3 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 w-1/5 truncate">${entry.category}</td>
+            <td class="p-3 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 w-1/5 truncate">${entry.usualSize}</td>
+            <td class="p-3 border-b border-gray-200 dark:border-gray-700 text-sm w-1/5 truncate ${
+              entry.fit === "Runs Small"
+                ? "text-red-600 dark:text-red-400"
+                : entry.fit === "Runs Large"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-gray-700 dark:text-gray-300"
+            }">${entry.fit}</td>
+            <td class="p-3 border-b border-gray-200 dark:border-gray-700 w-1/5 text-center">
+                <button onclick="editEntry(${index})" class="text-blue-600 hover:text-blue-800 dark:text-teal-400 dark:hover:text-teal-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all" title="Edit">
+                    <i class="fas fa-edit fa-fw"></i>
+                </button>
+                <button onclick="showDeleteModal(${index})" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all" title="Delete">
+                    <i class="fas fa-trash-alt fa-fw"></i>
+                </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function editEntry(index) {
+        currentEditIndex = index;
+        const entry = clothingData[index];
+        document.getElementById("editIndex").value = index;
+        document.getElementById("editBrand").value = entry.brand;
+        document.getElementById("editCategory").value = entry.category;
+        document.getElementById("editUsualSize").value = entry.usualSize;
+        document.getElementById("editBrandSize").value = entry.brandSize;
+        document.getElementById("editFit").value = entry.fit;
+        showModal("editModal");
+      }
+
+      function showDeleteModal(index) {
+        currentDeleteIndex = index;
+        showModal("deleteModal");
+      }
+
+      function confirmDeleteAction() {
+        clothingData.splice(currentDeleteIndex, 1);
+        localStorage.setItem("clothingData", JSON.stringify(clothingData));
+        closeModal("deleteModal");
+        updateDashboard();
+      }
+
+      function confirmResetAction() {
+        clothingData = [];
+        localStorage.setItem("clothingData", JSON.stringify(clothingData));
+        closeModal("resetModal");
+        updateDashboard();
+        const predictionResultEl = document.getElementById("predictionResult");
+        predictionResultEl.textContent = "";
+        predictionResultEl.className =
+          "text-lg font-medium text-center py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-800 dark:text-gray-100";
+      }
+
+      let fitChart, sizeDiffChart;
+
+      function getChartOptions(isDarkMode) {
+        const gridColor = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+        const ticksColor = isDarkMode ? "#cbd5e1" : "#4b5563"; 
+        const legendColor = isDarkMode ? "#e5e7eb" : "#1f2937";
+
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: gridColor },
+                    ticks: { color: ticksColor, font: { family: "Poppins"}},
+                },
+                x: {
+                    grid: { display: false }, 
+                    ticks: { color: ticksColor, font: { family: "Poppins"}},
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: legendColor, font: { family: "Poppins"} }
+                },
+                tooltip: {
+                    titleFont: { family: "Poppins" },
+                    bodyFont: { family: "Poppins" },
+                }
+            }
+        };
+      }
+
+
+      function updateCharts() {
+        const isDarkMode = document.documentElement.classList.contains("dark");
+        const chartBaseOptions = getChartOptions(isDarkMode);
+
+        const brands = [...new Set(clothingData.map((d) => d.brand))];
+        
+        const fitData = brands.map(brand => {
+            const brandData = clothingData.filter(d => d.brand === brand);
+            const counts = { 'Runs Small': 0, 'True to Size': 0, 'Runs Large': 0 };
+            brandData.forEach(d => counts[d.fit]++);
+            return {
+                brand,
+                data: [counts['Runs Small'], counts['True to Size'], counts['Runs Large']]
+            };
+        });
+
+        if (fitChart) fitChart.destroy();
+        const fitCtx = document.getElementById('fitChart');
+        if (fitCtx && clothingData.length > 0) {
+            const categoryColorsLight = [ 'rgba(252, 165, 165, 0.8)', 'rgba(147, 197, 253, 0.8)', 'rgba(110, 231, 183, 0.8)'];
+            const categoryColorsDark = [ 'rgba(239, 68, 68, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)'];
+            const currentCategoryColors = isDarkMode ? categoryColorsDark : categoryColorsLight;
+            const currentCategoryBorderColors = currentCategoryColors.map(color => color.replace(/0\.[68]/, '1'));
+
+
+            fitChart = new Chart(fitCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Runs Small', 'True to Size', 'Runs Large'],
+                    datasets: fitData.map(d => ({
+                        label: d.brand,
+                        data: d.data,
+                        backgroundColor: currentCategoryColors,
+                        borderColor: currentCategoryBorderColors,
+                        borderWidth: 1
+                    }))
+                },
+                options: chartBaseOptions
+            });
+        } else if (fitCtx) {
+            const ctx = fitCtx.getContext('2d');
+            ctx.clearRect(0, 0, fitCtx.width, fitCtx.height);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '14px Poppins';
+            ctx.fillStyle = isDarkMode ? '#9ca3af' : '#6b7280';
+            ctx.fillText('No data for Fit Trends', fitCtx.width / 2, fitCtx.height / 2);
+        }
+
+        const sizeDiffData = brands.map(brand => {
+            const brandData = clothingData.filter(d => d.brand === brand);
+            const diffs = brandData
+                .filter(d => !isNaN(parseFloat(d.usualSize)) && !isNaN(parseFloat(d.brandSize)))
+                .map(d => parseFloat(d.brandSize) - parseFloat(d.usualSize));
+            return {
+                brand,
+                avgDiff: diffs.length ? diffs.reduce((a, b) => a + b, 0) / diffs.length : 0
+            };
+        });
+
+        if (sizeDiffChart) sizeDiffChart.destroy();
+        const sizeDiffCtx = document.getElementById('sizeDiffChart');
+        if (sizeDiffCtx && clothingData.length > 0 && sizeDiffData.some(d => d.avgDiff !== 0 || brands.length > 0)) {
+            const barColor = isDarkMode ? 'rgba(96, 165, 250, 0.6)' : 'rgba(147, 197, 253, 0.8)';
+            const borderColor = isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(147, 197, 253)';
+            sizeDiffChart = new Chart(sizeDiffCtx, {
+                type: 'bar',
+                data: {
+                    labels: sizeDiffData.map(d => d.brand),
+                    datasets: [{
+                        label: 'Average Size Difference',
+                        data: sizeDiffData.map(d => d.avgDiff),
+                        backgroundColor: barColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: { ...chartBaseOptions, plugins: { ...chartBaseOptions.plugins, legend: { display: false } } }
+            });
+        } else if (sizeDiffCtx) {
+            const ctx = sizeDiffCtx.getContext('2d');
+            ctx.clearRect(0, 0, sizeDiffCtx.width, sizeDiffCtx.height);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '14px Poppins';
+            ctx.fillStyle = isDarkMode ? '#9ca3af' : '#6b7280';
+            ctx.fillText('No data for Size Difference', sizeDiffCtx.width / 2, sizeDiffCtx.height / 2);
+        }
+      }
+
+      function predictSize(brand, category, usualSize) {
+        const brandData = clothingData.filter(
+          (d) =>
+            d.brand.toLowerCase() === brand.toLowerCase() &&
+            d.category === category,
+        );
+        if (!brandData.length) {
+          return `No data for ${brand} (${category}). Try your usual size: ${usualSize}.`;
+        }
+
+        const fitCounts = { "Runs Small": 0, "True to Size": 0, "Runs Large": 0 };
+        brandData.forEach((d) => fitCounts[d.fit]++);
+        const total = brandData.length;
+        
+        let avgDiff = 0;
+        let relevantEntriesCount = 0;
+
+        const numericalDataForExactSize = brandData.filter( d => 
+            !isNaN(parseFloat(d.usualSize)) && 
+            !isNaN(parseFloat(d.brandSize)) && 
+            d.usualSize.trim().toLowerCase() === usualSize.trim().toLowerCase()
+        );
+
+        if (numericalDataForExactSize.length > 0) {
+            avgDiff = numericalDataForExactSize
+                .map(d => parseFloat(d.brandSize) - parseFloat(d.usualSize))
+                .reduce((a, b) => a + b, 0) / numericalDataForExactSize.length;
+            relevantEntriesCount = numericalDataForExactSize.length;
+        } else {
+            const allNumericalData = brandData.filter(
+              (d) => !isNaN(parseFloat(d.usualSize)) && !isNaN(parseFloat(d.brandSize))
+            );
+            if (allNumericalData.length > 0) {
+                 avgDiff = allNumericalData
+                    .map(d => parseFloat(d.brandSize) - parseFloat(d.usualSize))
+                    .reduce((a, b) => a + b, 0) / allNumericalData.length;
+                relevantEntriesCount = allNumericalData.length;
+            }
+        }
+
+        if (!isNaN(parseFloat(usualSize)) && relevantEntriesCount > 0) {
+          const predictedSize = parseFloat(usualSize) + avgDiff;
+          let advice = `Suggested size for ${brand} (${category}): ${predictedSize.toFixed(1)}. `;
+          advice += relevantEntriesCount === numericalDataForExactSize.length && numericalDataForExactSize.length > 0 
+            ? `(Based on ${relevantEntriesCount} entries for your usual size ${usualSize}).`
+            : `(General average based on ${relevantEntriesCount} entries for this brand/category).`;
+          return advice;
+        }
+
+        const fitScore = (fitCounts["Runs Small"] * -1 + fitCounts["True to Size"] * 0 + fitCounts["Runs Large"] * 1) / total;
+        const sizeMap = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+        const currentIndex = sizeMap.indexOf(usualSize.toUpperCase());
+
+        if (currentIndex === -1) {
+          let generalFitAdvice = "";
+          if (fitScore < -0.2) generalFitAdvice = "This brand/category tends to run small.";
+          else if (fitScore > 0.2) generalFitAdvice = "This brand/category tends to run large.";
+          else generalFitAdvice = "This brand/category tends to be true to size.";
+          return `Cannot predict for size '${usualSize}'. ${generalFitAdvice} Try your usual size.`;
+        }
+        
+        const adjustedIndex = Math.round(currentIndex - fitScore);
+        const predictedCategoricalSize = sizeMap[Math.max(0, Math.min(sizeMap.length - 1, adjustedIndex))];
+        
+        let advice = `Suggested size for ${brand} (${category}): ${predictedCategoricalSize}.`;
+        if (fitScore < -0.2) advice += " (This brand/category generally runs small).";
+        else if (fitScore > 0.2) advice += " (This brand/category generally runs large).";
+        else advice += " (This brand/category is generally true to size).";
+        
+        return advice;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setInitialTheme();
+        updateDashboard();
+      });
+    </script>
+  </body>
+</html>

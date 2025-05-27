@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shape-Based Drawing Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @keyframes pop {
+        0% {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .animate-pop {
+        animation: pop 0.6s ease-out;
+      }
+      body {
+        transition:
+          background-color 0.3s ease-in-out,
+          color 0.3s ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-blue-100 to-purple-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen p-4 sm:p-6 flex items-center justify-center"
+  >
+    <div class="max-w-lg mx-auto w-full">
+      <div
+        class="mb-6 p-4 sm:p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md flex justify-between items-center border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl"
+      >
+        <h1
+          class="text-xl sm:text-2xl font-bold text-blue-700 dark:text-teal-300 transition-colors duration-200 hover:text-blue-800 dark:hover:text-teal-200"
+        >
+          🎨 Shape Drawing Challenge
+        </h1>
+        <div class="flex items-center">
+          <span
+            class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >Light / Dark</span
+          >
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+            <div
+              class="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-teal-600 transition-all"
+            ></div>
+            <div
+              class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"
+            ></div>
+          </label>
+        </div>
+      </div>
+
+      <div
+        class="p-6 sm:p-8 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 text-center"
+      >
+        <p
+          class="text-center mb-6 text-sm sm:text-base text-gray-700 dark:text-gray-300"
+        >
+          Click the button to get a random shape. Use it as inspiration for a
+          creative drawing!
+        </p>
+        <canvas
+          id="shapeCanvas"
+          class="border-2 border-blue-200 dark:border-teal-700 rounded-lg mb-8 mx-auto bg-gray-50 dark:bg-slate-700 shadow-lg w-full"
+        ></canvas>
+        <button
+          id="newShapeBtn"
+          class="bg-blue-600 text-white font-semibold py-2.5 px-8 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-teal-400 focus:ring-opacity-75"
+        >
+          New Shape
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("shapeCanvas");
+      const ctx = canvas.getContext("2d");
+      const newShapeBtn = document.getElementById("newShapeBtn");
+      const themeToggle = document.getElementById("theme-toggle");
+      let currentShape = null;
+
+      function setInitialTheme() {
+        if (
+          localStorage.theme === "dark" ||
+          (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+          themeToggle.checked = true;
+        } else {
+          document.documentElement.classList.remove("dark");
+          themeToggle.checked = false;
+        }
+        if (canvas.width > 0 && canvas.height > 0) {
+          drawRandomShape();
+        }
+      }
+
+      themeToggle.addEventListener("change", () => {
+        if (themeToggle.checked) {
+          document.documentElement.classList.add("dark");
+          localStorage.theme = "dark";
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.theme = "light";
+        }
+        if (canvas.width > 0 && canvas.height > 0) {
+          if (currentShape) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            currentShape.draw();
+          } else {
+            drawRandomShape();
+          }
+        }
+      });
+
+      function getStrokeColor() {
+        return document.documentElement.classList.contains("dark")
+          ? "#e2e8f0"
+          : "#1e293b";
+      }
+
+      function resizeCanvas() {
+        const parentWidth = canvas.offsetWidth;
+        if (parentWidth > 0) {
+          canvas.width = parentWidth;
+          canvas.height = parentWidth * 0.75;
+        }
+
+        if (currentShape && canvas.width > 0 && canvas.height > 0) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          currentShape.draw();
+        } else if (canvas.width > 0 && canvas.height > 0) {
+          drawRandomShape();
+        }
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+
+      function drawRandomShape() {
+        if (canvas.width === 0 || canvas.height === 0) {
+          const parentWidth = canvas.parentElement.offsetWidth;
+          if (parentWidth > 0) {
+            canvas.width = parentWidth;
+            canvas.height = parentWidth * 0.75;
+          } else {
+            console.warn("Canvas parent has no width yet.");
+            return;
+          }
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const shapes = [
+          {
+            name: "Triangle",
+            draw: () => {
+              ctx.beginPath();
+              ctx.moveTo(canvas.width / 2, canvas.height * 0.1);
+              ctx.lineTo(canvas.width * 0.9, canvas.height * 0.9);
+              ctx.lineTo(canvas.width * 0.1, canvas.height * 0.9);
+              ctx.closePath();
+              ctx.strokeStyle = getStrokeColor();
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            },
+          },
+          {
+            name: "Squiggle",
+            draw: () => {
+              ctx.beginPath();
+              ctx.moveTo(canvas.width * 0.1, canvas.height / 2);
+              for (
+                let x = canvas.width * 0.1;
+                x <= canvas.width * 0.9;
+                x += (canvas.width * 0.8) / 20
+              ) {
+                const y =
+                  canvas.height / 2 +
+                  Math.sin(
+                    ((x - canvas.width * 0.1) / (canvas.width * 0.8)) *
+                      Math.PI *
+                      4
+                  ) *
+                    (canvas.height * 0.2);
+                ctx.lineTo(x, y);
+              }
+              ctx.strokeStyle = getStrokeColor();
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            },
+          },
+          {
+            name: "Blob",
+            draw: () => {
+              ctx.beginPath();
+              const centerX = canvas.width / 2;
+              const centerY = canvas.height / 2;
+              const radiusX = canvas.width * 0.35;
+              const radiusY = canvas.height * 0.3;
+
+              ctx.moveTo(centerX + radiusX, centerY);
+
+              ctx.bezierCurveTo(
+                centerX + radiusX * 1.2,
+                centerY - radiusY * 0.8,
+                centerX + radiusX * 0.5,
+                centerY - radiusY * 1.3,
+                centerX,
+                centerY - radiusY
+              );
+              ctx.bezierCurveTo(
+                centerX - radiusX * 0.5,
+                centerY - radiusY * 1.3,
+                centerX - radiusX * 1.2,
+                centerY - radiusY * 0.8,
+                centerX - radiusX,
+                centerY
+              );
+              ctx.bezierCurveTo(
+                centerX - radiusX * 1.2,
+                centerY + radiusY * 0.8,
+                centerX - radiusX * 0.5,
+                centerY + radiusY * 1.3,
+                centerX,
+                centerY + radiusY
+              );
+              ctx.bezierCurveTo(
+                centerX + radiusX * 0.5,
+                centerY + radiusY * 1.3,
+                centerX + radiusX * 1.2,
+                centerY + radiusY * 0.8,
+                centerX + radiusX,
+                centerY
+              );
+              ctx.closePath();
+              ctx.strokeStyle = getStrokeColor();
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            },
+          },
+        ];
+
+        currentShape = shapes[Math.floor(Math.random() * shapes.length)];
+        currentShape.draw();
+
+        canvas.classList.remove("animate-pop");
+        void canvas.offsetWidth;
+        canvas.classList.add("animate-pop");
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        resizeCanvas();
+        setInitialTheme();
+        if (canvas.width > 0 && canvas.height > 0 && !currentShape) {
+          drawRandomShape();
+        }
+      });
+
+      newShapeBtn.addEventListener("click", () => {
+        if (canvas.width > 0 && canvas.height > 0) {
+          drawRandomShape();
+        } else {
+          resizeCanvas();
+          if (canvas.width > 0 && canvas.height > 0) {
+            drawRandomShape();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

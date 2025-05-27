@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Digital Scrapbook Studio</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Amatic+SC:wght@400;700&family=Indie+Flower&family=Pacifico&family=Shadows+Into+Light&family=Quicksand:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --color-primary: #9c6ade;
+                --color-secondary: #f78fb3;
+                --color-accent: #63b3ed;
+                --color-background: #f3e8ff;
+                --color-paper: #fffbf5;
+            }
+
+            body {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3Cpattern id='paper' patternUnits='userSpaceOnUse' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23f3e8ff'/%3E%3Cpath d='M0 0h200v200H0z' fill='none' stroke='%23e0d7c8' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%' height='100%' fill='url(%23paper)'/%3E%3C/svg%3E");
+                font-family: "Quicksand", sans-serif;
+            }
+
+            h1,
+            h2,
+            h3,
+            .handwritten {
+                font-family: "Caveat", cursive;
+            }
+
+            .canvas-container {
+                background-color: var(--color-paper);
+                border: 8px solid white;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                border-radius: 4px;
+                position: relative;
+                overflow: auto;
+                width: 100%;
+                height: 100%;
+            }
+
+            .page {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                transform-origin: 0 0;
+                transition: transform 0.2s ease;
+            }
+            .sidebar {
+                background: linear-gradient(135deg, #fbe7f2 0%, #f3e8ff 100%);
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                overflow-y: auto;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 80%;
+                max-width: 320px;
+                height: 100vh; 
+                transition: left 0.3s ease;
+                z-index: 50;
+                padding-top: 2.5rem;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .sidebar-content {
+                height: calc(100% - 2.5rem); 
+                overflow-y: auto; 
+                padding-bottom: 2rem;
+            }
+
+            .sidebar-content::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .sidebar-content::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 106, 222, 0.5);
+                border-radius: 4px;
+            }
+
+            .sidebar-content::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(156, 106, 222, 0.8);
+            }
+
+            @media (min-width: 768px) {
+                .sidebar {
+                    position: static;
+                    width: 300px;
+                    height: 100vh; 
+                    padding-top: 1rem;
+                    overflow-y: auto; 
+                    box-sizing: border-box; 
+                }
+                .sidebar-content {
+                    overflow-y: auto;
+                    height: calc(100% - 1rem); 
+                    box-sizing: border-box;
+                }
+            }
+
+            .tab-content {
+                max-height: calc(100% - 150px);
+                overflow-y: auto;
+            }
+
+            .asset,
+            .template,
+            .sticker {
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .asset:hover,
+            .template:hover,
+            .sticker:hover {
+                transform: scale(1.05);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .draggable {
+                position: absolute;
+                cursor: move;
+                user-select: none;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 2px;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .draggable.active {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                transform: scale(1.02);
+            }
+
+            .polaroid {
+                padding: 10px 10px 35px 10px;
+                background: white;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .polaroid img {
+                width: 100%;
+                height: 130px;
+                display: block;
+                object-fit: cover;
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .polaroid img:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .polaroid-text {
+                font-family: "Caveat", cursive;
+                text-align: center;
+                font-size: 1.2rem;
+            }
+
+            .text-element {
+                font-family: "Caveat", cursive;
+                padding: 5px;
+                min-width: 100px;
+                min-height: 40px;
+                cursor: text;
+            }
+
+            .btn {
+                transition: all 0.3s;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .flipbook-page {
+                background: var(--color-paper);
+                border: 2px solid #fbcfe8;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 5px;
+                max-width: 90%;
+                max-height: 70vh;
+                overflow: hidden;
+                margin: 0 auto;
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                opacity: 0;
+                transition: opacity 0.5s ease, transform 0.5s ease;
+            }
+
+            .flipbook-page.active {
+                opacity: 1;
+                transform: translateX(-50%) rotateY(0deg);
+            }
+
+            .flipbook-page:not(.active) {
+                transform: translateX(-50%) rotateY(180deg);
+            }
+
+            .tab-active {
+                background-color: #f3e8ff;
+                border-bottom: 3px solid var(--color-secondary);
+            }
+
+            .page-indicator {
+                background: rgba(255, 255, 255, 0.8);
+                border-radius: 20px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .file-upload {
+                position: relative;
+                overflow: hidden;
+                display: inline-block;
+            }
+
+            .file-upload-input {
+                position: absolute;
+                left: 0;
+                top: 0;
+                opacity: 0;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+
+            .file-upload-btn {
+                display: inline-block;
+                padding: 6px 12px;
+                cursor: pointer;
+                background-color: var(--color-primary);
+                color: white;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+            .notification-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .notification-content {
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 400px;
+                text-align: center;
+            }
+
+            .color-picker {
+                appearance: none;
+                -moz-appearance: none;
+                -webkit-appearance: none;
+                background: none;
+                border: 0;
+                cursor: pointer;
+                height: 35px;
+                width: 35px;
+                padding: 0;
+            }
+
+            .color-picker::-webkit-color-swatch-wrapper {
+                padding: 0;
+            }
+
+            .color-picker::-webkit-color-swatch {
+                border: 2px solid white;
+                border-radius: 50%;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            }
+
+            .font-select {
+                font-family: "Quicksand", sans-serif;
+                padding: 6px;
+                border-radius: 4px;
+                border: 1px solid #e5e7eb;
+                background: white;
+                width: 100%;
+                cursor: pointer;
+            }
+
+            .template-preview {
+                width: 80px;
+                height: 80px;
+            }
+
+            .zoom-controls {
+                position: sticky;
+                bottom: 20px;
+                z-index: 100;
+            }
+
+            .zoom-controls button {
+                background-color: rgba(255, 255, 255, 0.9);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 8px 12px;
+                cursor: pointer;
+            }
+
+            .zoom-controls button:hover {
+                background-color: rgba(255, 255, 255, 1);
+            }
+
+            .canvas-container::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .canvas-container::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 106, 222, 0.5);
+                border-radius: 4px;
+            }
+
+            .canvas-container::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(156, 106, 222, 0.8);
+            }
+
+            .draggable:hover .element-delete-btn {
+                opacity: 1;
+            }
+
+            .element-delete-btn {
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                font-size: 0.8rem;
+            }
+
+            .tooltip {
+                position: relative;
+            }
+
+            .tooltip::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #333;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+            }
+
+            .tooltip:hover::after {
+                opacity: 1;
+            }
+
+            .tools-row {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 2px;
+            }
+
+            .tool-button {
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+                width: 70px;
+            }
+
+            @media (min-width: 768px) {
+                .sidebar {
+                    position: static;
+                    width: 300px;
+                    height: auto;
+                }
+                .canvas-container {
+                    max-height: calc(100vh - 150px);
+                }
+            }
+
+            @media (max-width: 768px) {
+                .sidebar {
+                    max-height: 100%;
+                }
+                .sidebar-content {
+                    padding-bottom: 2rem;
+                }
+                .tool-button {
+                    width: 70px;
+                }
+                .canvas-container {
+                    max-height: calc(100vh - 200px);
+                }
+                .tab-btn {
+                    padding: 8px;
+                    font-size: 0.9rem;
+                }
+                .tooltip::after {
+                    font-size: 10px;
+                    padding: 3px 6px;
+                }
+                .page-indicator {
+                    margin-left: 3rem;
+                  }
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes flip {
+                0% {
+                    transform: translateX(-50%) rotateY(0deg);
+                }
+                100% {
+                    transform: translateX(-50%) rotateY(180deg);
+                }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease forwards;
+            }
+        </style>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: "#9c6ade",
+                            secondary: "#f78fb3",
+                            accent: "#63b3ed",
+                            background: "#f3e8ff",
+                        },
+                    },
+                },
+            };
+        </script>
+    </head>
+    <body class="min-h-screen flex flex-col md:flex-row overflow-y-auto">
+        <button
+            id="toggleSidebar"
+            class="md:hidden fixed top-4 left-4 z-50 text-primary"
+        >
+            <i class="fas fa-bars fa-lg"></i>
+        </button>
+        <div class="sidebar w-full md:w-72 p-4 overflow-y-auto" id="sidebar">
+            <div class="sidebar-content relative">
+                <button
+                    id="closeSidebar"
+                    class="md:hidden absolute top-2 right-2 text-primary"
+                >
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+                <h2 class="text-5xl font-bold text-primary flex items-center">
+                    <i class="fas fa-book-open mr-2"></i> Scrapbook Studio
+                </h2>
+                <div class="flex border-b mt-4">
+                    <button
+                        class="tab-btn px-4 py-2 tab-active"
+                        data-tab="assets"
+                    >
+                        Assets
+                    </button>
+                    <button class="tab-btn px-4 py-2" data-tab="templates">
+                        Templates
+                    </button>
+                    <button class="tab-btn px-4 py-2" data-tab="stickers">
+                        Stickers
+                    </button>
+                </div>
+                <div class="tab-content mt-4" id="assets-tab">
+                    <div class="sidebar-section">
+                        <h3
+                            class="text-md font-semibold text-secondary flex items-center"
+                        >
+                            <i class="fas fa-images mr-2"></i> Upload Photo
+                        </h3>
+                        <label class="file-upload mt-2">
+                            <div
+                                class="file-upload-btn flex items-center justify-center"
+                            >
+                                <i class="fas fa-upload mr-2"></i> Choose Photo
+                            </div>
+                            <input
+                                type="file"
+                                id="assetUpload"
+                                class="file-upload-input"
+                                accept="image/*"
+                            />
+                        </label>
+                        <div
+                            id="assetLibrary"
+                            class="grid grid-cols-3 gap-2 mt-2"
+                        ></div>
+                    </div>
+                </div>
+                <div class="tab-content mt-4 hidden" id="templates-tab">
+                    <div class="sidebar-section">
+                        <h3
+                            class="text-md font-semibold text-secondary flex items-center"
+                        >
+                            <i class="fas fa-layer-group mr-2"></i> Page Layouts
+                        </h3>
+                        <div
+                            id="templateLibrary"
+                            class="grid grid-cols-1 gap-2 mt-2"
+                        >
+                            <div
+                                class="template bg-white p-2 rounded cursor-pointer flex items-center"
+                                data-template="1"
+                            >
+                                <div
+                                    class="template-preview bg-gray-200 mr-2 flex-shrink-0 grid grid-cols-2 gap-1"
+                                >
+                                    <div class="bg-gray-300"></div>
+                                    <div class="bg-gray-300"></div>
+                                    <div class="bg-gray-300"></div>
+                                    <div class="bg-gray-300"></div>
+                                </div>
+                                <span>Simple Grid</span>
+                            </div>
+                            <div
+                                class="template bg-white p-2 rounded cursor-pointer flex items-center mt-2"
+                                data-template="2"
+                            >
+                                <div
+                                    class="template-preview bg-gray-200 mr-2 flex-shrink-0 flex flex-col"
+                                >
+                                    <div class="bg-gray-300 h-2/3 mb-1"></div>
+                                    <div class="bg-gray-300 h-1/3"></div>
+                                </div>
+                                <span>Polaroid Stack</span>
+                            </div>
+                            <div
+                                class="template bg-white p-2 rounded cursor-pointer flex items-center mt-2"
+                                data-template="3"
+                            >
+                                <div
+                                    class="template-preview bg-gray-200 mr-2 flex-shrink-0 relative"
+                                >
+                                    <div
+                                        class="absolute bg-gray-300 w-8 h-8 left-0 top-0"
+                                    ></div>
+                                    <div
+                                        class="absolute bg-gray-300 w-6 h-6 right-0 bottom-0"
+                                    ></div>
+                                </div>
+                                <span> ductilityCollage</span>
+                            </div>
+                            <div
+                                class="template bg-white p-2 rounded cursor-pointer flex items-center mt-2"
+                                data-template="4"
+                            >
+                                <div
+                                    class="template-preview bg-gray-200 mr-2 flex-shrink-0 flex"
+                                >
+                                    <div class="bg-gray-300 w-1/3"></div>
+                                    <div class="bg-gray-300 w-2/3"></div>
+                                </div>
+                                <span>Memory Journal</span>
+                            </div>
+                            <div
+                                class="template bg-white p-2 rounded cursor-pointer flex items-center mt-2"
+                                data-template="5"
+                            >
+                                <div
+                                    class="template-preview bg-gray-200 mr-2 flex-shrink-0 flex flex-col"
+                                >
+                                    <div class="bg-gray-300 h-1/4"></div>
+                                    <div class="bg-gray-300 h-3/4 mt-1"></div>
+                                </div>
+                                <span>Title & Content</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content mt-4 hidden" id="stickers-tab">
+                    <div class="sidebar-section">
+                        <h3
+                            class="text-md font-semibold text-secondary flex items-center"
+                        >
+                            <i class="fas fa-star mr-2"></i> Stickers & Elements
+                        </h3>
+                        <div
+                            id="stickerLibrary"
+                            class="grid grid-cols-3 gap-2 mt-2"
+                        ></div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3
+                        class="text-md font-semibold text-secondary flex items-center"
+                    >
+                        <i class="fas fa-tools mr-2"></i> Tools
+                    </h3>
+                    <div class="flex flex-wrap mt-2 gap-2">
+                        <div class="tool-button">
+                            <button
+                                id="addText"
+                                class="btn bg-secondary text-white p-3 rounded flex items-center justify-center tooltip"
+                                data-tooltip="Add Text"
+                            >
+                                <i class="fas fa-font"></i>
+                            </button>
+                            <span class="text-xs mt-1">Add Text</span>
+                        </div>
+                        <div class="tool-button">
+                            <button
+                                id="addShape"
+                                class="btn bg-primary text-white p-3 rounded flex items-center justify-center tooltip"
+                                data-tooltip="Add Shape"
+                            >
+                                <i class="fas fa-shapes"></i>
+                            </button>
+                            <span class="text-xs mt-1">Add Shape</span>
+                        </div>
+                        <div class="tool-button">
+                            <input
+                                type="color"
+                                id="colorPicker"
+                                value="#f78fb3"
+                                class="color-picker tooltip"
+                                data-tooltip="Select Color"
+                            />
+                            <span class="text-xs mt-1">Color</span>
+                        </div>
+                        <div class="tool-button">
+                            <select
+                                id="fontPicker"
+                                class="font-select tooltip"
+                                data-tooltip="Select Font"
+                            >
+                                <option value="Caveat">Caveat</option>
+                                <option value="Amatic SC">Amatic SC</option>
+                                <option value="Indie Flower">
+                                    Indie Flower
+                                </option>
+                                <option value="Pacifico">Pacifico</option>
+                                <option value="Shadows Into Light">
+                                    Shadows Into Light
+                                </option>
+                            </select>
+                            <span class="text-xs mt-1">Font</span>
+                        </div>
+                        <div class="tools-row">
+                            <div class="tool-button">
+                                <button
+                                    id="undo"
+                                    class="btn bg-gray-500 text-white p-3 rounded flex items-center justify-center tooltip"
+                                    data-tooltip="Undo"
+                                >
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <span class="text-xs mt-1">Undo</span>
+                            </div>
+                            <div class="tool-button">
+                                <button
+                                    id="redo"
+                                    class="btn bg-gray-500 text-white p-3 rounded flex items-center justify-center tooltip"
+                                    data-tooltip="Redo"
+                                >
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                                <span class="text-xs mt-1">Redo</span>
+                            </div>
+                            <div class="tool-button">
+                                <button
+                                    id="clearCanvas"
+                                    class="btn bg-red-500 text-white p-3 rounded flex items-center justify-center tooltip"
+                                    data-tooltip="Clear Canvas"
+                                >
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                                <span class="text-xs mt-1">Clear</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <button
+                            id="addPage"
+                            class="btn bg-accent text-white px-3 py-2 rounded text-sm flex items-center justify-center tooltip"
+                            data-tooltip="Add Page"
+                        >
+                            <i class="fas fa-plus mr-1"></i> Add Page
+                        </button>
+                        <button
+                            id="deletePage"
+                            class="btn bg-red-400 text-white px-3 py-2 rounded text-sm flex items-center justify-center tooltip"
+                            data-tooltip="Delete Page"
+                        >
+                            <i class="fas fa-trash mr-1"></i> Delete Page
+                        </button>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                            id="previewFlipbook"
+                            class="btn bg-primary text-white px-3 py-2 rounded text-sm flex items-center justify-center tooltip"
+                            data-tooltip="Preview Scrapbook"
+                        >
+                            <i class="fas fa-book-open mr-1"></i> Preview
+                        </button>
+                        <button
+                            id="downloadPDF"
+                            class="btn bg-accent text-white px-3 py-2 rounded text-sm flex items-center justify-center tooltip"
+                            data-tooltip="Download as PDF"
+                        >
+                            <i class="fas fa-download mr-1"></i> Download
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <button
+                            id="startCollab"
+                            class="btn bg-secondary text-white w-full py-2 rounded text-sm flex items-center justify-center tooltip"
+                            data-tooltip="Start/End Collaboration"
+                        >
+                            <i class="fas fa-users mr-1"></i> Start
+                            Collaboration
+                        </button>
+                        <div
+                            id="collabStatus"
+                            class="text-sm text-gray-600 mt-2"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex-1 p-4 flex flex-col h-screen">
+            <div class="flex justify-between items-center mb-2">
+                <div class="page-indicator px-3 py-1 text-sm flex items-center">
+                    <button id="prevPage" class="mr-2">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="pageDisplay">Page 1 of 1</span>
+                    <button id="nextPage" class="ml-2">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div
+                    id="collaborators"
+                    class="text-sm text-purple-600 bg-white px-3 py-1 rounded-full flex items-center"
+                >
+                    <i class="fas fa-users mr-2"></i>
+                    <span>Collaborators: 1</span>
+                </div>
+            </div>
+            <div class="canvas-container relative flex-1" id="canvas"></div>
+            <div class="zoom-controls flex justify-center mt-2">
+                <button
+                    id="zoomOut"
+                    class="bg-white p-2 rounded-l-lg tooltip"
+                    data-tooltip="Zoom Out"
+                >
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <button
+                    id="zoomReset"
+                    class="bg-white p-2 border-l border-r border-gray-200 tooltip"
+                    data-tooltip="Reset Zoom"
+                >
+                    100%
+                </button>
+                <button
+                    id="zoomIn"
+                    class="bg-white p-2 rounded-r-lg tooltip"
+                    data-tooltip="Zoom In"
+                >
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div
+            id="flipbookModal"
+            class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex items-center justify-center"
+        >
+            <div class="bg-white p-6 rounded-lg max-w-4xl w-full shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-primary">
+                        Scrapbook Preview
+                    </h3>
+                    <button
+                        id="closeFlipbook"
+                        class="text-gray-500 hover:text-gray-800"
+                    >
+                        <i class="fas fa-times fa-lg"></i>
+                    </button>
+                </div>
+                <div
+                    id="flipbook"
+                    class="w-full h-[60vh] border rounded-lg relative"
+                ></div>
+                <div class="mt-4 flex justify-between">
+                    <button
+                        id="prevFlipPage"
+                        class="btn bg-primary text-white px-4 py-2 rounded flex items-center"
+                    >
+                        <i class="fas fa-arrow-left mr-2"></i> Previous
+                    </button>
+                    <div id="flipPageIndicator" class="self-center">
+                        Page 1 of 1
+                    </div>
+                    <button
+                        id="nextFlipPage"
+                        class="btn bg-primary text-white px-4 py-2 rounded flex items-center"
+                    >
+                        Next <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="notificationModal" class="notification-modal hidden">
+            <div class="notification-content">
+                <h3
+                    id="notificationTitle"
+                    class="text-lg font-semibold mb-2"
+                ></h3>
+                <p id="notificationMessage" class="mb-4"></p>
+                <div id="notificationButtons" class="flex justify-center gap-4">
+                    <button
+                        id="closeNotification"
+                        class="btn bg-primary text-white px-4 py-2 rounded"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+        <input
+            type="file"
+            id="polaroidImageUpload"
+            accept="image/*"
+            style="display: none"
+        />
+        <script>
+            class MockSocket {
+                constructor() {
+                    this.listeners = {};
+                    this.rooms = new Set();
+                }
+                on(event, callback) {
+                    if (!this.listeners[event]) this.listeners[event] = [];
+                    this.listeners[event].push(callback);
+                }
+                emit(event, data) {
+                    if (this.listeners[event]) {
+                        this.listeners[event].forEach((callback) =>
+                            callback(data)
+                        );
+                    }
+                }
+                join(sessionId) {
+                    this.rooms.add(sessionId);
+                }
+                leave(sessionId) {
+                    this.rooms.delete(sessionId);
+                }
+                to(sessionId) {
+                    return this;
+                }
+            }
+
+            const socket = new MockSocket();
+            let userId = Math.random().toString(36).substr(2, 9);
+            let pages = [{ elements: [] }];
+            let currentPage = 0;
+            let currentColor = "#f78fb3";
+            let currentFont = "Caveat";
+            let scale = 1;
+            let collabSession = null;
+            let virtualUsers = [];
+            let assets = [];
+            let undoStack = [];
+            let redoStack = [];
+
+            const canvas = document.getElementById("canvas");
+            updateCanvas();
+
+            function saveState() {
+                const state = JSON.parse(
+                    JSON.stringify(pages, (key, value) => {
+                        if (key === "node") return undefined;
+                        return value;
+                    })
+                );
+                undoStack.push(state);
+                if (undoStack.length > 50) undoStack.shift();
+                redoStack = [];
+            }
+
+            function showNotification(title, message, buttons = [{ text: "OK", id: "closeNotification" }]) {
+              document.getElementById("notificationTitle").textContent = title;
+              document.getElementById("notificationMessage").textContent = message;
+              const buttonsContainer = document.getElementById("notificationButtons");
+              buttonsContainer.innerHTML = "";
+
+              buttons.forEach((btn) => {
+                  const button = document.createElement("button");
+                  button.id = btn.id;
+                  button.className = "btn bg-primary text-white px-4 py-2 rounded";
+                  button.textContent = btn.text;
+
+                  button.addEventListener("click", () => {
+                      if (btn.onClick) btn.onClick();
+                      document.getElementById("notificationModal").classList.add("hidden");
+                  });
+
+                  buttonsContainer.appendChild(button);
+              });
+
+              document.getElementById("notificationModal").classList.remove("hidden");
+          }
+            document
+                .getElementById("closeSidebar")
+                .addEventListener("click", () => {
+                    const sidebar = document.getElementById("sidebar");
+                    sidebar.classList.remove("open");
+                });
+
+            document
+                .getElementById("closeNotification")
+                .addEventListener("click", () => {
+                    console.log("dklld");
+                    document
+                        .getElementById("notificationModal")
+                        .classList.add("hidden");
+                });
+
+            function updateCanvas() {
+                const pageContainer = document.createElement("div");
+                pageContainer.className =
+                    "page w-full h-full bg-white relative";
+                pageContainer.dataset.page = currentPage;
+
+                const page = pages[currentPage];
+                if (page && page.elements) {
+                    page.elements.forEach((element) => {
+                        let elementNode = createElement(
+                            element.type,
+                            element.content,
+                            element.x,
+                            element.y,
+                            element.font
+                        ).node;
+                        if (element.width)
+                            elementNode.style.width = `${element.width}px`;
+                        if (element.height)
+                            elementNode.style.height = `${element.height}px`;
+                        if (element.rotation)
+                            elementNode.style.transform = `rotate(${element.rotation}deg)`;
+                        if (element.color)
+                            elementNode.style.color = element.color;
+                        if (element.backgroundColor)
+                            elementNode.style.backgroundColor =
+                                element.backgroundColor;
+                        if (element.font)
+                            elementNode.style.fontFamily = element.font;
+                        elementNode.dataset.id = element.id;
+                        element.node = elementNode;
+                        makeDraggable(elementNode);
+                        makeResizable(elementNode);
+                        makeRotatable(elementNode);
+                        makeContextMenu(elementNode);
+                        makePolaroidClickable(elementNode);
+                        pageContainer.appendChild(elementNode);
+                    });
+                }
+
+                canvas.innerHTML = "";
+                canvas.appendChild(pageContainer);
+                updatePageIndicator();
+                updatePageButtons();
+            }
+
+            function updatePageIndicator() {
+                document.getElementById("pageDisplay").textContent = `Page ${
+                    currentPage + 1
+                } of ${pages.length}`;
+            }
+
+            function updatePageButtons() {
+                document.getElementById("prevPage").style.display =
+                    currentPage > 0 ? "inline-block" : "none";
+                document.getElementById("nextPage").style.display =
+                    currentPage < pages.length - 1 ? "inline-block" : "none";
+            }
+
+            let draggedElement = null;
+            canvas.addEventListener("dragover", (e) => e.preventDefault());
+            canvas.addEventListener("drop", (e) => {
+                e.preventDefault();
+                if (draggedElement) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / scale;
+                    const y = (e.clientY - rect.top) / scale;
+
+                    if (
+                        draggedElement.type === "image" &&
+                        e.target.tagName === "IMG" &&
+                        e.target.closest(".polaroid")
+                    ) {
+                        const polaroidElement = e.target.closest(".polaroid");
+                        const elementId = polaroidElement.dataset.id;
+                        const elementData = pages[currentPage].elements.find(
+                            (el) => el.node.dataset.id === elementId
+                        );
+                        if (elementData) {
+                            saveState();
+                            e.target.src = draggedElement.src;
+                            elementData.content = draggedElement.src;
+                            polaroidElement.dataset.content =
+                                draggedElement.src;
+                            socket.emit("updateElementContent", {
+                                page: currentPage,
+                                elementId,
+                                content: draggedElement.src,
+                            });
+                        }
+                    } else {
+                        saveState();
+                        const element = createElement(
+                            draggedElement.type,
+                            draggedElement.src ||
+                                draggedElement.sticker ||
+                                draggedElement.text,
+                            x,
+                            y
+                        );
+                        element.node.classList.add("animate-fade-in");
+                        pages[currentPage].elements.push(element);
+                        canvas
+                            .querySelector(`[data-page="${currentPage}"]`)
+                            .appendChild(element.node);
+                        socket.emit("addElement", {
+                            page: currentPage,
+                            element: {
+                                type: element.type,
+                                content: element.content,
+                                x: element.x,
+                                y: element.y,
+                                id: element.node.dataset.id,
+                                font: element.font,
+                            },
+                        });
+                    }
+                    draggedElement = null;
+                }
+            });
+
+            canvas.addEventListener(
+                "blur",
+                (e) => {
+                    if (e.target.isContentEditable) {
+                        const draggableElement = e.target.closest(".draggable");
+                        if (draggableElement && draggableElement.dataset.id) {
+                            const elementId = draggableElement.dataset.id;
+                            const elementData = pages[
+                                currentPage
+                            ].elements.find(
+                                (el) => el.node.dataset.id === elementId
+                            );
+                            let newContent = e.target.textContent;
+                            if (
+                                elementData &&
+                                elementData.content !== newContent
+                            ) {
+                                saveState();
+                                elementData.content = newContent;
+                                draggableElement.dataset.content = newContent;
+                                socket.emit("updateElementContent", {
+                                    page: currentPage,
+                                    elementId,
+                                    content: newContent,
+                                    elementType: elementData.type,
+                                });
+                                let deleteBtn = draggableElement.querySelector(
+                                    ".element-delete-btn"
+                                );
+                                if (!deleteBtn) {
+                                    deleteBtn =
+                                        document.createElement("button");
+                                    deleteBtn.innerHTML =
+                                        '<i class="fas fa-times-circle text-red-500 bg-white rounded-full"></i>';
+                                    deleteBtn.className =
+                                        "element-delete-btn absolute top-0 right-0 -mt-1 -mr-1 p-0.5 z-10";
+                                    deleteBtn.title = "Delete element";
+                                    deleteBtn.addEventListener("click", (e) => {
+                                        e.stopPropagation();
+                                        saveState();
+                                        const index = pages[
+                                            currentPage
+                                        ].elements.findIndex(
+                                            (el) => el.node === draggableElement
+                                        );
+                                        if (index !== -1) {
+                                            draggableElement.remove();
+                                            pages[currentPage].elements.splice(
+                                                index,
+                                                1
+                                            );
+                                            socket.emit("deleteElement", {
+                                                page: currentPage,
+                                                elementId,
+                                            });
+                                        }
+                                    });
+                                    draggableElement.appendChild(deleteBtn);
+                                }
+                            }
+                        }
+                    }
+                },
+                true
+            );
+
+            document
+                .getElementById("assetUpload")
+                .addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        handleImageUpload(file);
+                    }
+                });
+
+            function handleImageUpload(file, polaroidElement = null) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imgSrc = event.target.result;
+                    if (!assets.includes(imgSrc)) {
+                        assets.push(imgSrc);
+                        const imgContainer = document.createElement("div");
+                        imgContainer.className = "relative asset-container";
+                        const img = document.createElement("img");
+                        img.src = imgSrc;
+                        img.className =
+                            "asset w-16 h-16 object-cover rounded cursor-grab";
+                        img.draggable = true;
+                        img.addEventListener("dragstart", () => {
+                            draggedElement = { type: "image", src: img.src };
+                        });
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.innerHTML =
+                            '<i class="fas fa-times-circle text-red-500 bg-white rounded-full"></i>';
+                        deleteBtn.className =
+                            "absolute top-0 right-0 -mt-1 -mr-1 p-0.5 z-10";
+                        deleteBtn.title = "Remove image";
+                        deleteBtn.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            imgContainer.remove();
+                            assets = assets.filter((src) => src !== imgSrc);
+                        });
+                        imgContainer.appendChild(img);
+                        imgContainer.appendChild(deleteBtn);
+                        document
+                            .getElementById("assetLibrary")
+                            .appendChild(imgContainer);
+                    }
+                    if (polaroidElement) {
+                        saveState();
+                        const elementId = polaroidElement.dataset.id;
+                        const elementData = pages[currentPage].elements.find(
+                            (el) => el.node.dataset.id === elementId
+                        );
+                        if (elementData) {
+                            const img = polaroidElement.querySelector("img");
+                            img.src = imgSrc;
+                            elementData.content = imgSrc;
+                            polaroidElement.dataset.content = imgSrc;
+                            socket.emit("updateElementContent", {
+                                page: currentPage,
+                                elementId,
+                                content: imgSrc,
+                            });
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            const polaroidImageUpload = document.getElementById(
+                "polaroidImageUpload"
+            );
+            polaroidImageUpload.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                const polaroidElement = polaroidImageUpload.dataset
+                    .targetPolaroid
+                    ? document.querySelector(
+                          `.polaroid[data-id="${polaroidImageUpload.dataset.targetPolaroid}"]`
+                      )
+                    : null;
+                if (file) {
+                    handleImageUpload(file, polaroidElement);
+                } else {
+                    showNotification(
+                        "No Image Selected",
+                        "Please select an image to upload."
+                    );
+                }
+                polaroidImageUpload.dataset.targetPolaroid = "";
+            });
+
+            function makePolaroidClickable(element) {
+                if (element.dataset.type !== "image") return;
+                const img = element.querySelector("img");
+                if (img) {
+                    img.removeEventListener("click", handlePolaroidClick); 
+                    img.addEventListener("click", handlePolaroidClick);
+                }
+            }
+
+            function handlePolaroidClick(e) {
+                const polaroidElement = e.target.closest(".polaroid");
+                polaroidImageUpload.dataset.targetPolaroid =
+                    polaroidElement.dataset.id;
+                polaroidImageUpload.click();
+            }
+
+            function createElement(type, content, x, y, font = currentFont) {
+                let node;
+                const id = Math.random().toString(36).substr(2, 9);
+                if (type === "image") {
+                    node = document.createElement("div");
+                    node.className = "draggable polaroid";
+                    node.style.left = `${x}px`;
+                    node.style.top = `${y}px`;
+                    node.style.width = "150px";
+                    node.style.height = "180px";
+                    const img = document.createElement("img");
+                    img.src = content;
+                    img.className = "w-full h-[130px] object-cover";
+                    img.draggable = false;
+                    const textDiv = document.createElement("div");
+                    textDiv.className = "polaroid-text mt-2";
+                    textDiv.contentEditable = true;
+                    textDiv.style.fontFamily = font;
+                    textDiv.textContent = "Memory";
+                    node.appendChild(img);
+                    node.appendChild(textDiv);
+                } else if (type === "text") {
+                    node = document.createElement("div");
+                    node.className = "draggable text-element bg-transparent";
+                    node.contentEditable = true;
+                    node.textContent = content;
+                    node.style.left = `${x}px`;
+                    node.style.top = `${y}px`;
+                    node.style.color = currentColor;
+                    node.style.fontFamily = font;
+                    node.style.fontSize = "24px";
+                    node.style.cursor = "move";
+                } else if (type === "sticker") {
+                    node = document.createElement("div");
+                    node.className = "draggable text-2xl";
+                    node.style.left = `${x}px`;
+                    node.style.top = `${y}px`;
+                    node.style.width = "40px";
+                    node.style.height = "40px";
+                    node.style.lineHeight = "40px";
+                    node.style.textAlign = "center";
+                    node.textContent = content;
+                } else if (type === "shape") {
+                    node = document.createElement("div");
+                    node.className = "draggable";
+                    node.style.left = `${x}px`;
+                    node.style.top = `${y}px`;
+                    node.style.width = "100px";
+                    node.style.height = "100px";
+                    node.style.backgroundColor = currentColor;
+                    node.style.borderRadius =
+                        content === "circle" ? "50%" : "0";
+                }
+                node.dataset.type = type;
+                node.dataset.content = content;
+                node.dataset.id = id;
+                node.dataset.font = font;
+                const deleteBtn = document.createElement("button");
+                deleteBtn.innerHTML =
+                    '<i class="fas fa-times-circle text-red-500 bg-white rounded-full"></i>';
+                deleteBtn.className =
+                    "element-delete-btn absolute top-0 right-0 -mt-1 -mr-1 p-0.5 z-10";
+                deleteBtn.title = "Delete element";
+                deleteBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    saveState();
+                    const index = pages[currentPage].elements.findIndex(
+                        (el) => el.node === node
+                    );
+                    if (index !== -1) {
+                        node.remove();
+                        pages[currentPage].elements.splice(index, 1);
+                        socket.emit("deleteElement", {
+                            page: currentPage,
+                            elementId: node.dataset.id,
+                        });
+                    }
+                });
+                node.appendChild(deleteBtn);
+                makeDraggable(node);
+                makeResizable(node);
+                makeRotatable(node);
+                makeContextMenu(node);
+                makePolaroidClickable(node);
+                return {
+                    type,
+                    content,
+                    x,
+                    y,
+                    font,
+                    node,
+                    width: node.offsetWidth,
+                    height: node.offsetHeight,
+                    rotation: 0,
+                    color: type === "text" ? currentColor : undefined,
+                    backgroundColor:
+                        type === "shape" ? currentColor : undefined,
+                    id,
+                };
+            }
+
+            function recreateElement(element) {
+                const node = createElement(
+                    element.type,
+                    element.content,
+                    element.x,
+                    element.y,
+                    element.font
+                ).node;
+                if (element.width) node.style.width = `${element.width}px`;
+                if (element.height) node.style.height = `${element.height}px`;
+                if (element.rotation)
+                    node.style.transform = `rotate(${element.rotation}deg)`;
+                if (element.color) node.style.color = element.color;
+                if (element.backgroundColor)
+                    node.style.backgroundColor = element.backgroundColor;
+                if (element.font) node.style.fontFamily = element.font;
+                node.dataset.id = element.id;
+                return node;
+            }
+
+            function makeDraggable(element) {
+                let offsetX,
+                    offsetY,
+                    isDragging = false,
+                    startX,
+                    startY;
+                const dragThreshold = 5;
+                element.addEventListener("mousedown", (e) => {
+                    if (e.target.closest(".element-delete-btn")) return;
+                    if (
+                        e.target.tagName === "IMG" &&
+                        e.target.closest(".polaroid")
+                    )
+                        return;
+                    e.preventDefault();
+                    offsetX = e.clientX - element.getBoundingClientRect().left;
+                    offsetY = e.clientY - element.getBoundingClientRect().top;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    isDragging = false;
+                    document
+                        .querySelectorAll(".draggable")
+                        .forEach((el) => el.classList.remove("active"));
+                    element.classList.add("active");
+                    document.addEventListener("mousemove", moveElement);
+                    document.addEventListener("mouseup", stopMoving);
+                });
+                element.addEventListener("touchstart", (e) => {
+                  if (e.target.closest(".element-delete-btn")) return;
+                  const touch = e.touches[0];
+                  offsetX = touch.clientX - element.getBoundingClientRect().left;
+                  offsetY = touch.clientY - element.getBoundingClientRect().top;
+                  isDragging = true;
+
+                  const moveTouch = (e) => {
+                    const touchMove = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    element.style.left = `${(touchMove.clientX - rect.left - offsetX) / scale}px`;
+                    element.style.top = `${(touchMove.clientY - rect.top - offsetY) / scale}px`;
+                  };
+
+                  const endTouch = () => {
+                    isDragging = false;
+                    document.removeEventListener("touchmove", moveTouch);
+                    document.removeEventListener("touchend", endTouch);
+                  };
+
+                  document.addEventListener("touchmove", moveTouch, { passive: false });
+                  document.addEventListener("touchend", endTouch);
+                }, { passive: false });
+                function moveElement(e) {
+                    if (
+                        !isDragging &&
+                        (Math.abs(e.clientX - startX) > dragThreshold ||
+                            Math.abs(e.clientY - startY) > dragThreshold)
+                    ) {
+                        isDragging = true;
+                        element.style.zIndex = "1000";
+                        saveState();
+                    }
+                    if (isDragging) {
+                        const rect = canvas.getBoundingClientRect();
+                        element.style.left = `${
+                            (e.clientX - rect.left - offsetX) / scale
+                        }px`;
+                        element.style.top = `${
+                            (e.clientY - rect.top - offsetY) / scale
+                        }px`;
+                        const index = pages[currentPage].elements.findIndex(
+                            (el) => el.node === element
+                        );
+                        if (index !== -1) {
+                            pages[currentPage].elements[index].x = parseFloat(
+                                element.style.left
+                            );
+                            pages[currentPage].elements[index].y = parseFloat(
+                                element.style.top
+                            );
+                        }
+                        socket.emit("moveElement", {
+                            page: currentPage,
+                            elementId: element.dataset.id,
+                            x: parseFloat(element.style.left),
+                            y: parseFloat(element.style.top),
+                        });
+                    }
+                }
+                function stopMoving() {
+                    if (isDragging) element.style.zIndex = "10";
+                    element.classList.remove("active");
+                    document.removeEventListener("mousemove", moveElement);
+                    document.removeEventListener("mouseup", stopMoving);
+                }
+                if (element.dataset.type === "text") {
+                    element.addEventListener("dblclick", () => element.focus());
+                }
+            }
+
+            function makeResizable(element) {
+                const resizer = document.createElement("div");
+                resizer.className =
+                    "absolute w-4 h-4 bg-white border border-gray-400 rounded-full right-0 bottom-0 cursor-se-resize";
+                resizer.style.transform = "translate(50%, 50%)";
+                element.appendChild(resizer);
+                let startX, startY, startWidth, startHeight;
+                resizer.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = element.offsetWidth;
+                    startHeight = element.offsetHeight;
+                    document.addEventListener("mousemove", resize);
+                    document.addEventListener("mouseup", stopResize);
+                });
+                function resize(e) {
+                    saveState();
+                    const width = startWidth + (e.clientX - startX) / scale;
+                    const height = startHeight + (e.clientY - startY) / scale;
+                    element.style.width = `${width}px`;
+                    element.style.height = `${height}px`;
+                    if (element.dataset.type === "sticker") {
+                        const fontSize = Math.max(16, width / 2);
+                        element.style.fontSize = `${fontSize}px`;
+                        element.style.lineHeight = `${height}px`;
+                    }
+                    const index = pages[currentPage].elements.findIndex(
+                        (el) => el.node === element
+                    );
+                    if (index !== -1) {
+                        pages[currentPage].elements[index].width = width;
+                        pages[currentPage].elements[index].height = height;
+                    }
+                    socket.emit("resizeElement", {
+                        page: currentPage,
+                        elementId: element.dataset.id,
+                        width,
+                        height,
+                    });
+                }
+                function stopResize() {
+                    document.removeEventListener("mousemove", resize);
+                    document.removeEventListener("mouseup", stopResize);
+                }
+            }
+
+            function makeRotatable(element) {
+                if (
+                    element.dataset.type === "text" ||
+                    element.dataset.type === "sticker"
+                )
+                    return;
+                const rotator = document.createElement("div");
+                rotator.className =
+                    "absolute w-4 h-4 bg-white border border-gray-400 rounded-full left-0 top-0 cursor-crosshair";
+                rotator.style.transform = "translate(-50%, -50%)";
+                element.appendChild(rotator);
+                let rotation = 0;
+                rotator.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const elementRect = element.getBoundingClientRect();
+                    const centerX = elementRect.left + elementRect.width / 2;
+                    const centerY = elementRect.top + elementRect.height / 2;
+                    function rotateElement(e) {
+                        saveState();
+                        const angle = Math.atan2(
+                            e.clientY - centerY,
+                            e.clientX - centerX
+                        );
+                        rotation = angle * (180 / Math.PI) + 90;
+                        element.style.transform = `rotate(${rotation}deg)`;
+                        const index = pages[currentPage].elements.findIndex(
+                            (el) => el.node === element
+                        );
+                        if (index !== -1) {
+                            pages[currentPage].elements[index].rotation =
+                                rotation;
+                        }
+                        socket.emit("rotateElement", {
+                            page: currentPage,
+                            elementId: element.dataset.id,
+                            rotation,
+                        });
+                    }
+                    function stopRotate() {
+                        document.removeEventListener(
+                            "mousemove",
+                            rotateElement
+                        );
+                        document.removeEventListener("mouseup", stopRotate);
+                    }
+                    document.addEventListener("mousemove", rotateElement);
+                    document.addEventListener("mouseup", stopRotate);
+                });
+            }
+
+            function makeContextMenu(element) {
+                element.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    document
+                        .querySelectorAll(".context-menu")
+                        .forEach((m) => m.remove());
+                    const menu = document.createElement("div");
+                    menu.className =
+                        "context-menu fixed bg-white shadow-lg z-50 py-1 rounded";
+                    menu.style.left = `${e.clientX}px`;
+                    menu.style.top = `${e.clientY}px`;
+                    const deleteOption = document.createElement("div");
+                    deleteOption.className =
+                        "px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-500";
+                    deleteOption.innerHTML =
+                        '<i class="fas fa-trash mr-2"></i> Delete';
+                    deleteOption.onclick = () => {
+                        saveState();
+                        const index = pages[currentPage].elements.findIndex(
+                            (el) => el.node === element
+                        );
+                        if (index > -1) {
+                            element.remove();
+                            pages[currentPage].elements.splice(index, 1);
+                            menu.remove();
+                            socket.emit("deleteElement", {
+                                page: currentPage,
+                                elementId: element.dataset.id,
+                            });
+                        }
+                    };
+                    menu.appendChild(deleteOption);
+                    document.body.appendChild(menu);
+                    const closeMenu = (ev) => {
+                        if (!menu.contains(ev.target)) {
+                            menu.remove();
+                            document.removeEventListener("click", closeMenu);
+                        }
+                    };
+                    setTimeout(
+                        () => document.addEventListener("click", closeMenu),
+                        100
+                    );
+                };
+            }
+
+            function addTextElement() {
+                saveState();
+                const text = "Add your text here";
+                const element = createElement("text", text, 50, 50);
+                element.node.classList.add("animate-fade-in");
+                pages[currentPage].elements.push(element);
+                canvas
+                    .querySelector(`[data-page="${currentPage}"]`)
+                    .appendChild(element.node);
+                socket.emit("addElement", {
+                    page: currentPage,
+                    element: {
+                        type: element.type,
+                        content: element.content,
+                        x: element.x,
+                        y: element.y,
+                        id: element.node.dataset.id,
+                        font: element.font,
+                    },
+                });
+            }
+
+            function replaceButtonWithClone(buttonId, callback) {
+                const button = document.getElementById(buttonId);
+                const clone = button.cloneNode(true);
+                button.replaceWith(clone);
+                clone.addEventListener("click", callback);
+            }
+
+            replaceButtonWithClone("addText", addTextElement);
+
+            function showShapeMenu() {
+                document
+                    .querySelectorAll(".shape-menu")
+                    .forEach((menu) => menu.remove());
+                const shapeMenu = document.createElement("div");
+                shapeMenu.className =
+                    "shape-menu absolute bg-white rounded shadow-lg z-50 p-2";
+                shapeMenu.style.left = `${
+                    document.getElementById("addShape").getBoundingClientRect()
+                        .left
+                }px`;
+                shapeMenu.style.top = `${
+                    document.getElementById("addShape").getBoundingClientRect()
+                        .bottom + 5
+                }px`;
+                const shapes = ["rectangle", "circle"];
+                shapes.forEach((shape) => {
+                    const btn = document.createElement("button");
+                    btn.className =
+                        "block w-full text-left px-4 py-2 hover:bg-gray-100";
+                    btn.textContent =
+                        shape.charAt(0).toUpperCase() + shape.slice(1);
+                    btn.addEventListener("click", () => {
+                        saveState();
+                        const element = createElement("shape", shape, 50, 50);
+                        element.node.classList.add("animate-fade-in");
+                        pages[currentPage].elements.push(element);
+                        canvas
+                            .querySelector(`[data-page="${currentPage}"]`)
+                            .appendChild(element.node);
+                        socket.emit("addElement", {
+                            page: currentPage,
+                            element: {
+                                type: element.type,
+                                content: element.content,
+                                x: element.x,
+                                y: element.y,
+                                id: element.node.dataset.id,
+                                font: element.font,
+                            },
+                        });
+                        shapeMenu.remove();
+                    });
+                    shapeMenu.appendChild(btn);
+                });
+                document.body.appendChild(shapeMenu);
+                document.addEventListener("click", function closeShapeMenu(e) {
+                    if (
+                        !shapeMenu.contains(e.target) &&
+                        e.target !== document.getElementById("addShape")
+                    ) {
+                        shapeMenu.remove();
+                        document.removeEventListener("click", closeShapeMenu);
+                    }
+                });
+            }
+
+            replaceButtonWithClone("addShape", showShapeMenu);
+
+            replaceButtonWithClone("clearCanvas", () => {
+              showNotification("Clear Canvas", "Are you sure you want to clear the canvas?", [
+                { text: "Confirm", id: "confirmClear" },
+                { text: "Cancel", id: "cancelClear" },
+              ]);
+
+              setTimeout(() => {
+                document.getElementById("confirmClear").addEventListener("click", () => {
+                  saveState();
+                  pages[currentPage].elements = [];
+                  updateCanvas();
+                  socket.emit("clearCanvas", { page: currentPage });
+                  document.getElementById("notificationModal").classList.add("hidden");
+                });
+
+                document.getElementById("cancelClear").addEventListener("click", () => {
+                  document.getElementById("notificationModal").classList.add("hidden");
+                });
+              }, 0);
+            });
+
+            document
+                .getElementById("colorPicker")
+                .addEventListener("change", (e) => {
+                    currentColor = e.target.value;
+                });
+
+            document
+                .getElementById("fontPicker")
+                .addEventListener("change", (e) => {
+                    currentFont = e.target.value;
+                });
+
+            document.getElementById("undo").addEventListener("click", () => {
+                if (undoStack.length > 0) {
+                    redoStack.push(
+                        JSON.parse(
+                            JSON.stringify(pages, (key, value) => {
+                                if (key === "node") return undefined;
+                                return value;
+                            })
+                        )
+                    );
+                    pages = JSON.parse(JSON.stringify(undoStack.pop()));
+                    updateCanvas();
+                }
+            });
+
+            document.getElementById("redo").addEventListener("click", () => {
+                if (redoStack.length > 0) {
+                    undoStack.push(
+                        JSON.parse(
+                            JSON.stringify(pages, (key, value) => {
+                                if (key === "node") return undefined;
+                                return value;
+                            })
+                        )
+                    );
+                    pages = JSON.parse(JSON.stringify(redoStack.pop()));
+                    updateCanvas();
+                }
+            });
+
+            document.querySelectorAll(".template").forEach((template) => {
+                template.addEventListener("click", () => {
+                    saveState();
+                    const templateId = template.dataset.template;
+                    pages[currentPage].elements = [];
+                    const newElements = [];
+                    let imageIndex = 0;
+                    const getNextImage = () => {
+                        if (assets.length === 0)
+                            return "https://placehold.co/150";
+                        const src = assets[imageIndex % assets.length];
+                        imageIndex++;
+                        return src;
+                    };
+                    if (templateId === "1") {
+                        const positions = [
+                            { x: 50, y: 50 },
+                            { x: 250, y: 50 },
+                            { x: 50, y: 250 },
+                            { x: 250, y: 250 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                    } else if (templateId === "2") {
+                        const positions = [
+                            { x: 80, y: 50, rotate: -5 },
+                            { x: 110, y: 80, rotate: 5 },
+                            { x: 150, y: 60, rotate: -2 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            if (pos.rotate)
+                                element.node.style.transform = `rotate(${pos.rotate}deg)`;
+                            element.rotation = pos.rotate || 0;
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                        const textElement = createElement(
+                            "text",
+                            "Our Memories",
+                            160,
+                            320
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    } else if (templateId === "3") {
+                        const positions = [
+                            { x: 50, y: 80, width: 180, height: 200 },
+                            { x: 240, y: 60, width: 120, height: 100 },
+                            { x: 280, y: 170, width: 150, height: 150 },
+                            { x: 120, y: 290, width: 130, height: 100 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            element.node.style.width = `${pos.width}px`;
+                            element.node.style.height = `${pos.height}px`;
+                            element.width = pos.width;
+                            element.height = pos.height;
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                    } else if (templateId === "4") {
+                        const titleElement = createElement(
+                            "text",
+                            "My Journey",
+                            30,
+                            30
+                        );
+                        titleElement.node.style.fontSize = "36px";
+                        titleElement.node.classList.add("animate-fade-in");
+                        newElements.push(titleElement);
+                        const dateElement = createElement(
+                            "text",
+                            new Date().toLocaleDateString(),
+                            30,
+                            80
+                        );
+                        dateElement.node.style.color = "#9c6ade";
+                        dateElement.node.classList.add("animate-fade-in");
+                        newElements.push(dateElement);
+                        const imageElement = createElement(
+                            "image",
+                            getNextImage(),
+                            30,
+                            120
+                        );
+                        imageElement.node.classList.add("animate-fade-in");
+                        newElements.push(imageElement);
+                        const textElement = createElement(
+                            "text",
+                            "Write your memory here...",
+                            220,
+                            120
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    } else if (templateId === "5") {
+                        const titleElement = createElement(
+                            "text",
+                            "Page Title",
+                            30,
+                            30
+                        );
+                        titleElement.node.style.fontSize = "32px";
+                        titleElement.node.style.color = "#9c6ade";
+                        titleElement.node.classList.add("animate-fade-in");
+                        newElements.push(titleElement);
+                        const divider = createElement(
+                            "shape",
+                            "rectangle",
+                            30,
+                            80
+                        );
+                        divider.node.style.width = "80%";
+                        divider.node.style.height = "2px";
+                        divider.node.style.backgroundColor = "#f78fb3";
+                        divider.node.classList.add("animate-fade-in");
+                        newElements.push(divider);
+                        const imageElement = createElement(
+                            "image",
+                            getNextImage(),
+                            50,
+                            120
+                        );
+                        imageElement.node.classList.add("animate-fade-in");
+                        newElements.push(imageElement);
+                        const textElement = createElement(
+                            "text",
+                            "Add your content here...",
+                            50,
+                            350
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    }
+                    pages[currentPage].elements = newElements;
+                    updateCanvas();
+                    socket.emit("applyTemplate", {
+                        page: currentPage,
+                        templateId,
+                    });
+                });
+            });
+
+            function loadStickers() {
+                const stickers = [
+                    "❤️",
+                    "🌟",
+                    "🎵",
+                    "🌈",
+                    "🌺",
+                    "✨",
+                    "📷",
+                    "🎁",
+                    "🎉",
+                ];
+                const stickerLibrary =
+                    document.getElementById("stickerLibrary");
+                stickerLibrary.innerHTML = "";
+                stickers.forEach((sticker) => {
+                    const div = document.createElement("div");
+                    div.className =
+                        "sticker bg-white p-2 rounded cursor-pointer text-2xl flex items-center justify-center";
+                    div.textContent = sticker;
+                    div.dataset.sticker = sticker;
+                    div.setAttribute("draggable", true);
+                    div.addEventListener("dragstart", () => {
+                        draggedElement = { type: "sticker", sticker };
+                    });
+                    stickerLibrary.appendChild(div);
+                });
+            }
+            loadStickers();
+
+            document.querySelectorAll(".tab-btn").forEach((tab) => {
+                tab.addEventListener("click", () => {
+                    document
+                        .querySelectorAll(".tab-content")
+                        .forEach((content) => content.classList.add("hidden"));
+                    document
+                        .getElementById(`${tab.dataset.tab}-tab`)
+                        .classList.remove("hidden");
+                    document
+                        .querySelectorAll(".tab-btn")
+                        .forEach((btn) => btn.classList.remove("tab-active"));
+                    tab.classList.add("tab-active");
+                });
+            });
+
+            replaceButtonWithClone("prevPage", () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    updateCanvas();
+                }
+            });
+
+            replaceButtonWithClone("nextPage", () => {
+                if (currentPage < pages.length - 1) {
+                    currentPage++;
+                    updateCanvas();
+                }
+            });
+
+            replaceButtonWithClone("addPage", () => {
+                saveState();
+                pages.push({ elements: [] });
+                currentPage = pages.length - 1;
+                updateCanvas();
+                socket.emit("addPage");
+            });
+
+            replaceButtonWithClone("deletePage", () => {
+                if (pages.length > 1) {
+                    saveState();
+                    pages.splice(currentPage, 1);
+                    let tempCurrentPage = currentPage;
+                    currentPage = Math.min(currentPage, pages.length - 1);
+                    updateCanvas();
+                    socket.emit("deletePage", { page: tempCurrentPage });
+                } else {
+                    showNotification(
+                        "Cannot Delete",
+                        "You cannot delete the last page"
+                    );
+                }
+            });
+
+            document.getElementById("zoomIn").addEventListener("click", () => {
+                scale = Math.min(scale + 0.1, 2);
+                updateZoom();
+            });
+
+            document.getElementById("zoomOut").addEventListener("click", () => {
+                scale = Math.max(scale - 0.1, 0.5);
+                updateZoom();
+            });
+
+            document
+                .getElementById("zoomReset")
+                .addEventListener("click", () => {
+                    scale = 1;
+                    updateZoom();
+                });
+
+            function updateZoom() {
+                const canvasWrapper = document.getElementById("canvasWrapper");
+                const zoomResetBtn = document.getElementById("zoomReset");
+                const pageContainer = canvas.querySelector(`[data-page="${currentPage}"]`);
+                zoomResetBtn.textContent = `${Math.round(scale * 100)}%`;
+
+                pageContainer.style.transform = `scale(${scale})`;
+                pageContainer.style.transformOrigin = "top left";
+
+                canvasWrapper.scrollLeft = (canvas.scrollWidth - canvas.clientWidth) / 2;
+                canvasWrapper.scrollTop = (canvas.scrollHeight - canvas.clientHeight) / 2;
+              }
+
+            replaceButtonWithClone("previewFlipbook", async () => {
+                const flipbook = document.getElementById("flipbook");
+                flipbook.innerHTML =
+                    '<div class="text-center py-8">Generating preview...</div>';
+                document
+                    .getElementById("flipbookModal")
+                    .classList.remove("hidden");
+                try {
+                    const canvas = document.getElementById("canvas");
+                    const canvasWidth = canvas.offsetWidth;
+                    const canvasHeight = canvas.offsetHeight;
+                    const scaleFactor = 0.7;
+                    const pageImages = [];
+                    for (let i = 0; i < pages.length; i++) {
+                        if (pages[i].elements.length === 0) continue;
+                        const tempDiv = document.createElement("div");
+                        tempDiv.className = "page bg-white relative mx-auto";
+                        tempDiv.style.width = `${canvasWidth}px`;
+                        tempDiv.style.height = `${canvasHeight}px`;
+                        tempDiv.style.transform = `scale(${scaleFactor})`;
+                        tempDiv.style.transformOrigin = "top left";
+                        await Promise.all(
+                            pages[i].elements.map(async (element) => {
+                                const clone = recreateElement(element);
+                                clone.style.left = `${parseFloat(element.x)}px`;
+                                clone.style.top = `${parseFloat(element.y)}px`;
+                                if (element.type === "image") {
+                                    const img = clone.querySelector("img");
+                                    if (img) {
+                                        await new Promise((resolve) => {
+                                            if (img.complete) resolve();
+                                            else {
+                                                img.onload = resolve;
+                                                img.onerror = resolve;
+                                            }
+                                        });
+                                    }
+                                }
+                                tempDiv.appendChild(clone);
+                            })
+                        );
+                        const container = document.createElement("div");
+                        container.style.width = `${
+                            canvasWidth * scaleFactor
+                        }px`;
+                        container.style.height = `${
+                            canvasHeight * scaleFactor
+                        }px`;
+                        container.style.overflow = "hidden";
+                        container.style.position = "relative";
+                        container.appendChild(tempDiv);
+                        document.body.appendChild(container);
+                        const canvasImg = await html2canvas(container, {
+                            scale: 2,
+                            logging: false,
+                            useCORS: true,
+                            allowTaint: true,
+                        });
+                        document.body.removeChild(container);
+                        pageImages.push(canvasImg.toDataURL("image/png"));
+                    }
+                    if (pageImages.length === 0) {
+                        flipbook.innerHTML =
+                            '<div class="text-center py-8">No content to preview</div>';
+                        return;
+                    }
+                    flipbook.innerHTML = "";
+                    pageImages.forEach((imgSrc, index) => {
+                        const imgContainer = document.createElement("div");
+                        imgContainer.className = `flipbook-page mx-auto text-center ${
+                            index === 0 ? "active" : ""
+                        }`;
+                        const img = document.createElement("img");
+                        img.src = imgSrc;
+                        img.style.maxWidth = "100%";
+                        img.style.maxHeight = "70vh";
+                        img.style.objectFit = "contain";
+                        img.alt = `Page ${index + 1}`;
+                        const pageNum = document.createElement("div");
+                        pageNum.className =
+                            "text-center mt-2 text-primary font-bold handwritten";
+                        pageNum.textContent = `Page ${index + 1} of ${
+                            pageImages.length
+                        }`;
+                        imgContainer.appendChild(img);
+                        imgContainer.appendChild(pageNum);
+                        flipbook.appendChild(imgContainer);
+                    });
+                    document.getElementById(
+                        "flipPageIndicator"
+                    ).textContent = `Page 1 of ${pageImages.length}`;
+                    currentFlipPage = 0;
+                } catch (error) {
+                    console.error("Error generating preview:", error);
+                    flipbook.innerHTML =
+                        '<div class="text-red-500 text-center py-8">Error generating preview</div>';
+                }
+            });
+
+            let currentFlipPage = 0;
+            document
+                .getElementById("prevFlipPage")
+                .addEventListener("click", () => {
+                    const pages = document.querySelectorAll(".flipbook-page");
+                    if (currentFlipPage > 0) {
+                        pages[currentFlipPage].classList.remove("active");
+                        currentFlipPage--;
+                        pages[currentFlipPage].classList.add("active");
+                        document.getElementById(
+                            "flipPageIndicator"
+                        ).textContent = `Page ${currentFlipPage + 1} of ${
+                            pages.length
+                        }`;
+                    }
+                });
+
+            document
+                .getElementById("nextFlipPage")
+                .addEventListener("click", () => {
+                    const pages = document.querySelectorAll(".flipbook-page");
+                    if (currentFlipPage < pages.length - 1) {
+                        pages[currentFlipPage].classList.remove("active");
+                        currentFlipPage++;
+                        pages[currentFlipPage].classList.add("active");
+                        document.getElementById(
+                            "flipPageIndicator"
+                        ).textContent = `Page ${currentFlipPage + 1} of ${
+                            pages.length
+                        }`;
+                    }
+                });
+
+            document
+                .getElementById("closeFlipbook")
+                .addEventListener("click", () => {
+                    document
+                        .getElementById("flipbookModal")
+                        .classList.add("hidden");
+                    currentFlipPage = 0;
+                });
+
+            document
+                .getElementById("downloadPDF")
+                .addEventListener("click", async () => {
+                    const element = document.createElement("div");
+                    element.className = "bg-white p-4";
+                    let hasContent = false;
+                    for (const page of pages) {
+                        if (page.elements.length === 0) continue;
+                        hasContent = true;
+                        const pageDiv = document.createElement("div");
+                        pageDiv.className =
+                            "w-[800px] h-[1000px] bg-white relative mb-8 p-4";
+                        pageDiv.style.pageBreakAfter = "always";
+                        await Promise.all(
+                            page.elements.map(async (el) => {
+                                const clone = recreateElement(el);
+                                clone.style.left = `${parseFloat(el.x)}px`;
+                                clone.style.top = `${parseFloat(el.y)}px`;
+                                if (el.type === "image") {
+                                    const img = clone.querySelector("img");
+                                    if (img) {
+                                        await new Promise((resolve) => {
+                                            if (img.complete) resolve();
+                                            else {
+                                                img.onload = resolve;
+                                                img.onerror = resolve;
+                                            }
+                                        });
+                                    }
+                                }
+                                pageDiv.appendChild(clone);
+                            })
+                        );
+                        element.appendChild(pageDiv);
+                    }
+                    if (!hasContent) {
+                        showNotification(
+                            "Empty Scrapbook",
+                            "Add some content before downloading!"
+                        );
+                        return;
+                    }
+                    document.body.appendChild(element);
+                    html2pdf()
+                        .from(element)
+                        .set({
+                            margin: [10, 10],
+                            filename: "digital-scrapbook.pdf",
+                            image: { type: "jpeg", quality: 0.98 },
+                            html2canvas: {
+                                scale: 2,
+                                useCORS: true,
+                                allowTaint: true,
+                            },
+                            jsPDF: {
+                                unit: "mm",
+                                format: "a4",
+                                orientation: "portrait",
+                            },
+                        })
+                        .save()
+                        .then(() => {
+                            document.body.removeChild(element);
+                        });
+                });
+
+            document
+                .getElementById("startCollab")
+                .addEventListener("click", () => {
+                    if (!collabSession) {
+                        collabSession = Date.now().toString();
+                        socket.join(collabSession);
+                        virtualUsers = ["User1", "User2"];
+                        document.getElementById(
+                            "collabStatus"
+                        ).textContent = `Collaborating with ${virtualUsers.join(
+                            ", "
+                        )}`;
+                        document.getElementById("startCollab").innerHTML =
+                            '<i class="fas fa-users mr-1"></i> End Collaboration';
+                        document.getElementById(
+                            "collaborators"
+                        ).innerHTML = `<i class="fas fa-users mr-2"></i><span>`;
+                    } else {
+                        socket.leave(collabSession);
+                        collabSession = null;
+                        virtualUsers = [];
+                        document.getElementById("collabStatus").textContent =
+                            "";
+                        document.getElementById("startCollab").innerHTML =
+                            '<i class="fas fa-users mr-1"></i> Start Collaboration';
+                        document.getElementById(
+                            "collaborators"
+                        ).innerHTML = `<i class="fas fa-users mr-2"></i><span>Collaborators: 1</span>`;
+                    }
+                });
+
+            socket.on("addElement", (data) => {
+                if (currentPage === data.page) {
+                    const existing = pages[data.page].elements.find(
+                        (el) => el.id === data.element.id
+                    );
+                    if (!existing) {
+                        const element = createElement(
+                            data.element.type,
+                            data.element.content,
+                            data.element.x,
+                            data.element.y,
+                            data.element.font
+                        );
+                        element.node.dataset.id = data.element.id;
+                        element.id = data.element.id;
+                        element.node.classList.add("animate-fade-in");
+                        pages[data.page].elements.push(element);
+                        canvas
+                            .querySelector(`[data-page="${data.page}"]`)
+                            .appendChild(element.node);
+                    }
+                }
+            });
+
+            socket.on("moveElement", (data) => {
+                if (currentPage === data.page) {
+                    const element = pages[data.page].elements.find(
+                        (el) => el.id === data.elementId
+                    );
+                    if (element) {
+                        element.x = data.x;
+                        element.y = data.y;
+                        element.node.style.left = `${data.x}px`;
+                        element.node.style.top = `${data.y}px`;
+                    }
+                }
+            });
+
+            socket.on("resizeElement", (data) => {
+                if (currentPage === data.page) {
+                    const element = pages[data.page].elements.find(
+                        (el) => el.id === data.elementId
+                    );
+                    if (element) {
+                        element.width = data.width;
+                        element.height = data.height;
+                        element.node.style.width = `${data.width}px`;
+                        element.node.style.height = `${data.height}px`;
+                    }
+                }
+            });
+
+            socket.on("rotateElement", (data) => {
+                if (currentPage === data.page) {
+                    const element = pages[data.page].elements.find(
+                        (el) => el.id === data.elementId
+                    );
+                    if (element) {
+                        element.rotation = data.rotation;
+                        element.node.style.transform = `rotate(${data.rotation}deg)`;
+                    }
+                }
+            });
+
+            socket.on("deleteElement", (data) => {
+                if (currentPage === data.page) {
+                    const index = pages[data.page].elements.findIndex(
+                        (el) => el.id === data.elementId
+                    );
+                    if (index !== -1) {
+                        pages[data.page].elements[index].node.remove();
+                        pages[data.page].elements.splice(index, 1);
+                    }
+                }
+            });
+
+            socket.on("updateElementContent", (data) => {
+                if (currentPage === data.page) {
+                    const element = pages[data.page].elements.find(
+                        (el) => el.id === data.elementId
+                    );
+                    if (element) {
+                        element.content = data.content;
+                        if (element.type === "image") {
+                            element.node.querySelector("img").src =
+                                data.content;
+                        } else if (element.type === "text") {
+                            element.node.textContent = data.content;
+                        }
+                        element.node.dataset.content = data.content;
+                    }
+                }
+            });
+
+            socket.on("clearCanvas", (data) => {
+                if (currentPage === data.page) {
+                    pages[data.page].elements = [];
+                    updateCanvas();
+                }
+            });
+
+            socket.on("addPage", () => {
+                if (!pages[currentPage]) {
+                    pages.push({ elements: [] });
+                    updatePageIndicator();
+                    updatePageButtons();
+                }
+            });
+
+            socket.on("deletePage", (data) => {
+                if (pages.length > 1 && currentPage === data.page) {
+                    pages.splice(data.page, 1);
+                    currentPage = Math.min(currentPage, pages.length - 1);
+                    updateCanvas();
+                }
+            });
+
+            socket.on("applyTemplate", (data) => {
+                if (currentPage === data.page) {
+                    pages[data.page].elements = [];
+                    const templateId = data.templateId;
+                    const newElements = [];
+                    let imageIndex = 0;
+                    const getNextImage = () => {
+                        if (assets.length === 0)
+                            return "https://placehold.co/150";
+                        const src = assets[imageIndex % assets.length];
+                        imageIndex++;
+                        return src;
+                    };
+                    if (templateId === "1") {
+                        const positions = [
+                            { x: 50, y: 50 },
+                            { x: 250, y: 50 },
+                            { x: 50, y: 250 },
+                            { x: 250, y: 250 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                    } else if (templateId === "2") {
+                        const positions = [
+                            { x: 80, y: 50, rotate: -5 },
+                            { x: 110, y: 80, rotate: 5 },
+                            { x: 150, y: 60, rotate: -2 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            if (pos.rotate)
+                                element.node.style.transform = `rotate(${pos.rotate}deg)`;
+                            element.rotation = pos.rotate || 0;
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                        const textElement = createElement(
+                            "text",
+                            "Our Memories",
+                            160,
+                            320
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    } else if (templateId === "3") {
+                        const positions = [
+                            { x: 50, y: 80, width: 180, height: 200 },
+                            { x: 240, y: 60, width: 120, height: 100 },
+                            { x: 280, y: 170, width: 150, height: 150 },
+                            { x: 120, y: 290, width: 130, height: 100 },
+                        ];
+                        positions.forEach((pos) => {
+                            const element = createElement(
+                                "image",
+                                getNextImage(),
+                                pos.x,
+                                pos.y
+                            );
+                            element.node.style.width = `${pos.width}px`;
+                            element.node.style.height = `${pos.height}px`;
+                            element.width = pos.width;
+                            element.height = pos.height;
+                            element.node.classList.add("animate-fade-in");
+                            newElements.push(element);
+                        });
+                    } else if (templateId === "4") {
+                        const titleElement = createElement(
+                            "text",
+                            "My Journey",
+                            30,
+                            30
+                        );
+                        titleElement.node.style.fontSize = "36px";
+                        titleElement.node.classList.add("animate-fade-in");
+                        newElements.push(titleElement);
+                        const dateElement = createElement(
+                            "text",
+                            new Date().toLocaleDateString(),
+                            30,
+                            80
+                        );
+                        dateElement.node.style.color = "#9c6ade";
+                        dateElement.node.classList.add("animate-fade-in");
+                        newElements.push(dateElement);
+                        const imageElement = createElement(
+                            "image",
+                            getNextImage(),
+                            30,
+                            120
+                        );
+                        imageElement.node.classList.add("animate-fade-in");
+                        newElements.push(imageElement);
+                        const textElement = createElement(
+                            "text",
+                            "Write your memory here...",
+                            220,
+                            120
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    } else if (templateId === "5") {
+                        const titleElement = createElement(
+                            "text",
+                            "Page Title",
+                            30,
+                            30
+                        );
+                        titleElement.node.style.fontSize = "32px";
+                        titleElement.node.style.color = "#9c6ade";
+                        titleElement.node.classList.add("animate-fade-in");
+                        newElements.push(titleElement);
+                        const divider = createElement(
+                            "shape",
+                            "rectangle",
+                            30,
+                            80
+                        );
+                        divider.node.style.width = "80%";
+                        divider.node.style.height = "2px";
+                        divider.node.style.backgroundColor = "#f78fb3";
+                        divider.node.classList.add("animate-fade-in");
+                        newElements.push(divider);
+                        const imageElement = createElement(
+                            "image",
+                            getNextImage(),
+                            50,
+                            120
+                        );
+                        imageElement.node.classList.add("animate-fade-in");
+                        newElements.push(imageElement);
+                        const textElement = createElement(
+                            "text",
+                            "Add your content here...",
+                            50,
+                            350
+                        );
+                        textElement.node.classList.add("animate-fade-in");
+                        newElements.push(textElement);
+                    }
+                    pages[data.page].elements = newElements;
+                    updateCanvas();
+                }
+            });
+
+            document
+                .getElementById("toggleSidebar")
+                .addEventListener("click", () => {
+                    const sidebar = document.getElementById("sidebar");
+                    sidebar.classList.toggle("open");
+                });
+                function resizeSidebar() {
+                  const sidebar = document.getElementById("sidebar");
+                  if (window.innerWidth >= 768) {
+                    sidebar.style.height = window.innerHeight + 'px';
+                  }
+                }
+
+            updateCanvas();
+            resizeSidebar();
+            window.addEventListener("resize", resizeSidebar);
+        </script>
+    </body>
+</html>

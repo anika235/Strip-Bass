@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Closet Color Wheel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .custom-scrollbar-container::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .custom-scrollbar-container::-webkit-scrollbar-track {
+        background: #e2e8f0; 
+        border-radius: 10px;
+      }
+      .dark .custom-scrollbar-container::-webkit-scrollbar-track {
+        background: #334155; 
+      }
+      .custom-scrollbar-container::-webkit-scrollbar-thumb {
+        background: #94a3b8; 
+        border-radius: 10px;
+      }
+      .dark .custom-scrollbar-container::-webkit-scrollbar-thumb {
+        background: #64748b; 
+      }
+      .custom-scrollbar-container::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      .dark .custom-scrollbar-container::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
+      }
+      input,
+      select,
+      textarea {
+        outline: none;
+      }
+      select:focus,
+      input:focus,
+      textarea:focus {
+        outline: none;
+      }
+      .smooth-transition {
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 200ms;
+      }
+
+      td input.itemNameInput,
+      td select.itemColorSelect {
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+        line-height: 1.25;
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-sky-50 to-indigo-100 dark:from-slate-800 dark:to-slate-900 text-slate-800 dark:text-slate-100 min-h-screen p-4 md:p-6"
+  >
+    <div
+      class="max-w-6xl mx-auto mb-6 p-4 md:p-6 rounded-xl shadow-lg bg-white dark:bg-slate-800/70 backdrop-blur-md flex justify-between items-center border border-slate-200 dark:border-slate-700 smooth-transition hover:shadow-xl hover:-translate-y-0.5"
+    >
+      <h1
+        class="text-xl md:text-2xl font-bold text-indigo-600 dark:text-sky-400 flex items-center smooth-transition hover:text-indigo-700 dark:hover:text-sky-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-8 h-8 mr-3"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245M9.53 16.122A2.25 2.25 0 0012 13.875m0 0A2.25 2.25 0 0014.47 16.122m0 0a3 3 0 005.78 1.128 2.25 2.25 0 012.4 2.245m0 0a2.25 2.25 0 00-.884-5.465M12 13.875a2.25 2.25 0 00-2.47-.908M12 13.875c.383 0 .75.044 1.121.125m2.248-6.954L12.5 5.25m0 0l-2.248 1.745M12.5 5.25V1.5m0 3.75m0 0h-.097M12.5 5.25h.097m0 0A2.25 2.25 0 0114.47 7.5m0 0v2.828m0 0l1.128 1.129m-2.256-1.129l-1.129 1.129m0 0A2.25 2.25 0 009.53 7.5m0 0l1.129-1.13m0 0l-1.129-1.128m0 0V7.5m0 0H9.53m2.97-.908a2.25 2.25 0 01-2.47.908M14.47 7.5c0 .383.044.75.125 1.121M12 13.875c-2.625 0-4.682-1.006-4.682-2.25S9.375 9.375 12 9.375s4.682 1.006 4.682 2.25S14.625 13.875 12 13.875z"
+          />
+        </svg>
+        Closet Color Wheel
+      </h1>
+      <div class="flex items-center">
+        <span class="mr-2 text-sm font-medium text-slate-700 dark:text-slate-300"
+          >Light / Dark</span
+        >
+        <label
+          class="relative inline-flex items-center cursor-pointer smooth-transition hover:opacity-80"
+        >
+          <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+          <div
+            class="w-14 h-7 bg-slate-300 rounded-full peer peer-checked:bg-indigo-500 transition-all dark:bg-slate-600"
+          ></div>
+          <div
+            class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"
+          ></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div
+        class="lg:col-span-4 p-6 rounded-xl shadow-xl bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg space-y-6 border border-slate-200 dark:border-slate-700 smooth-transition hover:shadow-2xl hover:-translate-y-1"
+      >
+        <h2
+          class="text-xl font-semibold text-indigo-600 dark:text-sky-400 mb-4 pb-2 border-b-2 border-indigo-200 dark:border-sky-700 flex items-center smooth-transition hover:text-indigo-700 dark:hover:text-sky-300"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-7 h-7 mr-2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Add New Clothing Item
+        </h2>
+        <form id="clothingForm" class="space-y-5">
+          <div>
+            <label
+              for="itemName"
+              class="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                />
+              </svg>
+              Item Name
+            </label>
+            <input
+              type="text"
+              id="itemName"
+              class="mt-1 w-full py-3 px-4 rounded-md border-2 border-slate-300 dark:border-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 bg-slate-50/80 dark:bg-slate-700/60 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 smooth-transition hover:border-indigo-400 dark:hover:border-sky-500"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="itemColor"
+              class="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5 mr-2 text-slate-500 dark:text-slate-400"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245M9.53 16.122A2.25 2.25 0 0012 13.875m0 0A2.25 2.25 0 0014.47 16.122m0 0a3 3 0 005.78 1.128 2.25 2.25 0 012.4 2.245m0 0a2.25 2.25 0 00-.884-5.465M12 13.875a2.25 2.25 0 00-2.47-.908M12 13.875c.383 0 .75.044 1.121.125m2.248-6.954L12.5 5.25m0 0l-2.248 1.745M12.5 5.25V1.5m0 3.75m0 0h-.097M12.5 5.25h.097m0 0A2.25 2.25 0 0114.47 7.5m0 0v2.828m0 0l1.128 1.129m-2.256-1.129l-1.129 1.129m0 0A2.25 2.25 0 009.53 7.5m0 0l1.129-1.13m0 0l-1.129-1.128m0 0V7.5m0 0H9.53m2.97-.908a2.25 2.25 0 01-2.47.908M14.47 7.5c0 .383.044.75.125 1.121M12 13.875c-2.625 0-4.682-1.006-4.682-2.25S9.375 9.375 12 9.375s4.682 1.006 4.682 2.25S14.625 13.875 12 13.875z"
+                />
+              </svg>
+              Color
+            </label>
+            <select
+              id="itemColor"
+              class="mt-1 w-full py-3 px-4 rounded-md border-2 border-slate-300 dark:border-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 bg-slate-50/80 dark:bg-slate-700/60 dark:text-white smooth-transition hover:border-indigo-400 dark:hover:border-sky-500"
+              required
+            >
+              <option value="" disabled selected>Select a color</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Purple">Purple</option>
+              <option value="Black">Black</option>
+              <option value="White">White</option>
+              <option value="Gray">Gray</option>
+              <option value="Brown">Brown</option>
+              <option value="Orange">Orange</option>
+            </select>
+          </div>
+          <input type="hidden" id="editIndex" value="-1" />
+          <button
+            type="submit"
+            id="submitBtn"
+            class="w-full bg-indigo-500 text-white py-2.5 px-4 rounded-md hover:bg-indigo-600 dark:bg-sky-500 dark:hover:bg-sky-600 text-sm font-medium flex items-center justify-center shadow-md hover:shadow-lg smooth-transition transform hover:scale-105"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-5 h-5 mr-2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Add Item
+          </button>
+          <p
+            id="errorMsg"
+            class="text-rose-600 dark:text-rose-400 text-xs mt-1 hidden"
+          >
+            Please fill out all fields.
+          </p>
+        </form>
+      </div>
+
+      <div class="lg:col-span-8 space-y-6">
+        <div
+          class="p-6 rounded-xl shadow-xl bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg flex flex-col space-y-4 border border-slate-200 dark:border-slate-700 smooth-transition hover:shadow-2xl hover:-translate-y-1"
+        >
+          <h2
+            class="text-xl font-semibold text-indigo-600 dark:text-sky-400 mb-2 pb-2 border-b-2 border-indigo-200 dark:border-sky-700 flex-shrink-0 flex items-center smooth-transition hover:text-indigo-700 dark:hover:text-sky-300"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-7 h-7 mr-2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+              />
+            </svg>
+            Clothing Items
+          </h2>
+          <div
+            id="clothingTableContainer"
+            class="custom-scrollbar-container overflow-auto max-h-96 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg p-2 md:p-3"
+          >
+            <table
+              id="clothingTable"
+              class="min-w-full border-collapse border border-slate-300 dark:border-slate-600"
+            >
+              <thead
+                class="bg-slate-100 dark:bg-slate-700 sticky top-0 z-10"
+              >
+                <tr>
+                  <th
+                    class="p-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-300 dark:border-slate-600"
+                  >
+                    Item Name
+                  </th>
+                  <th
+                    class="p-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-300 dark:border-slate-600"
+                  >
+                    Color
+                  </th>
+                  <th
+                    class="p-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-300 dark:border-slate-600"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="clothingBody"
+                class="divide-y divide-slate-200 dark:divide-slate-700"
+              ></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          class="p-6 rounded-xl shadow-xl bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg flex flex-col space-y-4 border border-slate-200 dark:border-slate-700 smooth-transition hover:shadow-2xl hover:-translate-y-1"
+        >
+          <h2
+            class="text-xl font-semibold text-indigo-600 dark:text-sky-400 mb-2 pb-2 border-b-2 border-indigo-200 dark:border-sky-700 flex-shrink-0 flex items-center smooth-transition hover:text-indigo-700 dark:hover:text-sky-300"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-7 h-7 mr-2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"
+              />
+            </svg>
+            Color Analysis
+          </h2>
+          <div class="w-full max-w-md mx-auto">
+            <canvas id="colorWheel"></canvas>
+          </div>
+          <div
+            id="colorAnalysis"
+            class="mt-4 space-y-1 text-sm text-slate-700 dark:text-slate-300"
+          >
+            <p>
+              <strong
+                class="font-semibold text-slate-800 dark:text-slate-100"
+                >Overrepresented Colors:</strong
+              >
+              <span id="overrepresented">None</span>
+            </p>
+            <p>
+              <strong
+                class="font-semibold text-slate-800 dark:text-slate-100"
+                >Missing Colors:</strong
+              >
+              <span id="missing">None</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const themeToggle = document.getElementById("theme-toggle");
+
+      themeToggle.addEventListener("change", () => {
+        if (themeToggle.checked) {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("theme", "light");
+        }
+      });
+
+      function applyInitialTheme() {
+        const storedTheme = localStorage.getItem("theme");
+        if (
+          storedTheme === "dark" ||
+          (!storedTheme &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+          themeToggle.checked = true;
+        } else {
+          document.documentElement.classList.remove("dark");
+          themeToggle.checked = false;
+        }
+      }
+      applyInitialTheme();
+
+      let closet = [];
+      const colors = [
+        "Red",
+        "Blue",
+        "Green",
+        "Yellow",
+        "Purple",
+        "Black",
+        "White",
+        "Gray",
+        "Brown",
+        "Orange",
+      ];
+      const colorMap = {
+        Red: "#FF0000",
+        Blue: "#0000FF",
+        Green: "#008000",
+        Yellow: "#FFFF00",
+        Purple: "#800080",
+        Black: "#000000",
+        White: "#FFFFFF",
+        Gray: "#808080",
+        Brown: "#A52A2A",
+        Orange: "#FFA500",
+      };
+
+      let currentlyEditingIndex = -1;
+
+      const ctx = document.getElementById("colorWheel").getContext("2d");
+      const colorWheelChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              backgroundColor: [],
+              borderColor: document.documentElement.classList.contains("dark")
+                ? "#334155"
+                : "#FFFFFF",
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: document.documentElement.classList.contains("dark")
+                  ? "#cbd5e1"
+                  : "#334155",
+                font: { family: "Poppins" },
+              },
+            },
+            tooltip: {
+              titleFont: { family: "Poppins" },
+              bodyFont: { family: "Poppins" },
+              callbacks: {
+                label: (context) =>
+                  `${context.label}: ${context.raw} items (${(
+                    (context.raw / closet.length) *
+                    100
+                  ).toFixed(1)}%)`,
+              },
+            },
+          },
+        },
+      });
+
+      themeToggle.addEventListener("change", () => {
+        const isDark = document.documentElement.classList.contains("dark");
+        colorWheelChart.data.datasets[0].borderColor = isDark
+          ? "#334155"
+          : "#FFFFFF";
+        colorWheelChart.options.plugins.legend.labels.color = isDark
+          ? "#cbd5e1"
+          : "#334155";
+        colorWheelChart.update();
+      });
+
+      document
+        .getElementById("clothingForm")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const nameInput = document.getElementById("itemName");
+          const colorInput = document.getElementById("itemColor");
+          const name = nameInput.value.trim();
+          const color = colorInput.value;
+
+          if (!name || !color) {
+            document.getElementById("errorMsg").classList.remove("hidden");
+            return;
+          }
+          document.getElementById("errorMsg").classList.add("hidden");
+
+          closet.push({ name, color });
+
+          if (currentlyEditingIndex !== -1) {
+            currentlyEditingIndex = -1;
+          }
+
+          updateTable();
+          updateChart();
+          analyzeColors();
+          document.getElementById("clothingForm").reset();
+          colorInput.value = "";
+          document.getElementById("editIndex").value = -1;
+        });
+
+      function updateTable() {
+        const tbody = document.getElementById("clothingBody");
+        tbody.innerHTML = "";
+        if (closet.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500 dark:text-slate-400 border-b border-slate-300 dark:border-slate-600">Your closet is empty. Add some items!</td></tr>`;
+          return;
+        }
+
+        closet.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.id = `row-${index}`;
+          row.className =
+            "hover:bg-slate-100/70 dark:hover:bg-slate-700/70 smooth-transition";
+
+          if (index === currentlyEditingIndex) {
+            const nameCell = document.createElement("td");
+            nameCell.className =
+              "p-2 border-b border-slate-300 dark:border-slate-600";
+            nameCell.innerHTML = `<input type="text" value="${item.name}" class="itemNameInput mt-1 w-full py-1.5 px-3 rounded-md border-2 border-slate-300 dark:border-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 bg-slate-50/80 dark:bg-slate-700/60 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm" />`;
+
+            const colorCell = document.createElement("td");
+            colorCell.className =
+              "p-2 border-b border-slate-300 dark:border-slate-600";
+            let colorOptionsHTML = colors
+              .map(
+                (colorOption) =>
+                  `<option value="${colorOption}" ${item.color === colorOption ? "selected" : ""}>${colorOption}</option>`,
+              )
+              .join("");
+            colorCell.innerHTML = `<select class="itemColorSelect mt-1 w-full py-1.5 px-3 rounded-md border-2 border-slate-300 dark:border-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-500 bg-slate-50/80 dark:bg-slate-700/60 dark:text-white text-sm">${colorOptionsHTML}</select>`;
+
+            const actionsCell = document.createElement("td");
+            actionsCell.className =
+              "p-2 border-b border-slate-300 dark:border-slate-600 whitespace-nowrap";
+            actionsCell.innerHTML = `
+              <button onclick="saveEditedItem(${index})" class="text-green-600 dark:text-green-400 hover:underline font-medium smooth-transition">Save</button>
+              <button onclick="cancelEditItem(${index})" class="text-slate-500 dark:text-slate-400 hover:underline ml-2 font-medium smooth-transition">Cancel</button>
+            `;
+            row.append(nameCell, colorCell, actionsCell);
+          } else {
+            row.innerHTML = `
+              <td class="p-3 text-sm text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-600">${item.name}</td>
+              <td class="p-3 text-sm text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-600">
+                  <span class="inline-block w-4 h-4 rounded-full mr-2 border border-slate-300 dark:border-slate-600 align-middle" style="background-color: ${colorMap[item.color]}"></span>
+                  ${item.color}
+              </td>
+              <td class="p-3 text-sm border-b border-slate-300 dark:border-slate-600 whitespace-nowrap">
+                  <button onclick="editItem(${index})" class="text-indigo-600 dark:text-sky-400 hover:underline font-medium smooth-transition">Edit</button>
+                  <button onclick="removeItem(${index})" class="text-rose-500 dark:text-rose-400 hover:underline ml-3 font-medium smooth-transition">Delete</button>
+              </td>
+            `;
+          }
+          tbody.appendChild(row);
+        });
+      }
+
+      window.editItem = function (index) {
+        currentlyEditingIndex = index;
+        updateTable();
+        const row = document.getElementById(`row-${index}`);
+        if (row) {
+          const input = row.querySelector(
+            'input[type="text"], select.itemColorSelect',
+          );
+          if (input) {
+            input.focus();
+            if (input.select) input.select();
+          }
+        }
+      };
+
+      window.saveEditedItem = function (index) {
+        const row = document.getElementById(`row-${index}`);
+        if (!row) return;
+
+        const nameInput = row.querySelector("input.itemNameInput");
+        const colorSelect = row.querySelector("select.itemColorSelect");
+
+        if (nameInput && colorSelect) {
+          const newName = nameInput.value.trim();
+          const newColor = colorSelect.value;
+
+          if (!newName || !newColor) {
+            alert("Name and color cannot be empty.");
+            return;
+          }
+          closet[index].name = newName;
+          closet[index].color = newColor;
+        }
+        currentlyEditingIndex = -1;
+        updateTable();
+        updateChart();
+        analyzeColors();
+      };
+
+      window.cancelEditItem = function (index) {
+        currentlyEditingIndex = -1;
+        updateTable();
+      };
+
+      window.removeItem = function (index) {
+        closet.splice(index, 1);
+        if (index === currentlyEditingIndex) {
+          currentlyEditingIndex = -1;
+        } else if (index < currentlyEditingIndex) {
+          currentlyEditingIndex--;
+        }
+        updateTable();
+        updateChart();
+        analyzeColors();
+      };
+
+      document
+        .getElementById("clothingBody")
+        .addEventListener("keydown", function (event) {
+          if (currentlyEditingIndex === -1) return;
+
+          const target = event.target;
+          if (
+            target.classList.contains("itemNameInput") ||
+            target.classList.contains("itemColorSelect")
+          ) {
+            const row = target.closest("tr");
+            if (row && row.id === `row-${currentlyEditingIndex}`) {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveEditedItem(currentlyEditingIndex);
+              } else if (event.key === "Escape") {
+                cancelEditItem(currentlyEditingIndex);
+              }
+            }
+          }
+        });
+
+      function updateChart() {
+        const colorCounts = colors.reduce((acc, colorName) => {
+          acc[colorName] = closet.filter(
+            (item) => item.color === colorName,
+          ).length;
+          return acc;
+        }, {});
+
+        const labels = colors.filter((colorName) => colorCounts[colorName] > 0);
+        const data = labels.map((colorName) => colorCounts[colorName]);
+        const backgroundColors = labels.map(
+          (colorName) => colorMap[colorName],
+        );
+
+        colorWheelChart.data.labels = labels;
+        colorWheelChart.data.datasets[0].data = data;
+        colorWheelChart.data.datasets[0].backgroundColor = backgroundColors;
+        colorWheelChart.update();
+      }
+
+      function analyzeColors() {
+        const totalItems = closet.length;
+        if (totalItems === 0) {
+          document.getElementById("overrepresented").textContent = "N/A";
+          document.getElementById("missing").textContent = colors.join(", ");
+          return;
+        }
+        const colorCounts = colors.reduce((acc, colorName) => {
+          acc[colorName] = closet.filter(
+            (item) => item.color === colorName,
+          ).length;
+          return acc;
+        }, {});
+        const overrepresented = colors.filter(
+          (colorName) => colorCounts[colorName] / totalItems > 0.25,
+        );
+        const missing = colors.filter(
+          (colorName) => colorCounts[colorName] === 0,
+        );
+        document.getElementById("overrepresented").textContent =
+          overrepresented.length ? overrepresented.join(", ") : "None";
+        document.getElementById("missing").textContent = missing.length
+          ? missing.join(", ")
+          : "None";
+      }
+
+      updateTable();
+      updateChart();
+      analyzeColors();
+    </script>
+  </body>
+</html>

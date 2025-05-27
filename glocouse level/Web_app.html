@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glucose Level Graph Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+          }
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .dark option:disabled {
+      color: rgb(202, 202, 202);
+    }
+    input, select, textarea {
+      outline: none;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+    }
+  </style>
+</head>
+<body class="font-sans bg-gradient-to-br from-blue-100 to-purple-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen p-6">
+
+  <div class="max-w-6xl mx-auto mb-6 p-6 rounded-xl shadow-xl bg-white/30 dark:bg-white/10 backdrop-blur-md flex justify-between items-center border border-white/30 dark:border-white/20">
+    <h1 class="text-2xl font-bold text-blue-700 dark:text-teal-300">🩺 Glucose Level Graph Generator</h1>
+    <div class="flex items-center">
+      <span class="mr-2 text-sm font-medium">Light / Dark</span>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="theme-toggle" class="sr-only peer">
+        <div class="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:bg-teal-600 transition-all"></div>
+        <div class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"></div>
+      </label>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
+
+    <div class="p-6 md:col-span-2 rounded-xl shadow-xl bg-white/30 dark:bg-white/10 backdrop-blur-md space-y-4 border border-white/30 dark:border-white/20">
+      <form id="glucoseForm" class="space-y-4">
+        <div>
+          <label for="sampleContext" class="block text-sm font-medium">Sample Context</label>
+          <select id="sampleContext" required
+           class="mt-1 w-full py-1 px-2
+           rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+           focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+           bg-white/30 dark:bg-gray-700/70 dark:text-white" >
+           <option disabled selected value="">Select context</option>
+           <option value="Fasting">Fasting</option>
+           <option value="Postprandial">Postprandial</option>
+           <option value="Preprandial">Preprandial</option>
+           <option value="Random">Random</option>
+           <option value="Bedtime">Bedtime</option>
+           <option value="Post-exercise">Post-exercise</option>
+           <option value="Morning">Morning</option>
+         </select>
+        </div>
+        <div>
+          <label for="department" class="block text-sm font-medium">Department</label>
+          <select id="department" required class="mt-1 w-full py-1 px-2
+          rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+          focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+          bg-white/30 dark:bg-gray-700/70 dark:text-white">
+            <option disabled selected value="">Select Department</option>
+            <option value="Endocrinology">Endocrinology</option>
+            <option value="Analytics">Analytics</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="General Medicine">General Medicine</option>
+          </select>
+        </div>
+        <div>
+          <label for="glucoseReading" class="block text-sm font-medium">Glucose Reading (mg/dL)</label>
+          <input type="number" id="glucoseReading" required min="0" step="0.1"
+          class="mt-1 w-full py-1 px-2
+          rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+          focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+          bg-white/30 dark:bg-gray-700/70 dark:text-white" />
+        </div>
+        <div>
+          <label for="timeframe" class="block text-sm font-medium">Timeframe</label>
+          <input type="datetime-local" id="timeframe" required autocomplete="off"
+          class="mt-1 w-full py-1 px-2
+          rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+          focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+          bg-white/30 dark:bg-gray-700/70 dark:text-white" />
+        </div>
+        <div>
+          <label for="prescription" class="block text-sm font-medium">Medical Prescription</label>
+          <textarea id="prescription" rows="3" placeholder="e.g. Take insulin before meal" autocomplete="off"
+          class="mt-1 w-full py-1 px-2
+          rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+          focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+          bg-white/30 dark:bg-gray-700/70 dark:text-white"></textarea>
+        </div>
+        <div class="flex gap-2" id="formActions">
+          <button id="addBtn" type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition">Add Data Point</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="p-6 md:col-span-3 rounded-xl shadow-xl bg-white/30 dark:bg-white/10 backdrop-blur-md flex flex-col space-y-4 border border-white/30 dark:border-white/20">
+      <div>
+        <label for="graphTitle" class="block text-sm font-medium">Graph Title</label>
+        <input type="text" id="graphTitle"
+               class="mt-1 w-full py-1 px-2 rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+                      focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+                      bg-white/30 dark:bg-gray-700/70 dark:text-white" />
+      </div>
+      <div>
+        <h2 class="text-xl font-semibold mb-2">📈 Glucose Chart</h2>
+        <label class="block text-sm font-medium">Filter by Date</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div>
+            <label for="filterStart" class="block text-sm font-medium">Filter: Start</label>
+            <input type="datetime-local" id="filterStart"
+            class="mt-1 w-full py-1 px-2
+            rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+            focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+            bg-white/30 dark:bg-gray-700/70 dark:text-white" />
+          </div>
+          <div>
+            <label for="filterEnd" class="block text-sm font-medium">Filter: End</label>
+            <input type="datetime-local" id="filterEnd"
+            class="mt-1 w-full py-1 px-2
+            rounded-md border-2 border-gray-300 dark:border-gray-600 shadow-sm
+            focus:ring-teal-500 focus:border-teal-500 dark:focus:border-teal-500 dark:focus:ring-teal-500
+            bg-white/30 dark:bg-gray-700/70 dark:text-white" />
+          </div>
+        </div>
+      </div>
+      <div class="flex-grow relative min-h-[300px] md:min-h-[400px]">
+        <canvas id="glucoseChart" class="bg-white dark:bg-gray-800 rounded-md p-1 md:p-2"></canvas>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button id="exportPNG" class="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 dark:bg-teal-600 dark:hover:bg-teal-700 transition">Export PNG</button>
+        <button id="exportTXT" class="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 dark:bg-teal-600 dark:hover:bg-teal-700 transition">Export TXT</button>
+        <button id="resetButton" class="bg-red-500 text-white py-2 rounded-md hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 transition">Clear Data</button>
+      </div>
+    </div>
+  </div>
+  <div id="actionModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 shadow-lg w-full max-w-md text-center text-gray-900 dark:text-white space-y-4">
+      <h2 class="text-lg font-semibold">What do you want to do with this point?</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-300">You can edit the values, delete the point, or cancel.</p>
+      <div class="flex justify-center gap-4 mt-4">
+        <button id="editPointBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700">Edit</button>
+        <button id="deletePointBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">Delete</button>
+        <button id="cancelModalBtn" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-600">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirmClearModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 shadow-lg w-full max-w-md text-center text-gray-900 dark:text-white space-y-4">
+      <h2 class="text-lg font-semibold">Are you sure?</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-300">This will permanently delete all glucose data.</p>
+      <div class="flex justify-center gap-4 mt-4">
+        <button id="confirmClearBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">Yes, clear</button>
+        <button id="cancelClearBtn" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-600">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const graphTitleInput = document.getElementById('graphTitle');
+
+    const CHART_COLORS_LIGHT = {
+      lineBorder: 'rgba(59, 130, 246, 1)',
+      lineBackground: 'rgba(59,130,246,0.2)',
+      pointNormal: 'rgba(59,130,246,1)',
+      pointAbnormal: 'rgba(220,38,38,1)'
+    };
+    const CHART_COLORS_DARK = {
+      lineBorder: 'rgba(13, 148, 136, 1)',
+      lineBackground: 'rgba(20, 184, 166, 0.2)',
+      pointNormal: 'rgba(13, 148, 136, 1)',
+      pointAbnormal: 'rgba(220,38,38,1)'
+    };
+
+
+    themeToggle.addEventListener('change', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      if (chart) chart.destroy();
+      initializeChart();
+      filterAndUpdateChart();
+    });
+
+    let glucoseData = JSON.parse(localStorage.getItem('glucoseData') || '[]');
+    let currentGraphTitle = localStorage.getItem('graphTitle') || 'Glucose Levels';
+    graphTitleInput.value = currentGraphTitle;
+
+    let chart;
+    const glucoseThresholds = [
+      { context: "Fasting", min: 70, max: 99 },
+      { context: "Postprandial", min: 70, max: 140 },
+      { context: "Preprandial", min: 70, max: 130 },
+      { context: "Random", min: 70, max: 180 },
+      { context: "Bedtime", min: 100, max: 140 },
+      { context: "Post-exercise", min: 70, max: 160 },
+      { context: "Morning", min: 70, max: 99 }
+    ];
+
+    function getChartThemeColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      return {
+        text: isDark ? '#e5e7eb' : '#1f2937',
+        grid: isDark ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.5)',
+        background: isDark ? '#1f2937' : '#ffffff',
+        chartLineColors: isDark ? CHART_COLORS_DARK : CHART_COLORS_LIGHT
+      };
+    }
+
+    function initializeChart() {
+      const ctx = document.getElementById('glucoseChart').getContext('2d');
+      if (chart) chart.destroy();
+      const theme = getChartThemeColors();
+      currentGraphTitle = document.getElementById('graphTitle').value || 'Glucose Levels';
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Glucose Levels (mg/dL)',
+            data: [],
+            backgroundColor: theme.chartLineColors.lineBackground,
+            borderColor: theme.chartLineColors.lineBorder,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: []
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: theme.text,
+                boxWidth: 12,
+                padding: 20
+              }
+            },
+            title: {
+              display: true,
+              text: currentGraphTitle,
+              font: { size: 18 },
+              color: theme.text,
+              padding: { top: 10, bottom: 20 }
+            },
+            tooltip: {
+              callbacks: {
+                title: function (tooltipItems) {
+                  const item = tooltipItems[0];
+                  const displayedData = chart.data.labels.map((label, i) => ({
+                    timeframe: label,
+                    reading: chart.data.datasets[0].data[i]
+                  }));
+                  const actualDataPoint = glucoseData.find(d =>
+                    d.timeframe === item.label &&
+                    d.reading === displayedData[item.dataIndex]?.reading
+                  );
+                  const originalDate = actualDataPoint ? actualDataPoint.timeframe : item.label;
+                  return originalDate.replace('T', ' ');
+                },
+                label: function (tooltipItem) {
+                  const displayedTime = tooltipItem.label;
+                  const displayedReading = tooltipItem.raw;
+
+                  const dataPoint = glucoseData.find(d => d.timeframe === displayedTime && d.reading === displayedReading);
+
+                  if (dataPoint) {
+                    return `${dataPoint.context}: ${dataPoint.reading} mg/dL`;
+                  }
+                  return `Reading: ${displayedReading} mg/dL`;
+                }
+              },
+              backgroundColor: theme.background,
+              titleColor: theme.text,
+              bodyColor: theme.text,
+              borderColor: theme.grid,
+              borderWidth: 1,
+              padding: 10,
+              boxPadding: 3
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time',
+                color: theme.text
+              },
+              ticks: { color: theme.text },
+              grid: { color: theme.grid }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'mg/dL',
+                color: theme.text
+              },
+              ticks: { color: theme.text },
+              grid: { color: theme.grid }
+            }
+          }
+        }
+      });
+    }
+
+    function sortGlucoseData() {
+      glucoseData.sort((a, b) => new Date(a.timeframe) - new Date(b.timeframe));
+    }
+
+    function isReadingNormal(context, reading) {
+      const threshold = glucoseThresholds.find(t => t.context === context);
+      if (!threshold) return true;
+      return reading >= threshold.min && reading <= threshold.max;
+    }
+
+    function updateChartSettingsAndColors() {
+        currentGraphTitle = document.getElementById('graphTitle').value || 'Glucose Levels';
+        if (chart) {
+            const theme = getChartThemeColors();
+            chart.options.plugins.title.text = currentGraphTitle;
+            chart.options.plugins.legend.labels.color = theme.text;
+            chart.options.plugins.title.color = theme.text;
+            chart.options.scales.x.title.color = theme.text;
+            chart.options.scales.x.ticks.color = theme.text;
+            chart.options.scales.x.grid.color = theme.grid;
+            chart.options.scales.y.title.color = theme.text;
+            chart.options.scales.y.ticks.color = theme.text;
+            chart.options.scales.y.grid.color = theme.grid;
+
+            chart.options.plugins.tooltip.backgroundColor = theme.background;
+            chart.options.plugins.tooltip.titleColor = theme.text;
+            chart.options.plugins.tooltip.bodyColor = theme.text;
+            chart.options.plugins.tooltip.borderColor = theme.grid;
+
+            chart.data.datasets[0].backgroundColor = theme.chartLineColors.lineBackground;
+            chart.data.datasets[0].borderColor = theme.chartLineColors.lineBorder;
+        }
+    }
+
+
+    function filterAndUpdateChart() {
+      if (!chart) return;
+      updateChartSettingsAndColors();
+
+      const start = document.getElementById('filterStart').value;
+      const end = document.getElementById('filterEnd').value;
+      const theme = getChartThemeColors();
+
+      const filteredData = glucoseData.filter(d => {
+        const date = new Date(d.timeframe).getTime();
+        const afterStart = !start || date >= new Date(start).getTime();
+        const beforeEnd = !end || date <= new Date(end).getTime();
+        return afterStart && beforeEnd;
+      });
+
+      chart.data.labels = filteredData.map(d => d.timeframe);
+      chart.data.datasets[0].data = filteredData.map(d => d.reading);
+      chart.data.datasets[0].pointBackgroundColor = filteredData.map(d =>
+        isReadingNormal(d.context, d.reading)
+          ? theme.chartLineColors.pointNormal
+          : theme.chartLineColors.pointAbnormal
+      );
+      chart.update();
+      localStorage.setItem('glucoseData', JSON.stringify(glucoseData));
+    }
+
+    graphTitleInput.addEventListener('input', () => {
+      currentGraphTitle = graphTitleInput.value;
+      localStorage.setItem('graphTitle', currentGraphTitle);
+      if (chart) {
+        chart.options.plugins.title.text = currentGraphTitle;
+        chart.update('none');
+      }
+    });
+
+    function resetForm() {
+        document.getElementById('glucoseForm').reset();
+        document.getElementById('sampleContext').selectedIndex = 0;
+        document.getElementById('department').selectedIndex = 0;
+        document.getElementById('glucoseReading').placeholder = 'Enter glucose level';
+        document.getElementById('sampleContext').dispatchEvent(new Event('change'));
+    }
+
+    function toggleFormButtons(editing) {
+      const actions = document.getElementById('formActions');
+      actions.innerHTML = '';
+
+      if (editing) {
+        actions.innerHTML = `
+          <button id="updateBtn" type="button" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition">Update</button>
+          <button id="cancelEditBtn" type="button" class="w-full bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 dark:bg-gray-500 dark:hover:bg-gray-600 transition">Cancel Edit</button>
+        `;
+
+        document.getElementById('updateBtn').addEventListener('click', () => {
+          const context = document.getElementById('sampleContext').value;
+          const reading = parseFloat(document.getElementById('glucoseReading').value);
+          const timeframe = document.getElementById('timeframe').value;
+          const prescription = document.getElementById('prescription').value;
+          const department = document.getElementById('department').value;
+
+          if (context && department && !isNaN(reading) && timeframe && editIndex !== null) {
+            const clickedPointTime = chart.data.labels[editIndex];
+            const clickedPointReading = chart.data.datasets[0].data[editIndex];
+            const actualIndexInGlucoseData = glucoseData.findIndex(d => d.timeframe === clickedPointTime && d.reading === clickedPointReading);
+
+            if (actualIndexInGlucoseData !== -1) {
+                glucoseData[actualIndexInGlucoseData] = { reading, timeframe, prescription, department, context };
+                sortGlucoseData();
+                filterAndUpdateChart();
+                editMode = false;
+                editIndex = null;
+                resetForm();
+                toggleFormButtons(false);
+            } else {
+                alert("Error updating point. Original data not found.");
+                editMode = false;
+                editIndex = null;
+                resetForm();
+                toggleFormButtons(false);
+            }
+          } else {
+            alert('Please ensure all fields are filled correctly.');
+          }
+        });
+
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+          editMode = false;
+          editIndex = null;
+          resetForm();
+          toggleFormButtons(false);
+        });
+      } else {
+        actions.innerHTML = `
+          <button id="addBtn" type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition">Add Data Point</button>
+        `;
+      }
+    }
+
+    document.getElementById('filterStart').addEventListener('change', filterAndUpdateChart);
+    document.getElementById('filterEnd').addEventListener('change', filterAndUpdateChart);
+
+    document.getElementById('glucoseForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (editMode) return;
+      const context = document.getElementById('sampleContext').value;
+      const reading = parseFloat(document.getElementById('glucoseReading').value);
+      const timeframe = document.getElementById('timeframe').value;
+      const prescription = document.getElementById('prescription').value;
+      const department = document.getElementById('department').value;
+
+      if (!context || !department || isNaN(reading) || !timeframe) {
+        return alert('Please fill all required fields with valid values.');
+      }
+      glucoseData.push({ reading, timeframe, prescription, department, context });
+      sortGlucoseData();
+      filterAndUpdateChart();
+      resetForm();
+    });
+
+    document.getElementById('resetButton').addEventListener('click', () => {
+      document.getElementById('confirmClearModal').classList.remove('hidden');
+    });
+
+    document.getElementById('exportPNG').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `${currentGraphTitle.replace(/\s+/g, '_') || 'glucose_chart'}.png`;
+      const canvas = document.getElementById('glucoseChart');
+      const tempCtx = document.createElement('canvas').getContext('2d');
+      tempCtx.canvas.width = canvas.width;
+      tempCtx.canvas.height = canvas.height;
+      const theme = getChartThemeColors();
+      tempCtx.fillStyle = theme.background;
+      tempCtx.fillRect(0, 0, tempCtx.canvas.width, tempCtx.canvas.height);
+      tempCtx.drawImage(canvas, 0, 0);
+      link.href = tempCtx.canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    document.getElementById('exportTXT').addEventListener('click', () => {
+      const dataToExport = chart.data.labels.map((label, i) => {
+        const reading = chart.data.datasets[0].data[i];
+        const originalPoint = glucoseData.find(d => d.timeframe === label && d.reading === reading);
+        return originalPoint || { timeframe: label, reading: reading, department: 'N/A', context: 'N/A', prescription: 'N/A' };
+      });
+
+      const txt = dataToExport.map(d =>
+        `Time: ${d.timeframe}, Reading: ${d.reading} mg/dL, Department: ${d.department || ''}, Context: ${d.context || ''}, Note: ${d.prescription || ''}`
+      ).join('\n');
+
+      const blob = new Blob([`Graph Title: ${currentGraphTitle}\n${txt}`], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${currentGraphTitle.replace(/\s+/g, '_') || 'glucose_data'}.txt`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    let editMode = false;
+    let editIndex = null;
+
+    document.getElementById('glucoseChart').addEventListener('click', (e) => {
+      const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
+      if (points.length) {
+        editIndex = points[0].index;
+        document.getElementById('actionModal').classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('editPointBtn').addEventListener('click', () => {
+      if (editIndex === null || editIndex < 0 || !chart.data.labels[editIndex]) {
+        alert("Cannot edit point. Please select a valid point on the chart.");
+        document.getElementById('actionModal').classList.add('hidden');
+        editIndex = null;
+        return;
+      }
+
+      const timeframeFromChart = chart.data.labels[editIndex];
+      const readingFromChart = chart.data.datasets[0].data[editIndex];
+      const dataPointToEdit = glucoseData.find(d => d.timeframe === timeframeFromChart && d.reading === readingFromChart);
+
+      if (dataPointToEdit) {
+        document.getElementById('sampleContext').value = dataPointToEdit.context || '';
+        document.getElementById('glucoseReading').value = dataPointToEdit.reading;
+        document.getElementById('timeframe').value = dataPointToEdit.timeframe;
+        document.getElementById('prescription').value = dataPointToEdit.prescription || '';
+        document.getElementById('department').value = dataPointToEdit.department || '';
+        editMode = true;
+        toggleFormButtons(true);
+      } else {
+        alert("Could not find the data point to edit. It might have been modified or deleted.");
+        editIndex = null;
+      }
+      document.getElementById('actionModal').classList.add('hidden');
+    });
+
+    document.getElementById('deletePointBtn').addEventListener('click', () => {
+      if (editIndex === null || editIndex < 0 || !chart.data.labels[editIndex]) {
+         alert("Cannot delete point. Please select a valid point on the chart.");
+         document.getElementById('actionModal').classList.add('hidden');
+         editIndex = null;
+         return;
+      }
+
+      const timeframeToDelete = chart.data.labels[editIndex];
+      const readingToDelete = chart.data.datasets[0].data[editIndex];
+      const originalIndex = glucoseData.findIndex(d => d.timeframe === timeframeToDelete && d.reading === readingToDelete);
+
+      if (originalIndex !== -1) {
+        glucoseData.splice(originalIndex, 1);
+        sortGlucoseData();
+        filterAndUpdateChart();
+      } else {
+        alert("Could not find data point to delete.");
+      }
+      document.getElementById('actionModal').classList.add('hidden');
+      editIndex = null;
+    });
+
+    document.getElementById('cancelModalBtn').addEventListener('click', () => {
+      document.getElementById('actionModal').classList.add('hidden');
+      editIndex = null;
+    });
+
+    document.getElementById('confirmClearBtn').addEventListener('click', () => {
+      glucoseData = [];
+      localStorage.removeItem('glucoseData');
+      if (chart) chart.destroy();
+      initializeChart();
+      filterAndUpdateChart();
+      document.getElementById('confirmClearModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelClearBtn').addEventListener('click', () => {
+      document.getElementById('confirmClearModal').classList.add('hidden');
+    });
+
+    document.getElementById('sampleContext').addEventListener('change', () => {
+      const context = document.getElementById('sampleContext').value;
+      const threshold = glucoseThresholds.find(t => t.context === context);
+      const glucoseInput = document.getElementById('glucoseReading');
+
+      if (threshold) {
+        glucoseInput.placeholder = `Normal: ${threshold.min} - ${threshold.max} mg/dL`;
+      } else {
+        glucoseInput.placeholder = 'Enter glucose level';
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const storedTheme = localStorage.getItem('theme');
+      if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        themeToggle.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeToggle.checked = false;
+      }
+
+      initializeChart();
+      filterAndUpdateChart();
+      toggleFormButtons(false);
+      document.getElementById('sampleContext').dispatchEvent(new Event('change'));
+    });
+  </script>
+</body>
+</html>

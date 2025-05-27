@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Color Harmony Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdn.plot.ly/plotly-3.0.1.min.js"
+      charset="utf-8"
+    ></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class", 
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      input[type="color"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 44px;
+        height: 40px;
+        border: none;
+        cursor: pointer;
+        border-radius: 0.375rem; 
+        padding: 0;
+        overflow: hidden;
+        vertical-align: middle;
+        border: 1px solid rgba(209, 213, 219, 0.6); 
+        transition: transform 0.1s ease-in-out;
+      }
+      .dark input[type="color"] {
+        border: 1px solid rgba(71, 85, 105, 0.6); 
+      }
+      input[type="color"]:active {
+        transform: scale(0.95);
+      }
+      input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 0.25rem; 
+      }
+      input[type="color"]::-moz-color-swatch {
+        border: none;
+        border-radius: 0.25rem; 
+      }
+
+      .harmony-button.active {
+        
+        background-color: #2563eb;
+        color: white;
+        font-weight: 600; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -2px rgba(0, 0, 0, 0.1); 
+      }
+      .dark .harmony-button.active {
+        background-color: #14b8a6; 
+      }
+      .harmony-button.active svg {
+        color: white;
+      }
+      .harmony-button.active:hover {
+        background-color: #1d4ed8; 
+      }
+      .dark .harmony-button.active:hover {
+        background-color: #0f766e; 
+      }
+
+      #colorWheel .main-svg {
+        border-radius: 0.5rem;
+      } 
+      #colorList .list-item:hover .copy-button {
+        opacity: 1;
+      }
+
+      .base-color-indicator {
+        background-color: rgba(226, 232, 240, 0.8); 
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+      }
+      .dark .base-color-indicator {
+        background-color: rgba(51, 65, 85, 0.7); 
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
+
+      .harmony-button span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #colorWheel.updating {
+        opacity: 0.7;
+        transition: opacity 0.2s ease-out;
+      }
+      #colorWheel {
+        transition: opacity 0.3s ease-in;
+      }
+      #colorList {
+        list-style: none;
+        padding-left: 0;
+      }
+      #colorWheelContainer {
+        overflow: hidden;
+      }
+      #hexInput {
+        outline-offset: 2px;
+      }
+      #hexInput:focus {
+        border-color: #0d9488; 
+        box-shadow: 0 0 0 1px #0d9488; 
+      }
+      .dark #hexInput:focus {
+        border-color: #14b8a6; 
+        box-shadow: 0 0 0 1px #14b8a6; 
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-blue-100 to-purple-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen p-2 sm:p-4 antialiased overflow-x-hidden"
+  >
+    <div
+      class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg p-4 md:p-6 rounded-2xl shadow-xl w-full max-w-6xl mx-auto border border-white/30 dark:border-gray-700/50 flex flex-col max-h-[95vh] min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-4rem)] overflow-y-auto transition-colors duration-300"
+    >
+      <h1
+        class="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 md:mb-8 pb-1 text-blue-600 dark:text-teal-400 flex-shrink-0 flex items-center justify-center gap-x-2 sm:gap-x-3 transition-colors duration-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-blue-500 dark:text-teal-400 transition-colors duration-300"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"
+          />
+        </svg>
+        <span>Color Harmony Explorer</span>
+      </h1>
+
+      <div
+        class="flex flex-col lg:flex-row gap-6 md:gap-8 flex-grow min-h-0"
+      >
+        <div
+          class="flex flex-col space-y-4 w-full lg:w-1/3 flex-shrink-0 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-xl shadow-lg p-4 md:p-5 border border-white/20 dark:border-gray-700/40 transition-all duration-300 ease-in-out hover:shadow-2xl lg:hover:-translate-y-1"
+        >
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >1. Select Base Color</label
+            >
+            <div
+              class="flex items-center gap-3 bg-slate-100/70 dark:bg-gray-700/50 p-2.5 rounded-lg border border-slate-200/70 dark:border-gray-600/50 shadow-sm"
+            >
+              <input
+                type="color"
+                id="colorPicker"
+                value="#D9534F"
+                title="Select Base Color"
+              />
+              <input
+                type="text"
+                id="hexInput"
+                value="#D9534F"
+                title="Enter Hex Code (e.g., #RRGGBB)"
+                class="flex-1 px-3 py-2 rounded-md bg-white dark:bg-gray-600 border border-slate-300/70 dark:border-gray-500 text-gray-700 dark:text-gray-200 text-sm font-semibold font-mono shadow-inner appearance-none focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <hr class="border-slate-300 dark:border-gray-600" />
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >2. Choose Harmony Rule</label
+            >
+            <div class="grid grid-cols-2 gap-2.5">
+              <button
+                data-rule="complementary"
+                title="Opposite colors (180° apart)"
+                class="harmony-button flex items-center justify-center text-center gap-1.5 px-2 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 bg-white/80 dark:bg-gray-700/70 border border-slate-300/70 dark:border-gray-600/60 rounded-md hover:bg-slate-100 dark:hover:bg-gray-600/70 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-gray-700 focus:ring-blue-500 dark:focus:ring-teal-500 transition-all duration-150 ease-in-out"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-4 h-4 text-teal-700 dark:text-teal-400 flex-shrink-0"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                  />
+                </svg>
+                <span>Complementary</span>
+              </button>
+              <button
+                data-rule="analogous"
+                title="Adjacent colors (±30°)"
+                class="harmony-button flex items-center justify-center text-center gap-1.5 px-2 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 bg-white/80 dark:bg-gray-700/70 border border-slate-300/70 dark:border-gray-600/60 rounded-md hover:bg-slate-100 dark:hover:bg-gray-600/70 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-gray-700 focus:ring-blue-500 dark:focus:ring-teal-500 transition-all duration-150 ease-in-out"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-4 h-4 text-teal-700 dark:text-teal-400 flex-shrink-0"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 14.25l4.179-2.25M18.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
+                  />
+                </svg>
+                <span>Analogous</span>
+              </button>
+              <button
+                data-rule="triadic"
+                title="3 evenly spaced colors (120° apart)"
+                class="harmony-button flex items-center justify-center text-center gap-1.5 px-2 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 bg-white/80 dark:bg-gray-700/70 border border-slate-300/70 dark:border-gray-600/60 rounded-md hover:bg-slate-100 dark:hover:bg-gray-600/70 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-gray-700 focus:ring-blue-500 dark:focus:ring-teal-500 transition-all duration-150 ease-in-out"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-4 h-4 text-teal-700 dark:text-teal-400 flex-shrink-0"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+                  />
+                </svg>
+                <span>Triadic</span>
+              </button>
+              <button
+                data-rule="tetradic"
+                title="4 colors, rectangular (0°, 60°, 180°, 240°)"
+                class="harmony-button flex items-center justify-center text-center gap-1.5 px-2 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 bg-white/80 dark:bg-gray-700/70 border border-slate-300/70 dark:border-gray-600/60 rounded-md hover:bg-slate-100 dark:hover:bg-gray-600/70 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-gray-700 focus:ring-blue-500 dark:focus:ring-teal-500 transition-all duration-150 ease-in-out"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-4 h-4 text-teal-700 dark:text-teal-400 flex-shrink-0"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                  />
+                </svg>
+                <span>Tetradic</span>
+              </button>
+            </div>
+            <div
+              id="ruleDescription"
+              class="mt-2 text-xs text-center text-gray-600/90 dark:text-gray-400/90 px-1 min-h-[1.5rem]"
+            ></div>
+          </div>
+
+          <hr class="border-slate-300 dark:border-gray-600" />
+
+          <div class="flex flex-col flex-grow min-h-0">
+            <h2
+              class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex-shrink-0"
+            >
+              3. Resulting Palette
+            </h2>
+            <div
+              id="colorList"
+              class="space-y-1.5 overflow-y-auto flex-grow pr-1 min-h-[150px] bg-slate-100/70 dark:bg-gray-700/60 p-3 rounded-lg border border-slate-200/70 dark:border-gray-600/50 shadow-sm"
+            ></div>
+          </div>
+        </div>
+
+        <div
+          id="colorWheelContainer"
+          class="w-full lg:w-2/3 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-xl shadow-lg border border-white/20 dark:border-gray-700/40 p-1 sm:p-1.5 flex items-center justify-center flex-grow min-h-[280px] sm:min-h-[320px] lg:min-h-0 transition-all duration-300 ease-in-out hover:shadow-2xl lg:hover:-translate-y-1"
+        >
+          <div id="colorWheel" class="w-full h-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      
+      
+      
+      
+
+      const ICONS = {
+        copy: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m9.75 0l-4.5-4.5m0 0l-4.5 4.5M12 3v13.5" /></svg>`,
+        copied: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-teal-600 dark:text-teal-400"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`,
+      };
+
+      let currentPaletteData = { colors: [], baseIndex: -1 };
+
+      function rgbToHex(r, g, b) {
+        const clamp = (val) => Math.max(0, Math.min(255, Math.round(val)));
+        return (
+          "#" +
+          [clamp(r), clamp(g), clamp(b)]
+            .map((x) => x.toString(16).padStart(2, "0"))
+            .join("")
+            .toUpperCase()
+        );
+      }
+
+      function hexToRgb(hex) {
+        if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+        const bigint = parseInt(hex.slice(1), 16);
+        return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+      }
+
+      function hslToRgb(h, s, l) {
+        s /= 100;
+        l /= 100;
+        const k = (n) => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = (n) =>
+          l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        return [255 * f(0), 255 * f(8), 255 * f(4)];
+      }
+
+      function rgbToHsl(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        const max = Math.max(r, g, b),
+          min = Math.min(r, g, b);
+        let h = 0,
+          s = 0,
+          l = (max + min) / 2;
+        if (max !== min) {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r:
+              h = (g - b) / d + (g < b ? 6 : 0);
+              break;
+            case g:
+              h = (b - r) / d + 2;
+              break;
+            case b:
+              h = (r - g) / d + 4;
+              break;
+          }
+          h *= 60;
+          if (h < 0) h += 360;
+        }
+        if (s * 100 < 0.1) h = 0;
+        return [h, s * 100, l * 100];
+      }
+
+      function hexToHsl(hex) {
+        const rgb = hexToRgb(hex);
+        return rgb ? rgbToHsl(...rgb) : [NaN, NaN, NaN];
+      }
+
+      function getTextColorForBackground(hexColor) {
+        try {
+          const rgb = hexToRgb(hexColor);
+          if (!rgb)
+            return document.documentElement.classList.contains("dark")
+              ? "#FFFFFF"
+              : "#000000";
+          const [r, g, b] = rgb;
+          const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          return lum > 0.5 ? "#000000" : "#FFFFFF";
+        } catch (e) {
+          console.warn("Could not calculate text color for:", hexColor, e);
+          return document.documentElement.classList.contains("dark")
+            ? "#FFFFFF"
+            : "#000000";
+        }
+      }
+
+      const harmonyRules = {
+        complementary: {
+          name: "Complementary",
+          description: "Opposite colors (180° apart)",
+          shifts: [0, 180],
+        },
+        analogous: {
+          name: "Analogous",
+          description: "Adjacent colors (±30°)",
+          shifts: [-30, 0, 30],
+        },
+        triadic: {
+          name: "Triadic",
+          description: "3 evenly spaced colors (120° apart)",
+          shifts: [0, 120, 240],
+        },
+        tetradic: {
+          name: "Tetradic",
+          description: "4 colors, rectangular (0°, 60°, 180°, 240°)",
+          shifts: [0, 60, 180, 240],
+        },
+      };
+
+      function getHarmonizedColors(baseHue, baseSat, baseLight, rule) {
+        const ruleInfo = harmonyRules[rule];
+        if (!ruleInfo) return { colors: [], baseIndex: -1 };
+
+        const baseH = ((baseHue % 360) + 360) % 360;
+        let identifiedBaseIndex = -1;
+
+        const colors = ruleInfo.shifts.map((shift, index) => {
+          const h = ((baseH + shift) % 360 + 360) % 360;
+          if (Math.abs(shift % 360) < 0.1) {
+            identifiedBaseIndex = index;
+          }
+          const [r, g, b] = hslToRgb(h, baseSat, baseLight);
+          return rgbToHex(r, g, b);
+        });
+
+        if (identifiedBaseIndex === -1) {
+          let minDiff = 361;
+          let tempIndex = 0;
+          colors.forEach((col, idx) => {
+            const [colH] = hexToHsl(col);
+            if (isNaN(colH)) return;
+            const normColH = ((colH % 360) + 360) % 360;
+            const diff = Math.min(
+              Math.abs(baseH - normColH),
+              360 - Math.abs(baseH - normColH),
+            );
+            if (diff < minDiff) {
+              minDiff = diff;
+              tempIndex = idx;
+            }
+          });
+          if (minDiff < 1 && colors.length > 0) {
+            identifiedBaseIndex = tempIndex;
+          } else if (colors.length > 0) {
+            identifiedBaseIndex = 0;
+          }
+        }
+        if (
+          identifiedBaseIndex < 0 ||
+          identifiedBaseIndex >= colors.length
+        ) {
+          identifiedBaseIndex = colors.length > 0 ? 0 : -1;
+        }
+
+        return { colors, baseIndex: identifiedBaseIndex };
+      }
+
+      function generateWheelData() {
+        const numSegments = 360;
+        const angleStep = 360 / numSegments;
+        const x = [];
+        const y = [];
+        const radius = 1.0;
+
+        for (let i = 0; i <= numSegments; i++) {
+          const angleDeg = i * angleStep;
+          const angleRad = ((angleDeg - 90) * Math.PI) / 180;
+          x.push(radius * Math.cos(angleRad));
+          y.push(radius * Math.sin(angleRad));
+        }
+        return { x, y };
+      }
+
+      function updatePlot(baseColorHex, rule) {
+        const plotDiv = document.getElementById("colorWheel");
+        if (!plotDiv || typeof Plotly === "undefined") {
+          console.error("Plotly or target div not found.");
+          return;
+        }
+
+        plotDiv.classList.add("updating");
+        const hexInputElement = document.getElementById("hexInput");
+        if (hexInputElement) {
+          hexInputElement.value = baseColorHex.toUpperCase();
+        }
+
+        try {
+          const [baseHue, baseSat, baseLight] = hexToHsl(baseColorHex);
+          if (isNaN(baseHue) || isNaN(baseSat) || isNaN(baseLight)) {
+            plotDiv.innerHTML = `<div class="p-4 text-red-600 dark:text-red-400 text-center font-medium">Invalid base color: ${baseColorHex}.</div>`;
+            currentPaletteData = { colors: [], baseIndex: -1 };
+            updateColorList(
+              currentPaletteData.colors,
+              currentPaletteData.baseIndex,
+            );
+            document.getElementById("ruleDescription").textContent = "";
+            plotDiv.classList.remove("updating");
+            return;
+          }
+
+          currentPaletteData = getHarmonizedColors(
+            baseHue,
+            baseSat,
+            baseLight,
+            rule,
+          );
+          if (
+            !currentPaletteData ||
+            !currentPaletteData.colors ||
+            currentPaletteData.colors.length === 0
+          ) {
+            throw new Error(
+              "Harmonized color generation failed or returned empty.",
+            );
+          }
+
+          const wheelData = generateWheelData();
+
+          const harmonizedHues = currentPaletteData.colors.map((hex) => {
+            const hsl = hexToHsl(hex);
+            if (isNaN(hsl[0]))
+              throw new Error(`Invalid HSL conversion for color ${hex}`);
+            return hsl[0];
+          });
+
+          const plotContainer = document.getElementById("colorWheelContainer");
+          const containerWidth =
+            plotContainer.clientWidth || plotContainer.offsetWidth || 300;
+
+          const DESKTOP_WHEEL_LINE = 28;
+          const DESKTOP_MARKER_SIZE = 20;
+          const DESKTOP_TEXT_SIZE = 11;
+          const MOBILE_WHEEL_LINE = 18;
+          const MOBILE_MARKER_SIZE = 15;
+          const MOBILE_TEXT_SIZE = 9;
+
+          let wheelLineWidth, currentMarkerSize, markerTextFontSize;
+
+          if (containerWidth <= 350) {
+            wheelLineWidth = MOBILE_WHEEL_LINE;
+            currentMarkerSize = MOBILE_MARKER_SIZE;
+            markerTextFontSize = MOBILE_TEXT_SIZE;
+          } else if (containerWidth <= 500) {
+            wheelLineWidth = Math.max(
+              MOBILE_WHEEL_LINE,
+              Math.round(DESKTOP_WHEEL_LINE * 0.75),
+            );
+            currentMarkerSize = Math.max(
+              MOBILE_MARKER_SIZE,
+              Math.round(DESKTOP_MARKER_SIZE * 0.75),
+            );
+            markerTextFontSize = Math.max(
+              MOBILE_TEXT_SIZE,
+              Math.round(DESKTOP_TEXT_SIZE * 0.85),
+            );
+          } else {
+            wheelLineWidth = DESKTOP_WHEEL_LINE;
+            currentMarkerSize = DESKTOP_MARKER_SIZE;
+            markerTextFontSize = DESKTOP_TEXT_SIZE;
+          }
+
+          const titleFontSize = containerWidth < 380 ? 10 : 13;
+          const plotMarginTop = containerWidth < 380 ? 15 : 20;
+
+          const markerRadius = 1.0;
+          const harmonizedX = harmonizedHues.map(
+            (h) => markerRadius * Math.cos(((h - 90) * Math.PI) / 180),
+          );
+          const harmonizedY = harmonizedHues.map(
+            (h) => markerRadius * Math.sin(((h - 90) * Math.PI) / 180),
+          );
+
+          const markerTextColors =
+            currentPaletteData.colors.map(getTextColorForBackground);
+          const markerOutlineWidth = 1;
+          const markerLineColor = document.documentElement.classList.contains(
+            "dark",
+          )
+            ? "rgba(255,255,255,0.6)"
+            : "rgba(0,0,0,0.7)";
+          const wheelLineColor = `hsl(${Math.round(baseHue)}, ${Math.round(
+            baseSat,
+          )}%, ${Math.max(
+            0,
+            Math.round(baseLight) -
+              (document.documentElement.classList.contains("dark")
+                ? -5
+                : 10),
+          )}%)`;
+
+          const data = [
+            {
+              x: wheelData.x,
+              y: wheelData.y,
+              mode: "lines",
+              type: "scatter",
+              line: {
+                color: wheelLineColor,
+                width: wheelLineWidth,
+              },
+              hoverinfo: "none",
+              showlegend: false,
+            },
+            {
+              x: harmonizedX,
+              y: harmonizedY,
+              mode: "markers+text",
+              type: "scatter",
+              marker: {
+                symbol: "circle",
+                size: currentMarkerSize,
+                color: currentPaletteData.colors,
+                line: { color: markerLineColor, width: markerOutlineWidth },
+              },
+              text: currentPaletteData.colors,
+              textposition: "middle center",
+              textfont: {
+                family: "Poppins, sans-serif",
+                size: markerTextFontSize,
+                color: markerTextColors,
+              },
+              hoverinfo: "text",
+              hovertext: currentPaletteData.colors.map(
+                (c, index) =>
+                  `${c}<br>Hue: ${Math.round(harmonizedHues[index])}°${
+                    index === currentPaletteData.baseIndex
+                      ? "<br><b>(Base)</b>"
+                      : ""
+                  }`,
+              ),
+              showlegend: false,
+            },
+          ];
+
+          const currentRuleInfo = harmonyRules[rule] || { name: "Selected" };
+          const plotTitleColor = document.documentElement.classList.contains(
+            "dark",
+          )
+            ? "#9ca3af"
+            : "#374151"; 
+
+          const layout = {
+            title: {
+              text: `${currentRuleInfo.name} Harmony for ${baseColorHex}`,
+              font: {
+                family: "Poppins, sans-serif",
+                size: titleFontSize,
+                color: plotTitleColor,
+              },
+              y: 0.99,
+              yanchor: "top",
+              x: 0.5,
+              xanchor: "center",
+            },
+            xaxis: {
+              showgrid: false,
+              zeroline: false,
+              showticklabels: false,
+              range: [-1.3, 1.3],
+              constrain: "domain",
+            },
+            yaxis: {
+              showgrid: false,
+              zeroline: false,
+              showticklabels: false,
+              range: [-1.3, 1.3],
+              scaleanchor: "x",
+              scaleratio: 1,
+            },
+            margin: { t: plotMarginTop, b: 5, l: 5, r: 5 },
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)",
+            autosize: true,
+            showlegend: false,
+            transition: {
+              duration: 300,
+              easing: "cubic-in-out",
+            },
+          };
+
+          const config = {
+            responsive: true,
+            displaylogo: false,
+            displayModeBar: false,
+            scrollZoom: false,
+            dragMode: false,
+            doubleClick: "reset",
+          };
+
+          Plotly.react(plotDiv, data, layout, config)
+            .then(() => {
+              plotDiv.classList.remove("updating");
+            })
+            .catch((err) => {
+              console.error("Plotly react error:", err);
+              plotDiv.innerHTML = `<div class="p-4 text-red-600 dark:text-red-400 text-center font-medium">Error rendering visualization.</div>`;
+              plotDiv.classList.remove("updating");
+            });
+
+          updateColorList(
+            currentPaletteData.colors,
+            currentPaletteData.baseIndex,
+          );
+          document.getElementById("ruleDescription").textContent =
+            currentRuleInfo.description || "";
+        } catch (error) {
+          console.error("Error updating plot:", error);
+          plotDiv.innerHTML = `<div class="p-4 text-red-600 dark:text-red-400 text-center font-medium">Error: ${error.message}.</div>`;
+          currentPaletteData = { colors: [], baseIndex: -1 };
+          updateColorList(
+            currentPaletteData.colors,
+            currentPaletteData.baseIndex,
+          );
+          document.getElementById("ruleDescription").textContent = "";
+          plotDiv.classList.remove("updating");
+        }
+      }
+
+      function copyToClipboard(text, buttonElement) {
+        if (!navigator.clipboard) {
+          alert("Clipboard API not supported by your browser.");
+          return;
+        }
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            const originalIcon = buttonElement.innerHTML;
+            const originalTitle = buttonElement.title;
+            buttonElement.innerHTML = ICONS.copied;
+            buttonElement.title = "Copied!";
+            buttonElement.disabled = true;
+            setTimeout(() => {
+              buttonElement.innerHTML = ICONS.copy;
+              buttonElement.title = originalTitle;
+              buttonElement.disabled = false;
+            }, 1200);
+          })
+          .catch((err) => {
+            console.error("Failed to copy text: ", err);
+            alert("Failed to copy text.");
+          });
+      }
+
+      function updateColorList(colors, baseIndex) {
+        const colorListDiv = document.getElementById("colorList");
+        if (!colorListDiv) return;
+
+        colorListDiv.innerHTML = "";
+
+        if (colors.length === 0) {
+          colorListDiv.innerHTML =
+            '<p class="text-xs text-gray-500 dark:text-gray-400 text-center italic p-4">Select a base color and rule.</p>';
+          return;
+        }
+
+        colors.forEach((color, index) => {
+          const listItem = document.createElement("div");
+          listItem.className = `list-item flex items-center justify-between gap-x-2 p-2 rounded-md group transition-colors duration-150 hover:bg-slate-200/60 dark:hover:bg-gray-600/50 ${
+            index === baseIndex ? "base-color-indicator font-medium" : ""
+          }`;
+
+          const colorInfoDiv = document.createElement("div");
+          colorInfoDiv.className =
+            "flex items-center gap-x-3 overflow-hidden flex-1 min-w-0";
+
+          const swatch = document.createElement("span");
+          swatch.className =
+            "block w-6 h-6 rounded-md border-2 border-slate-300 dark:border-gray-500 shadow-sm flex-shrink-0";
+          swatch.style.backgroundColor = color;
+
+          const hexText = document.createElement("span");
+          hexText.className =
+            "text-sm font-mono text-gray-700 dark:text-gray-300 truncate";
+          hexText.textContent = color;
+
+          colorInfoDiv.appendChild(swatch);
+          colorInfoDiv.appendChild(hexText);
+
+          if (index === baseIndex) {
+            const baseLabel = document.createElement("span");
+            baseLabel.className =
+              "ml-auto text-xs font-semibold text-teal-600 dark:text-teal-400 flex-shrink-0 px-1.5 py-0.5 bg-teal-100/70 dark:bg-teal-800/40 rounded-full";
+            baseLabel.textContent = "BASE";
+            colorInfoDiv.appendChild(baseLabel);
+          }
+
+          const copyButton = document.createElement("button");
+          copyButton.className =
+            "copy-button p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-slate-300/50 dark:hover:bg-gray-600/50 hover:text-gray-700 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-all duration-150 focus:opacity-100 flex-shrink-0";
+          copyButton.innerHTML = ICONS.copy;
+          copyButton.dataset.color = color;
+          copyButton.title = `Copy ${color}`;
+          copyButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            copyToClipboard(copyButton.dataset.color, copyButton);
+          });
+
+          listItem.appendChild(colorInfoDiv);
+          listItem.appendChild(copyButton);
+          colorListDiv.appendChild(listItem);
+        });
+      }
+
+      function validateHex(hex) {
+        return /^#[0-9a-fA-F]{6}$/.test(hex);
+      }
+
+      const colorPicker = document.getElementById("colorPicker");
+      const hexInput = document.getElementById("hexInput");
+      const harmonyButtons = document.querySelectorAll(".harmony-button");
+      let currentRule = "complementary";
+
+      function setActiveButton(selectedRule) {
+        harmonyButtons.forEach((button) => {
+          const isActive = button.dataset.rule === selectedRule;
+          button.classList.toggle("active", isActive);
+          if (isActive) {
+            button.classList.add(
+              "shadow-lg",
+              "ring-2",
+              "ring-blue-500",
+              "dark:ring-teal-500",
+              "ring-offset-1",
+              "ring-offset-white",
+              "dark:ring-offset-gray-700",
+            );
+          } else {
+            button.classList.remove(
+              "shadow-lg",
+              "ring-2",
+              "ring-blue-500",
+              "dark:ring-teal-500",
+              "ring-offset-1",
+              "ring-offset-white",
+              "dark:ring-offset-gray-700",
+            );
+          }
+        });
+        const ruleInfo = harmonyRules[selectedRule];
+        document.getElementById("ruleDescription").textContent = ruleInfo
+          ? ruleInfo.description
+          : "";
+      }
+
+      colorPicker.addEventListener("input", (e) => {
+        const newColor = e.target.value.toUpperCase();
+        if (hexInput) {
+          hexInput.value = newColor;
+          hexInput.classList.remove(
+            "border-red-500",
+            "dark:border-red-400",
+          );
+        }
+        updatePlot(newColor, currentRule);
+      });
+
+      if (hexInput) {
+        hexInput.addEventListener("change", (e) => {
+          let newColor = e.target.value.toUpperCase();
+          if (
+            !newColor.startsWith("#") &&
+            /^[0-9a-fA-F]{6}$/.test(newColor)
+          ) {
+            newColor = "#" + newColor;
+          } else if (
+            !newColor.startsWith("#") &&
+            /^[0-9a-fA-F]{3}$/.test(newColor)
+          ) {
+            newColor =
+              "#" +
+              newColor
+                .split("")
+                .map((char) => char + char)
+                .join("");
+          }
+
+          if (validateHex(newColor)) {
+            colorPicker.value = newColor;
+            e.target.value = newColor;
+            e.target.classList.remove(
+              "border-red-500",
+              "dark:border-red-400",
+            );
+            updatePlot(newColor, currentRule);
+          } else {
+            e.target.value = colorPicker.value.toUpperCase();
+            e.target.classList.add(
+              "border-red-500",
+              "dark:border-red-400",
+              "focus:border-red-500",
+              "dark:focus:border-red-400",
+              "focus:ring-red-500",
+              "dark:focus:ring-red-400",
+            );
+            setTimeout(() => {
+              e.target.classList.remove(
+                "border-red-500",
+                "dark:border-red-400",
+                "focus:border-red-500",
+                "dark:focus:border-red-400",
+                "focus:ring-red-500",
+                "dark:focus:ring-red-400",
+              );
+              
+            }, 1500);
+          }
+        });
+      }
+      harmonyButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          currentRule = button.dataset.rule;
+          setActiveButton(currentRule);
+          updatePlot(colorPicker.value, currentRule);
+        });
+      });
+      let resizeTimeout;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const plotDiv = document.getElementById("colorWheel");
+          if (
+            plotDiv &&
+            plotDiv._fullLayout &&
+            typeof Plotly !== "undefined" &&
+            Plotly.Plots
+          ) {
+            updatePlot(colorPicker.value, currentRule);
+          }
+        }, 200);
+      });
+      document.addEventListener("DOMContentLoaded", () => {
+        setActiveButton(currentRule);
+        const initialColor = colorPicker.value.toUpperCase();
+        if (hexInput) {
+          hexInput.value = initialColor;
+        }
+        setTimeout(() => {
+          updatePlot(initialColor, currentRule);
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

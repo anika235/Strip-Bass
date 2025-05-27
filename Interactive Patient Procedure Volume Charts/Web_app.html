@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procedure Volume Chart Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {},
+        },
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style></style>
+  </head>
+  <body
+    class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen py-8 px-4 transition-colors duration-300"
+  >
+    <div class="w-full max-w-7xl space-y-8">
+      <div
+        class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl flex justify-between items-center"
+      >
+        <h1
+          class="text-3xl font-bold text-center text-gray-700 dark:text-gray-200"
+        >
+          Interactive Patient Procedure Volume Charts
+        </h1>
+        <div class="flex items-center">
+          <span
+            class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Light / Dark</span
+          >
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-600 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"
+            ></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div class="flex flex-col md:flex-row gap-8">
+          <div
+            class="w-full md:w-1/3 bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-lg"
+          >
+            <h2 class="text-xl font-semibold mb-4 text-gray-600 dark:text-gray-300">
+              Chart Controls
+            </h2>
+            <form id="chartForm" class="space-y-4">
+              <div>
+                <label
+                  for="focusArea"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Target Focus Area</label
+                >
+                <select
+                  id="focusArea"
+                  class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 dark:focus:border-teal-400 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-50"
+                >
+                  <option value="Surgery">Surgery</option>
+                  <option value="Analytics">Analytics</option>
+                  <option value="Cardiology">Cardiology</option>
+                  <option value="Orthopedics">Orthopedics</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  for="chartTitleInput"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Chart Title (for selected area)</label
+                >
+                <input
+                  type="text"
+                  id="chartTitleInput"
+                  class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 dark:focus:border-teal-400 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-400"
+                  placeholder="Enter chart title"
+                />
+              </div>
+              <div>
+                <label
+                  for="procedureName"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Procedure Name</label
+                >
+                <input
+                  type="text"
+                  id="procedureName"
+                  class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 dark:focus:border-teal-400 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-400"
+                  placeholder="e.g., Appendectomy"
+                />
+              </div>
+              <div>
+                <label
+                  for="procedureCount"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Procedure Count</label
+                >
+                <input
+                  type="number"
+                  id="procedureCount"
+                  min="0"
+                  class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 dark:focus:border-teal-400 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-50 placeholder-gray-400 dark:placeholder-gray-400"
+                  placeholder="e.g., 150"
+                />
+              </div>
+              <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="submit"
+                  class="w-full sm:w-auto flex-grow bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-teal-400 transition duration-150 ease-in-out"
+                >
+                  Add Data
+                </button>
+                <button
+                  type="button"
+                  id="resetChart"
+                  class="w-full sm:w-auto flex-grow bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-400 transition duration-150 ease-in-out"
+                >
+                  Reset Chart
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="w-full md:w-2/3">
+            <div class="flex flex-col sm:flex-row gap-6 mb-6">
+              <div
+                class="w-full sm:w-1/2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl"
+              >
+                <h3
+                  id="displayTitleSurgery"
+                  class="text-lg font-semibold text-center mb-3 text-gray-700 dark:text-gray-200"
+                ></h3>
+                <canvas id="procedureChartSurgery"></canvas>
+              </div>
+              <div
+                class="w-full sm:w-1/2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl"
+              >
+                <h3
+                  id="displayTitleAnalytics"
+                  class="text-lg font-semibold text-center mb-3 text-gray-700 dark:text-gray-200"
+                ></h3>
+                <canvas id="procedureChartAnalytics"></canvas>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-6">
+              <div
+                class="w-full sm:w-1/2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl"
+              >
+                <h3
+                  id="displayTitleCardiology"
+                  class="text-lg font-semibold text-center mb-3 text-gray-700 dark:text-gray-200"
+                ></h3>
+                <canvas id="procedureChartCardiology"></canvas>
+              </div>
+              <div
+                class="w-full sm:w-1/2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl"
+              >
+                <h3
+                  id="displayTitleOrthopedics"
+                  class="text-lg font-semibold text-center mb-3 text-gray-700 dark:text-gray-200"
+                ></h3>
+                <canvas id="procedureChartOrthopedics"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const chartInstances = {};
+      const allFocusAreas = [
+        "Surgery",
+        "Analytics",
+        "Cardiology",
+        "Orthopedics",
+      ];
+      let currentSelectedFocusArea = "Surgery";
+
+      const formChartTitleInput = document.getElementById("chartTitleInput");
+      const procedureNameInput = document.getElementById("procedureName");
+      const procedureCountInput = document.getElementById("procedureCount");
+      const focusAreaSelect = document.getElementById("focusArea");
+      const themeToggle = document.getElementById("theme-toggle");
+
+      const chartDisplayTitleElements = {
+        Surgery: document.getElementById("displayTitleSurgery"),
+        Analytics: document.getElementById("displayTitleAnalytics"),
+        Cardiology: document.getElementById("displayTitleCardiology"),
+        Orthopedics: document.getElementById("displayTitleOrthopedics"),
+      };
+
+      const lightThemeChartColors = {
+        gridColor: "rgba(200, 200, 200, 0.2)",
+        tickColor: "#4b5563",
+        titleColor: "#374151",
+        legendColor: "#4b5563",
+        tooltipBgColor: "rgba(0, 0, 0, 0.7)",
+        tooltipTitleColor: "#ffffff",
+        tooltipBodyColor: "#ffffff",
+      };
+
+      const darkThemeChartColors = {
+        gridColor: "rgba(100, 116, 139, 0.3)",
+        tickColor: "#cbd5e1",
+        titleColor: "#e2e8f0",
+        legendColor: "#cbd5e1",
+        tooltipBgColor: "rgba(55, 65, 81, 0.9)",
+        tooltipTitleColor: "#f3f4f6",
+        tooltipBodyColor: "#f3f4f6",
+      };
+
+      function getThemeChartColors() {
+        return document.documentElement.classList.contains("dark")
+          ? darkThemeChartColors
+          : lightThemeChartColors;
+      }
+
+      function getRandomColor() {
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return {
+          background: `rgba(${r}, ${g}, ${b}, 0.6)`,
+          border: `rgba(${r}, ${g}, ${b}, 1)`,
+        };
+      }
+
+      function createChartOptions(area) {
+        const themeColors = getThemeChartColors();
+
+        return {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Count",
+                font: { size: 12 },
+                color: themeColors.titleColor,
+              },
+              grid: { color: themeColors.gridColor },
+              ticks: { font: { size: 10 }, color: themeColors.tickColor },
+            },
+            x: {
+              title: {
+                display: true,
+                text: "Procedure",
+                font: { size: 12 },
+                color: themeColors.titleColor,
+              },
+              grid: { display: false },
+              ticks: { font: { size: 10 }, color: themeColors.tickColor },
+            },
+          },
+          plugins: {
+            title: {
+              display: false,
+              text: `Procedure Volumes for ${area}`,
+            },
+            legend: {
+              display: true,
+              position: "top",
+              labels: {
+                font: { size: 10 },
+                boxWidth: 20,
+                padding: 10,
+                color: themeColors.legendColor,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) =>
+                  `${context.dataset.label}: ${context.raw}`,
+              },
+              backgroundColor: themeColors.tooltipBgColor,
+              titleColor: themeColors.tooltipTitleColor,
+              bodyColor: themeColors.tooltipBodyColor,
+              titleFont: { size: 14 },
+              bodyFont: { size: 12 },
+            },
+          },
+          onClick: (event, elements, chart) => {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              chart.data.labels.splice(index, 1);
+              chart.data.datasets[0].data.splice(index, 1);
+              chart.data.datasets[0].backgroundColor.splice(index, 1);
+              chart.data.datasets[0].borderColor.splice(index, 1);
+              chart.update();
+            }
+          },
+        };
+      }
+
+      function updateChartTheme(chartInstance) {
+        if (!chartInstance) return;
+        const themeColors = getThemeChartColors();
+
+        chartInstance.options.scales.y.title.color = themeColors.titleColor;
+        chartInstance.options.scales.y.grid.color = themeColors.gridColor;
+        chartInstance.options.scales.y.ticks.color = themeColors.tickColor;
+
+        chartInstance.options.scales.x.title.color = themeColors.titleColor;
+        chartInstance.options.scales.x.ticks.color = themeColors.tickColor;
+
+        if (chartInstance.options.plugins.legend) {
+          chartInstance.options.plugins.legend.labels.color =
+            themeColors.legendColor;
+        }
+        if (chartInstance.options.plugins.tooltip) {
+          chartInstance.options.plugins.tooltip.backgroundColor =
+            themeColors.tooltipBgColor;
+          chartInstance.options.plugins.tooltip.titleColor =
+            themeColors.tooltipTitleColor;
+          chartInstance.options.plugins.tooltip.bodyColor =
+            themeColors.tooltipBodyColor;
+        }
+        chartInstance.update("none");
+      }
+
+      function updateAllChartThemes() {
+        allFocusAreas.forEach((area) => {
+          if (chartInstances[area]) {
+            updateChartTheme(chartInstances[area]);
+          }
+        });
+      }
+
+      (function () {
+        const storedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        let useDark;
+        if (storedTheme) {
+          useDark = storedTheme === "dark";
+        } else {
+          useDark = prefersDark;
+        }
+        if (useDark) {
+          document.documentElement.classList.add("dark");
+        }
+        if (themeToggle) {
+          themeToggle.checked = useDark;
+        }
+      })();
+
+      allFocusAreas.forEach((area) => {
+        const ctx = document
+          .getElementById(`procedureChart${area}`)
+          .getContext("2d");
+        const initialChartJsTitle = `Procedure Volumes for ${area}`;
+        chartInstances[area] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: `${area} Counts`,
+                data: [],
+                backgroundColor: [],
+                borderColor: [],
+                borderWidth: 1,
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: createChartOptions(area),
+        });
+        chartInstances[area].options.plugins.title.text = initialChartJsTitle;
+      });
+
+      function updateAllChartDisplayTitles() {
+        allFocusAreas.forEach((area) => {
+          if (chartInstances[area] && chartDisplayTitleElements[area]) {
+            chartDisplayTitleElements[area].textContent =
+              chartInstances[area].options.plugins.title.text;
+          }
+        });
+      }
+
+      function updateFormTitleInput() {
+        if (chartInstances[currentSelectedFocusArea]) {
+          formChartTitleInput.value =
+            chartInstances[
+              currentSelectedFocusArea
+            ].options.plugins.title.text;
+        }
+      }
+
+      if (themeToggle) {
+        themeToggle.addEventListener("change", () => {
+          const isDark = themeToggle.checked;
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+          }
+          updateAllChartThemes();
+        });
+      }
+
+      focusAreaSelect.addEventListener("change", (e) => {
+        currentSelectedFocusArea = e.target.value;
+        updateFormTitleInput();
+      });
+
+      document.getElementById("chartForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const procedureName = procedureNameInput.value.trim();
+        const procedureCount = parseInt(procedureCountInput.value);
+        const customChartTitle = formChartTitleInput.value.trim();
+        const targetChart = chartInstances[currentSelectedFocusArea];
+
+        if (
+          targetChart &&
+          procedureName &&
+          !isNaN(procedureCount) &&
+          procedureCount >= 0
+        ) {
+          targetChart.data.labels.push(procedureName);
+          targetChart.data.datasets[0].data.push(procedureCount);
+          const color = getRandomColor();
+          targetChart.data.datasets[0].backgroundColor.push(color.background);
+          targetChart.data.datasets[0].borderColor.push(color.border);
+
+          targetChart.options.plugins.title.text =
+            customChartTitle ||
+            `Procedure Volumes for ${currentSelectedFocusArea}`;
+          targetChart.update();
+
+          updateAllChartDisplayTitles();
+          procedureNameInput.value = "";
+          procedureCountInput.value = "";
+          procedureNameInput.focus();
+        } else if (
+          targetChart &&
+          customChartTitle &&
+          (!procedureName || isNaN(procedureCount))
+        ) {
+          if (targetChart.options.plugins.title.text !== customChartTitle) {
+            targetChart.options.plugins.title.text = customChartTitle;
+            updateAllChartDisplayTitles();
+            targetChart.update();
+          }
+        }
+      });
+
+      document.getElementById("resetChart").addEventListener("click", () => {
+        const targetChart = chartInstances[currentSelectedFocusArea];
+        if (targetChart) {
+          targetChart.data.labels = [];
+          targetChart.data.datasets[0].data = [];
+          targetChart.data.datasets[0].backgroundColor = [];
+          targetChart.data.datasets[0].borderColor = [];
+          const defaultTitle = `Procedure Volumes for ${currentSelectedFocusArea}`;
+          targetChart.options.plugins.title.text = defaultTitle;
+          targetChart.update();
+
+          updateFormTitleInput();
+          updateAllChartDisplayTitles();
+          procedureNameInput.value = "";
+          procedureCountInput.value = "";
+        }
+      });
+
+      currentSelectedFocusArea = focusAreaSelect.value;
+      updateFormTitleInput();
+      updateAllChartDisplayTitles();
+    </script>
+  </body>
+</html>

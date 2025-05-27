@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Generator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@400;500;600;700&family=Pacifico&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/theme-toggles@4.10.1/css/expand.min.css"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary: #6366f1;
+        --secondary: #a855f7;
+        --accent: #f59e0b;
+        --error: #ef4444;
+      }
+
+      body {
+        font-family: "Montserrat", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(to bottom right, #eee6ee, #9d82cc);
+        min-height: 100vh;
+        margin: 0;
+        padding: 2rem;
+        color: #030920;
+      }
+
+      .dark body {
+        background: linear-gradient(to bottom right, #736097, #030920);
+        color: white;
+      }
+
+      .dark input {
+        background-color: rgba(0, 0, 0, 0.3);
+        color: white;
+      }
+
+      .dark .logo-inner span {
+        color: #ffffff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        font-weight: 600;
+      }
+
+      .dark .header,
+      .dark .footer,
+      .dark .controls {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .dark .brand-name {
+        background: linear-gradient(45deg, #ffffff, #a5b4fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .dark .logo-brand i {
+        color: #a5b4fc;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      }
+
+      .dark .toggle-ui {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .dark .toggle-ui i {
+        color: white;
+      }
+
+      .dark .theme-toggle {
+        color: white;
+      }
+
+      .controls {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, 1fr);
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1.5rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .input-group {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .input-group input {
+        flex: 1;
+        width: auto;
+      }
+
+      .button-group {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.8rem;
+        align-items: stretch;
+      }
+
+      .button-group button {
+        height: 100%;
+        min-height: 44px;
+      }
+
+      @media (max-width: 820px) {
+        .button-group {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        button:last-child {
+          grid-column: span 2;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .button-group {
+          grid-template-columns: 1fr;
+        }
+        
+        button:last-child {
+          grid-column: span 1;
+        }
+        
+        .input-group {
+          flex-direction: column;
+        }
+        
+        .input-group input {
+          width: 100%;
+        }
+      }
+
+      input {
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        width: 250px;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.4);
+        color: #030920;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.8);
+      }
+
+      input.error {
+        border-color: var(--error) !important;
+        animation: shake 0.4s;
+      }
+
+      button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        background: linear-gradient(45deg, var(--primary), var(--secondary));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+      }
+
+      button i {
+        font-size: 1.3rem;
+      }
+
+      button::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300%;
+        height: 300%;
+        background: linear-gradient(
+          45deg,
+          transparent 45%,
+          rgba(255, 255, 255, 0.2) 50%,
+          transparent 55%
+        );
+        animation: borderFlow 3s linear infinite;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+      }
+
+      button:hover {
+        transform: translateY(-4px);
+      }
+
+      #logoContainer {
+        position: relative;
+        min-height: 200px;
+        width: 100%;
+        max-width: 600px;
+        margin: 1rem;
+        perspective: 1000px;
+      }
+
+      .logo {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      .logo-inner {
+        padding: 1.5rem 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
+        position: relative;
+        overflow: hidden;
+      }
+
+      .logo-inner span {
+        color: #030920;
+        text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+      }
+
+      .shape-circle {
+        border-radius: 50%;
+      }
+      .shape-pill {
+        border-radius: 100px;
+      }
+      .shape-diamond {
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      }
+      .shape-hexagon {
+        clip-path: polygon(
+          50% 0%,
+          100% 25%,
+          100% 75%,
+          50% 100%,
+          0% 75%,
+          0% 25%
+        );
+      }
+
+      .gradient-1 {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      }
+      .gradient-2 {
+        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      }
+      .gradient-3 {
+        background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      }
+      .gradient-4 {
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      }
+      .gradient-5 {
+        background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+      }
+
+      .text-style-1 {
+        font-family: "Pacifico", cursive;
+        font-size: 1.2em;
+      }
+      .text-style-2 {
+        font-family: "Bebas Neue", sans-serif;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+      .text-style-3 {
+        font-family: "Caveat", cursive;
+        font-weight: 600;
+      }
+      .text-style-4 {
+        font-family: "Poppins", sans-serif;
+        font-size: 1.8em;
+      }
+
+      /* Enhanced Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -45%) scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      @keyframes borderFlow {
+        0% {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        100% {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-8px);
+        }
+        75% {
+          transform: translateX(8px);
+        }
+      }
+
+      .animated-logo {
+        animation: float 4s ease-in-out infinite;
+      }
+
+      .logo-hover {
+        transition: transform 0.3s ease, filter 0.3s ease;
+      }
+
+      .logo-hover:hover {
+        transform: scale(1.05) rotateZ(-2deg);
+        filter: drop-shadow(0 15px 12px rgba(0, 0, 0, 0.4));
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      .secondary-btn::before {
+        display: none;
+      }
+
+      .secondary-btn {
+        background: linear-gradient(45deg, #00bc7d, #00b8db) !important;
+      }
+
+      .theme-toggle {
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .theme-toggle svg {
+        width: 1.5em;
+        height: 1.5em;
+      }
+
+      .dark .theme-toggle {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .dark .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Keyframes */
+      @keyframes fadeInRight {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fadeInDown {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInLeft {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Animation classes */
+      .animate-right {
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: fadeInRight 800ms ease-out forwards;
+      }
+
+      .animate-down {
+        opacity: 0;
+        transform: translateY(-20px);
+        animation: fadeInDown 800ms ease-out forwards;
+      }
+
+      .animate-left {
+        opacity: 0;
+        transform: translateX(20px);
+        animation: fadeInLeft 800ms ease-out forwards;
+      }
+
+      .loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .download-area {
+        grid-column: 1 / -1;
+        margin-top: 0.8rem;
+      }
+
+      .download-btn {
+        background: linear-gradient(45deg, #00bc7d, #00b8db) !important;
+        width: 100%;
+        height: 100%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .download-btn.waiting {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .download-btn.waiting::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        animation: shine 1.5s infinite;
+      }
+
+      @keyframes shine {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 200%;
+        }
+      }
+
+      .download-btn i {
+        margin-right: 5px;
+        font-size: 1.3rem;
+        transition: transform 0.3s ease;
+      }
+
+      .download-btn.waiting i {
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+      }
+
+      .header.hidden {
+        transform: translateY(-100%);
+      }
+
+      .logo-brand {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo-brand i {
+        font-size: 2rem;
+        color: #030920;
+      }
+
+      .brand-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        background: linear-gradient(45deg, #030920, #4a3f6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem 2rem;
+        text-align: center;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+      }
+
+      .footer p {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0;
+        letter-spacing: 0.5px;
+      }
+
+      .dark .footer p {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .footer.hidden {
+        transform: translateY(100%);
+      }
+
+      .toggle-ui {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 1001;
+        transition: all 0.3s ease;
+      }
+
+      .toggle-ui:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .toggle-ui i {
+        font-size: 1.2rem;
+        color: #030920;
+      }
+
+      .main-content {
+        margin-top: 80px;
+        margin-bottom: 80px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Dancing+Script:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <header class="header">
+      <div class="logo-brand">
+        <i class="ti ti-brand-html5"></i>
+        <span class="brand-name">Logo Generator</span>
+      </div>
+      <div class="theme-toggle" title="Toggle theme" id="theme-toggle">
+        <span class="theme-toggle-sr">Toggle theme</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          fill="currentColor"
+          class="theme-toggle__expand"
+          viewBox="0 0 32 32"
+        >
+          <clipPath id="theme-toggle__expand__cutout">
+            <path d="M0-11h25a1 1 0 0017 13v30H0Z" />
+          </clipPath>
+          <g clip-path="url(#theme-toggle__expand__cutout)">
+            <circle cx="16" cy="16" r="8.4" />
+            <path d="M18.3 3.2c0 1.3-1 2.3-2.3 2.3s-2.3-1-2.3-2.3S14.7.9 16 .9s2.3 1 2.3 2.3zm-4.6 25.6c0-1.3 1-2.3 2.3-2.3s2.3 1 2.3 2.3-1 2.3-2.3 2.3-2.3-1-2.3-2.3zm15.1-10.5c-1.3 0-2.3-1-2.3-2.3s1-2.3 2.3-2.3 2.3 1 2.3 2.3-1 2.3-2.3 2.3zM3.2 13.7c1.3 0 2.3 1 2.3 2.3s-1 2.3-2.3 2.3S.9 17.3.9 16s1-2.3 2.3-2.3zm5.8-7C9 7.9 7.9 9 6.7 9S4.4 8 4.4 6.7s1-2.3 2.3-2.3S9 5.4 9 6.7zm16.3 21c-1.3 0-2.3-1-2.3-2.3s1-2.3 2.3-2.3 2.3 1 2.3 2.3-1 2.3-2.3 2.3zm2.4-21c0 1.3-1 2.3-2.3 2.3S23 7.9 23 6.7s1-2.3 2.3-2.3 2.4 1 2.4 2.3zM6.7 23C8 23 9 24 9 25.3s-1 2.3-2.3 2.3-2.3-1-2.3-2.3 1-2.3 2.3-2.3z" />
+          </g>
+        </svg>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="animate-down" id="logoContainer"></div>
+      <div class="animate-right controls" style="animation-delay: 300ms;">
+        <div class="input-group">
+          <label for="nameInput" class="sr-only">Enter your name</label>
+          <input
+            type="text"
+            id="nameInput"
+            placeholder="Enter your name"
+            maxlength="15"
+            aria-label="Enter your name"
+          />
+        </div>
+        <div class="button-group">
+          <button onclick="cycleStyleAndGenerate()" id="generateBtn" aria-label="Cycle through shapes">
+            <i class="ti ti-shape"></i>Next Shape
+          </button>
+          <button onclick="cycleTextStyle()" id="textStyleBtn" aria-label="Cycle through text styles">
+            <i class="ti ti-typography"></i>Next Font
+          </button>
+          <button onclick="cycleGradient()" id="gradientBtn" aria-label="Cycle through color gradients">
+            <i class="ti ti-palette"></i>Next Color
+          </button>
+          <button class="secondary-btn" onclick="refreshLogoWithRandomStyles()" id="refreshBtn" aria-label="Randomize all styles">
+            <i class="ti ti-arrows-shuffle"></i>
+            Random All
+          </button>
+        </div>
+      </div>
+      <div class="download-area">
+        <button class="download-btn" onclick="downloadLogo()" id="downloadBtn" style="display: none;" aria-label="Download logo">
+          <i class="ti ti-download"></i>Download Logo
+        </button>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>© 2025 Logo Generator. All rights reserved.</p>
+    </footer>
+
+    <button class="toggle-ui" id="toggleUI" aria-label="Toggle UI visibility">
+      <i class="ti ti-layout-sidebar"></i>
+    </button>
+
+    <script>
+      const themeToggle = document.getElementById('theme-toggle');
+      themeToggle.addEventListener('click' ,() => {
+        themeToggle.classList.toggle('theme-toggle--toggled');
+        document.documentElement.classList.toggle('dark');
+      });
+
+      const stylePresets = {
+        shapes: [
+          "shape-circle",
+          "shape-pill",
+          "shape-diamond",
+          "shape-hexagon",
+        ],
+        gradients: [
+          "gradient-1",
+          "gradient-2",
+          "gradient-3",
+          "gradient-4",
+          "gradient-5",
+        ],
+        textStyles: [
+          "text-style-1",
+          "text-style-2",
+          "text-style-3",
+          "text-style-4",
+        ],
+        animations: ["animated-logo"],
+      };
+
+      let currentLogoStyle = null;
+      let currentShapeIndex = 0;
+      let currentGradientIndex = 0;
+      let currentTextStyleIndex = 0;
+
+      function getRandomStyle() {
+        const shape = stylePresets.shapes[Math.floor(Math.random() * stylePresets.shapes.length)];
+        const gradient = stylePresets.gradients[Math.floor(Math.random() * stylePresets.gradients.length)];
+        const textStyle = stylePresets.textStyles[Math.floor(Math.random() * stylePresets.textStyles.length)];
+        const animation = stylePresets.animations[Math.floor(Math.random() * stylePresets.animations.length)];
+        
+        currentShapeIndex = stylePresets.shapes.indexOf(shape);
+        currentGradientIndex = stylePresets.gradients.indexOf(gradient);
+        currentTextStyleIndex = stylePresets.textStyles.indexOf(textStyle);
+
+        return {
+          shape,
+          gradient,
+          textStyle,
+          animation,
+          rotation: Math.random() * 20 - 10,
+          scale: 0.9 + Math.random() * 0.2,
+        };
+      }
+
+      function applyAndDisplayLogo(text, styleConfig) {
+        const logoContainer = document.getElementById("logoContainer");
+        logoContainer.innerHTML = ""; 
+
+        const logo = document.createElement("div");
+        logo.className = "logo";
+
+        const logoInner = document.createElement("div");
+        logoInner.className = "logo-inner logo-hover";
+
+        logoInner.classList.add(styleConfig.shape, styleConfig.gradient, styleConfig.textStyle);
+        if (styleConfig.animation) {
+          logoInner.classList.add(styleConfig.animation);
+        }
+
+        logoInner.style.transform = `rotate(${styleConfig.rotation}deg) scale(${styleConfig.scale})`;
+        logoInner.style.padding = `${(1.0 + Math.random() * 0.5).toFixed(1)}rem ${(1.5 + Math.random() * 1.0).toFixed(1)}rem`;
+        logoInner.style.fontSize = `${(1.2 + Math.random() * 0.6).toFixed(1)}rem`;
+
+        if (Math.random() > 0.6) {
+          logoInner.style.border = `${(Math.random() * 2 + 1).toFixed(0)}px solid rgba(255,255,255,0.3)`;
+        }
+        
+        logoInner.innerHTML = `<span style="text-align: center; display: inline-block; white-space: normal; padding: 0.1em 0.2em;">${text}</span>`;
+        logo.appendChild(logoInner);
+        logoContainer.appendChild(logo);
+
+        currentLogoStyle = styleConfig; 
+
+        const generateBtn = document.getElementById("generateBtn");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const textStyleBtn = document.getElementById("textStyleBtn");
+        const gradientBtn = document.getElementById("gradientBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        generateBtn.classList.remove("loading");
+        refreshBtn.classList.remove("loading");
+        textStyleBtn.classList.remove("loading");
+        gradientBtn.classList.remove("loading");
+        downloadBtn.style.display = "block";
+        downloadBtn.classList.remove("waiting");
+      }
+
+      function cycleStyleAndGenerate() {
+        const nameInput = document.getElementById("nameInput");
+        const name = nameInput.value.trim();
+        const generateBtn = document.getElementById("generateBtn");
+
+        if (!name) {
+          nameInput.classList.add("error");
+          setTimeout(() => nameInput.classList.remove("error"), 500);
+          return;
+        }
+        nameInput.classList.remove("error");
+        generateBtn.classList.add("loading");
+        
+        const downloadBtn = document.getElementById("downloadBtn");
+        if (downloadBtn.style.display === "block") {
+            downloadBtn.classList.add("waiting");
+        }
+
+        setTimeout(() => {
+          let newStyle;
+          if (currentLogoStyle) {
+            // Only cycle through shapes, keep other styles the same
+            currentShapeIndex = (currentShapeIndex + 1) % stylePresets.shapes.length;
+            const newShape = stylePresets.shapes[currentShapeIndex];
+            newStyle = { 
+              ...currentLogoStyle, 
+              shape: newShape 
+            };
+          } else {
+            newStyle = getRandomStyle();
+          }
+          applyAndDisplayLogo(name, newStyle);
+        }, 300);
+      }
+
+      function refreshLogoWithRandomStyles() {
+        const nameInput = document.getElementById("nameInput");
+        const name = nameInput.value.trim();
+        const refreshBtn = document.getElementById("refreshBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        if (!name) {
+          nameInput.classList.add("error");
+          setTimeout(() => nameInput.classList.remove("error"), 500);
+          return;
+        }
+        nameInput.classList.remove("error");
+        refreshBtn.classList.add("loading");
+        if (downloadBtn.style.display === "block") {
+            downloadBtn.classList.add("waiting");
+        }
+
+        setTimeout(() => {
+          const newRandomStyle = getRandomStyle();
+          currentShapeIndex = stylePresets.shapes.indexOf(newRandomStyle.shape);
+          currentGradientIndex = stylePresets.gradients.indexOf(newRandomStyle.gradient);
+          currentTextStyleIndex = stylePresets.textStyles.indexOf(newRandomStyle.textStyle);
+          applyAndDisplayLogo(name, newRandomStyle);
+        }, 300);
+      }
+
+      function downloadLogo() {
+        const logoInnerElement = document.querySelector('.logo-inner');
+        if (!logoInnerElement) return;
+
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.classList.add("waiting");
+
+        // Store original styles
+        const currentAnimation = currentLogoStyle ? currentLogoStyle.animation : null;
+        const originalTransform = logoInnerElement.style.transform;
+        
+        // Get the current shape class
+        const shapeClass = currentLogoStyle ? currentLogoStyle.shape : null;
+        
+        // Temporarily remove animations and hover effects
+        if (currentAnimation) {
+          logoInnerElement.classList.remove(currentAnimation);
+        }
+        logoInnerElement.classList.remove('logo-hover');
+        
+        // Reset transform to ensure proper rendering
+        logoInnerElement.style.transform = "none";
+
+        // Get text content
+        const textContent = logoInnerElement.querySelector('span').textContent;
+        const computedStyle = window.getComputedStyle(logoInnerElement);
+        
+        // The SVG approach for all shapes
+        if (shapeClass === 'shape-diamond' || shapeClass === 'shape-hexagon' || 
+            shapeClass === 'shape-circle' || shapeClass === 'shape-pill') {
+          // Use a canvas-based approach for more accurate rendering
+          const targetWidth = 600;
+          const targetHeight = 400;
+          
+          // Create a temporary container that's a clone of the logo
+          const tempContainer = document.createElement('div');
+          tempContainer.style.position = 'absolute';
+          tempContainer.style.left = '-9999px';
+          tempContainer.style.top = '-9999px';
+          document.body.appendChild(tempContainer);
+          
+          // Clone the logo for accurate rendering
+          const clonedLogo = logoInnerElement.cloneNode(true);
+          
+          // Reset transform temporarily
+          clonedLogo.style.transform = 'none';
+          // Remove animations
+          if (currentAnimation) {
+            clonedLogo.classList.remove(currentAnimation);
+          }
+          clonedLogo.classList.remove('logo-hover');
+          
+          // Ensure the logo has proper dimensions
+          clonedLogo.style.width = 'auto';
+          clonedLogo.style.height = 'auto';
+          clonedLogo.style.display = 'inline-block';
+          
+          tempContainer.appendChild(clonedLogo);
+          
+          // Use html2canvas with proper settings
+          html2canvas(clonedLogo, {
+            backgroundColor: null,
+            useCORS: true,
+            allowTaint: true,
+            scale: 2,
+            logging: false,
+            onclone: function(clonedDoc) {
+              // Make sure all fonts are properly loaded
+              const clonedElement = clonedDoc.querySelector('.logo-inner');
+              if (clonedElement) {
+                // Force font loading
+                const spanElement = clonedElement.querySelector('span');
+                if (spanElement) {
+                  // Force text rendering for better font loading
+                  spanElement.style.visibility = 'visible';
+                }
+              }
+            }
+          }).then(canvas => {
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'logo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(tempContainer);
+            downloadBtn.classList.remove("waiting");
+            
+            // Restore original styling
+            if (currentAnimation) {
+              logoInnerElement.classList.add(currentAnimation);
+            }
+            logoInnerElement.classList.add('logo-hover');
+            logoInnerElement.style.transform = originalTransform;
+          }).catch(err => {
+            console.error("Error generating canvas:", err);
+            document.body.removeChild(tempContainer);
+            downloadBtn.classList.remove("waiting");
+            
+            // Restore original styling even if there's an error
+            if (currentAnimation) {
+              logoInnerElement.classList.add(currentAnimation);
+            }
+            logoInnerElement.classList.add('logo-hover');
+            logoInnerElement.style.transform = originalTransform;
+          });
+        } else {
+          // Use the regular html2canvas approach for unsupported shapes
+          fallbackToHtml2Canvas();
+        }
+        
+        function fallbackToHtml2Canvas() {
+          // Create a temporary wrapper with padding to ensure the full shape is captured
+          const wrapper = document.createElement('div');
+          wrapper.style.padding = '20px';
+          wrapper.style.display = 'inline-block';
+          wrapper.style.position = 'absolute';
+          wrapper.style.left = '-9999px';
+          wrapper.style.top = '-9999px';
+          
+          // Clone the logo for rendering
+          const clonedLogo = logoInnerElement.cloneNode(true);
+          
+          // Ensure proper rendering of shapes - explicitly set dimensions and styling
+          clonedLogo.style.position = 'relative';
+          clonedLogo.style.display = 'inline-block';
+          clonedLogo.style.width = 'auto';
+          clonedLogo.style.height = 'auto';
+          
+          // Enhance the background to ensure proper shape rendering
+          const computedStyle = window.getComputedStyle(logoInnerElement);
+          const backgroundImage = computedStyle.backgroundImage;
+          if (backgroundImage) {
+            clonedLogo.style.backgroundImage = backgroundImage;
+          }
+          
+          wrapper.appendChild(clonedLogo);
+          document.body.appendChild(wrapper);
+
+          html2canvas(clonedLogo, {
+            backgroundColor: null,
+            useCORS: true,
+            allowTaint: true,
+            scale: 3, // Higher scale for better quality
+            logging: false,
+            foreignObjectRendering: true, // Better rendering for complex CSS
+          }).then(canvas => {
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'logo.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(wrapper);
+            downloadBtn.classList.remove("waiting");
+            
+            // Restore original styling
+            if (currentAnimation) {
+              logoInnerElement.classList.add(currentAnimation);
+            }
+            logoInnerElement.classList.add('logo-hover');
+            logoInnerElement.style.transform = originalTransform;
+          }).catch(err => {
+            console.error("Error generating canvas:", err);
+            document.body.removeChild(wrapper);
+            downloadBtn.classList.remove("waiting");
+            
+            // Restore original styling even if there's an error
+            if (currentAnimation) {
+              logoInnerElement.classList.add(currentAnimation);
+            }
+            logoInnerElement.classList.add('logo-hover');
+            logoInnerElement.style.transform = originalTransform;
+          });
+        }
+      }
+
+      function initializePageWithRandomLogo() {
+        const nameInput = document.getElementById("nameInput");
+        // Only set a default value if the input is empty
+        if (!nameInput.value.trim()) {
+          const names = [
+            "Nexus", "Quantum", "Stellar", "Eclipse", "Vortex", 
+            "Zenith", "Aurora", "Glyph", "Pixel", "Craft"
+          ];
+          const suffixes = [
+            "X", "Pro", "AI", "Labs", "Studio", 
+            "Tech", "Creative", "Works", "Design", "Co"
+          ];
+          nameInput.value = `${names[Math.floor(Math.random() * names.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+        }
+        refreshLogoWithRandomStyles(); 
+      }
+
+      initializePageWithRandomLogo();
+
+      const toggleUI = document.getElementById('toggleUI');
+      const header = document.querySelector('.header');
+      const footer = document.querySelector('.footer');
+      let isUIVisible = true;
+
+      toggleUI.addEventListener('click', () => {
+        isUIVisible = !isUIVisible;
+        header.classList.toggle('hidden');
+        footer.classList.toggle('hidden');
+        toggleUI.querySelector('i').classList.toggle('ti-layout-sidebar');
+        toggleUI.querySelector('i').classList.toggle('ti-layout-sidebar-right');
+      });
+
+      function cycleTextStyle() {
+        const nameInput = document.getElementById("nameInput");
+        const name = nameInput.value.trim();
+        const textStyleBtn = document.getElementById("textStyleBtn");
+
+        if (!name) {
+          nameInput.classList.add("error");
+          setTimeout(() => nameInput.classList.remove("error"), 500);
+          return;
+        }
+        nameInput.classList.remove("error");
+        textStyleBtn.classList.add("loading");
+        
+        const downloadBtn = document.getElementById("downloadBtn");
+        if (downloadBtn.style.display === "block") {
+            downloadBtn.classList.add("waiting");
+        }
+
+        setTimeout(() => {
+          let newStyle;
+          if (currentLogoStyle) {
+            // Only cycle through text styles, keep other styles the same
+            currentTextStyleIndex = (currentTextStyleIndex + 1) % stylePresets.textStyles.length;
+            const newTextStyle = stylePresets.textStyles[currentTextStyleIndex];
+            newStyle = { 
+              ...currentLogoStyle, 
+              textStyle: newTextStyle 
+            };
+          } else {
+            newStyle = getRandomStyle();
+          }
+          applyAndDisplayLogo(name, newStyle);
+          textStyleBtn.classList.remove("loading");
+        }, 300);
+      }
+
+      function cycleGradient() {
+        const nameInput = document.getElementById("nameInput");
+        const name = nameInput.value.trim();
+        const gradientBtn = document.getElementById("gradientBtn");
+
+        if (!name) {
+          nameInput.classList.add("error");
+          setTimeout(() => nameInput.classList.remove("error"), 500);
+          return;
+        }
+        nameInput.classList.remove("error");
+        gradientBtn.classList.add("loading");
+        
+        const downloadBtn = document.getElementById("downloadBtn");
+        if (downloadBtn.style.display === "block") {
+            downloadBtn.classList.add("waiting");
+        }
+
+        setTimeout(() => {
+          let newStyle;
+          if (currentLogoStyle) {
+            // Only cycle through gradients, keep other styles the same
+            currentGradientIndex = (currentGradientIndex + 1) % stylePresets.gradients.length;
+            const newGradient = stylePresets.gradients[currentGradientIndex];
+            newStyle = { 
+              ...currentLogoStyle, 
+              gradient: newGradient 
+            };
+          } else {
+            newStyle = getRandomStyle();
+          }
+          applyAndDisplayLogo(name, newStyle);
+          gradientBtn.classList.remove("loading");
+        }, 300);
+      }
+    </script>
+  </body>
+</html>

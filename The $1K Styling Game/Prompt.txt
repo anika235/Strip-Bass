@@ -1,0 +1,1 @@
+Create a JavaScript app called "The $1K Styling Game" where users must spend exactly $1000 on a full outfit using predefined store items. Each item has a name, category, and price. The user can add or remove items to their cart, and the app should only allow checkout when the total equals $1000 with no cents left over. Display selected items and the current total in real time.

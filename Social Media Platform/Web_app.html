@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Social Media Reach Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+      button,
+      input,
+      select {
+        transition: all 0.3s ease-in-out;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f0fdfa;
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: #115e59;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #5eead4;
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #0d9488;
+      }
+      .chart-container {
+        position: relative;
+        padding: 8px;
+        border-radius: 0.5rem;
+        background-color: rgba(204, 251, 241, 0.1);
+        height: 180px; 
+        overflow: hidden; 
+      }
+      .dark .chart-container {
+        background-color: rgba(17, 94, 89, 0.2);
+      }
+      .chart-title-sm {
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              teal: {
+                50: "#f0fdfa",
+                100: "#ccfbf1",
+                200: "#99f6e4",
+                300: "#5eead4",
+                400: "#2dd4bf",
+                500: "#14b8a6",
+                600: "#0d9488",
+                700: "#0f766e",
+                800: "#115e59",
+                900: "#134e4a",
+                950: "#062f2b",
+              },
+            },
+          },
+        },
+        plugins: [],
+      };
+    </script>
+  </head>
+  <body
+    class="bg-teal-50 dark:bg-slate-900 min-h-screen flex items-center justify-center p-4 transition-colors duration-300"
+  >
+    <div
+      class="bg-white dark:bg-teal-900 rounded-lg shadow-xl p-6 w-full max-w-7xl relative md:grid md:grid-cols-5 md:gap-6"
+    >
+      
+      <div class="md:col-span-2">
+        <h1
+          class="text-2xl font-bold text-teal-700 dark:text-teal-200 mb-6 text-center md:text-left"
+        >
+          Data Controls
+        </h1>
+        <form id="dataForm" class="space-y-4 mb-6">
+          <div>
+            <label
+              for="dashboardTitleInput"
+              class="block text-sm font-medium text-teal-700 dark:text-teal-300"
+              >Dashboard Title</label
+            >
+            <input
+              type="text"
+              id="dashboardTitleInput"
+              placeholder="e.g., Quarterly Reach Overview"
+              class="mt-1 block w-full p-2 border border-teal-300 dark:border-teal-600 bg-white dark:bg-teal-800 text-teal-700 dark:text-teal-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 hover:border-teal-400 dark:hover:border-teal-500"
+            />
+          </div>
+          <div>
+            <label
+              for="postTitle"
+              class="block text-sm font-medium text-teal-700 dark:text-teal-300"
+              >Post Title (for table)</label
+            >
+            <input
+              type="text"
+              id="postTitle"
+              placeholder="e.g., New Feature Launch"
+              class="mt-1 block w-full p-2 border border-teal-300 dark:border-teal-600 bg-white dark:bg-teal-800 text-teal-700 dark:text-teal-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 hover:border-teal-400 dark:hover:border-teal-500"
+            />
+          </div>
+          <div>
+            <label
+              for="department"
+              class="block text-sm font-medium text-teal-700 dark:text-teal-300"
+              >Department</label
+            >
+            <select
+              id="department"
+              class="mt-1 block w-full p-2 border border-teal-300 dark:border-teal-600 bg-white dark:bg-teal-800 text-teal-700 dark:text-teal-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 hover:border-teal-400 dark:hover:border-teal-500"
+            >
+              <option value="Social Media">Social Media</option>
+              <option value="Analytics">Analytics</option>
+              <option value="Content Creation">Content Creation</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="postDate"
+                class="block text-sm font-medium text-teal-700 dark:text-teal-300"
+                >Posting Date</label
+              >
+              <input
+                type="date"
+                id="postDate"
+                class="mt-1 block w-full p-2 border border-teal-300 dark:border-teal-600 bg-white dark:bg-teal-800 text-teal-700 dark:text-teal-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 hover:border-teal-400 dark:hover:border-teal-500"
+              />
+            </div>
+            <div>
+              <label
+                for="reach"
+                class="block text-sm font-medium text-teal-700 dark:text-teal-300"
+                >Reach</label
+              >
+              <input
+                type="number"
+                id="reach"
+                min="0"
+                placeholder="e.g., 1000"
+                class="mt-1 block w-full p-2 border border-teal-300 dark:border-teal-600 bg-white dark:bg-teal-800 text-teal-700 dark:text-teal-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 hover:border-teal-400 dark:hover:border-teal-500"
+              />
+            </div>
+          </div>
+          <div class="flex space-x-4 pt-2">
+            <button
+              type="submit"
+              class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 transform focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+            >
+              Add Data
+            </button>
+            <button
+              type="button"
+              id="resetButton"
+              class="flex-1 bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 hover:shadow-lg hover:-translate-y-0.5 transform focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75"
+            >
+              Reset All
+            </button>
+          </div>
+        </form>
+      </div>
+
+      
+      <div class="md:col-span-3 flex flex-col h-full">
+        <div class="flex justify-between items-start mb-3">
+          <h2
+            id="dashboardTitle"
+            class="text-xl font-bold text-teal-700 dark:text-teal-200"
+          >
+            Reach Data Overview
+          </h2>
+          <button
+            id="themeToggle"
+            class="p-2 rounded-md text-teal-600 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transform hover:scale-110"
+            aria-label="Toggle theme"
+          >
+            <svg id="sunIcon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg id="moonIcon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+        </div>
+
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="chart-container"> 
+            <h3 class="chart-title-sm text-teal-700 dark:text-teal-200">Social Media Reach</h3>
+            <canvas id="socialMediaReachChart"></canvas>
+          </div>
+          <div class="chart-container"> 
+            <h3 class="chart-title-sm text-teal-700 dark:text-teal-200">Analytics Reach</h3>
+            <canvas id="analyticsReachChart"></canvas>
+          </div>
+        </div>
+
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="chart-container"> 
+            <h3 class="chart-title-sm text-teal-700 dark:text-teal-200">Content Creation Reach</h3>
+            <canvas id="contentCreationReachChart"></canvas>
+          </div>
+          <div class="chart-container"> 
+            <h3 class="chart-title-sm text-teal-700 dark:text-teal-200">Reach Distribution</h3>
+            <canvas id="departmentPieChart"></canvas>
+          </div>
+        </div>
+        
+        
+        <div class="flex-shrink-0 mt-2">
+          <h2 class="text-lg font-semibold text-teal-700 dark:text-teal-200 mb-2">
+            Data Points
+          </h2>
+          <div class="overflow-auto max-h-52 md:max-h-60">
+            <table id="dataTable" class="w-full border-collapse text-teal-700 dark:text-teal-200">
+              <thead>
+                <tr class="bg-teal-100 dark:bg-teal-700 sticky top-0 z-10">
+                  <th class="p-2 text-left font-semibold">Post Title</th>
+                  <th class="p-2 text-left font-semibold">Department</th>
+                  <th class="p-2 text-left font-semibold">Date</th>
+                  <th class="p-2 text-left font-semibold">Reach</th>
+                  <th class="p-2 text-left font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody" class="divide-y divide-teal-200 dark:divide-teal-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      
+      let socialMediaChart, analyticsChart, contentCreationChart, departmentPieChart;
+
+      
+      const departmentColors = {
+        "Social Media": { light: 'rgba(59, 130, 246, 1)', dark: 'rgba(96, 165, 250, 1)', bgLight: 'rgba(59, 130, 246, 0.1)', bgDark: 'rgba(96, 165, 250, 0.1)' },
+        "Analytics":    { light: 'rgba(168, 85, 247, 1)', dark: 'rgba(192, 132, 252, 1)', bgLight: 'rgba(168, 85, 247, 0.1)', bgDark: 'rgba(192, 132, 252, 0.1)' },
+        "Content Creation": { light: 'rgba(34, 197, 94, 1)', dark: 'rgba(74, 222, 128, 1)', bgLight: 'rgba(34, 197, 94, 0.1)', bgDark: 'rgba(74, 222, 128, 0.1)' }
+      };
+      
+      const commonChartTextColors = {
+        light: { title: "rgb(15, 118, 110)", legend: "rgb(15, 118, 110)", scaleLabel: "rgb(15, 118, 110)", tick: "rgb(13, 148, 136)", grid: "rgba(153, 246, 228, 0.3)" },
+        dark:  { title: "rgb(204, 251, 241)", legend: "rgb(153, 246, 228)", scaleLabel: "rgb(153, 246, 228)", tick: "rgb(94, 234, 212)", grid: "rgba(17, 94, 89, 0.3)" }
+      };
+
+      function createLineChartConfig(departmentName, isDarkTheme) {
+        const themeKey = isDarkTheme ? 'dark' : 'light';
+        const colors = departmentColors[departmentName];
+        const textColors = commonChartTextColors[themeKey];
+        return {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: departmentName + ' Reach', data: [], borderColor: colors[themeKey], backgroundColor: colors['bg'+themeKey.charAt(0).toUpperCase() + themeKey.slice(1)], fill: true, tension: 0.4 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: true, labels: { color: textColors.legend, boxWidth: 15, padding: 10, font: {size: 10} } }, 
+                title: { display: false } 
+            },
+            scales: {
+              x: { title: { display: true, text: 'Date', color: textColors.scaleLabel, font: {size: 10} }, ticks: { color: textColors.tick, font: {size: 9} }, grid: { color: textColors.grid } },
+              y: { title: { display: true, text: 'Reach', color: textColors.scaleLabel, font: {size: 10} }, beginAtZero: true, ticks: { color: textColors.tick, font: {size: 9} }, grid: { color: textColors.grid } }
+            }
+          }
+        };
+      }
+
+      function createPieChartConfig(isDarkTheme) {
+        const themeKey = isDarkTheme ? 'dark' : 'light';
+        const textColors = commonChartTextColors[themeKey];
+        const pieBGColors = Object.values(departmentColors).map(dept => dept[themeKey]);
+        const pieBorderColors = Object.values(departmentColors).map(dept => dept[themeKey]);
+
+        return {
+          type: 'pie',
+          data: {
+            labels: Object.keys(departmentColors),
+            datasets: [{
+              label: 'Reach Distribution',
+              data: [0, 0, 0], 
+              backgroundColor: pieBGColors,
+              borderColor: pieBorderColors, 
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top', labels: { color: textColors.legend, boxWidth: 15, padding: 10, font: {size: 10} } }, 
+              title: { display: false } 
+            }
+          }
+        };
+      }
+      
+      function initializeCharts(isDarkTheme) {
+        if (socialMediaChart) socialMediaChart.destroy();
+        socialMediaChart = new Chart(document.getElementById('socialMediaReachChart').getContext('2d'), createLineChartConfig("Social Media", isDarkTheme));
+        
+        if (analyticsChart) analyticsChart.destroy();
+        analyticsChart = new Chart(document.getElementById('analyticsReachChart').getContext('2d'), createLineChartConfig("Analytics", isDarkTheme));
+        
+        if (contentCreationChart) contentCreationChart.destroy();
+        contentCreationChart = new Chart(document.getElementById('contentCreationReachChart').getContext('2d'), createLineChartConfig("Content Creation", isDarkTheme));
+        
+        if (departmentPieChart) departmentPieChart.destroy();
+        departmentPieChart = new Chart(document.getElementById('departmentPieChart').getContext('2d'), createPieChartConfig(isDarkTheme));
+      }
+
+      let dataPoints = [];
+      let currentEditIndex = null; 
+
+      const form = document.getElementById("dataForm");
+      const dashboardTitleInput = document.getElementById("dashboardTitleInput");
+      const dashboardTitleDisplay = document.getElementById("dashboardTitle");
+      const postTitleInput = document.getElementById("postTitle");
+      const departmentInput = document.getElementById("department");
+      const postDateInput = document.getElementById("postDate");
+      const reachInput = document.getElementById("reach");
+      const dataTableBody = document.getElementById("dataTableBody");
+      const resetButton = document.getElementById("resetButton");
+      const themeToggle = document.getElementById("themeToggle");
+      const sunIcon = document.getElementById("sunIcon");
+      const moonIcon = document.getElementById("moonIcon");
+      const htmlElement = document.documentElement;
+
+      const applyTheme = (theme) => {
+        const isDark = theme === "dark";
+        if (isDark) {
+          htmlElement.classList.add("dark");
+          sunIcon.classList.remove("hidden");
+          moonIcon.classList.add("hidden");
+        } else {
+          htmlElement.classList.remove("dark");
+          moonIcon.classList.remove("hidden");
+          sunIcon.classList.add("hidden");
+        }
+        initializeCharts(isDark); 
+        updateAllChartsAndTable(); 
+      };
+
+      const toggleTheme = () => {
+        const newTheme = htmlElement.classList.contains("dark") ? "light" : "dark";
+        localStorage.setItem("theme", newTheme);
+        applyTheme(newTheme);
+      };
+
+      const savedTheme = localStorage.getItem("theme");
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+      
+
+      dashboardTitleInput.addEventListener("input", () => {
+        dashboardTitleDisplay.textContent = dashboardTitleInput.value.trim() || "Reach Data Overview";
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const postTitle = postTitleInput.value.trim() || "Untitled Post";
+        const department = departmentInput.value;
+        const date = postDateInput.value;
+        const reach = parseInt(reachInput.value);
+
+        if (!date || isNaN(reach) || reach < 0) {
+          alert("Please enter a valid date and reach value.");
+          return;
+        }
+        
+        if (currentEditIndex !== null) {
+            dataPoints[currentEditIndex] = { postTitle, department, date, reach };
+            currentEditIndex = null; 
+            form.querySelector('button[type="submit"]').textContent = 'Add Data';
+        } else {
+            dataPoints.push({ postTitle, department, date, reach });
+        }
+        
+        updateAllChartsAndTable();
+        form.reset(); 
+        dashboardTitleInput.value = dashboardTitleDisplay.textContent === "Reach Data Overview" ? "" : dashboardTitleDisplay.textContent; 
+        postTitleInput.focus();
+      });
+
+      resetButton.addEventListener("click", () => {
+        dataPoints = [];
+        currentEditIndex = null;
+        form.reset();
+        dashboardTitleInput.value = "";
+        dashboardTitleDisplay.textContent = "Reach Data Overview";
+        form.querySelector('button[type="submit"]').textContent = 'Add Data';
+        updateAllChartsAndTable();
+      });
+      
+      function updateLineChart(chart, departmentName) {
+        const filteredData = dataPoints.filter(dp => dp.department === departmentName).sort((a, b) => new Date(a.date) - new Date(b.date));
+        chart.data.labels = filteredData.map(dp => dp.date);
+        chart.data.datasets[0].data = filteredData.map(dp => dp.reach);
+        chart.update();
+      }
+
+      function updatePieChart() {
+        const departmentTotals = { "Social Media": 0, "Analytics": 0, "Content Creation": 0 };
+        dataPoints.forEach(dp => {
+          if (departmentTotals.hasOwnProperty(dp.department)) {
+            departmentTotals[dp.department] += dp.reach;
+          }
+        });
+        departmentPieChart.data.datasets[0].data = Object.values(departmentTotals);
+        departmentPieChart.update();
+      }
+
+      function updateTable() {
+        dataTableBody.innerHTML = "";
+        dataPoints.forEach((dp, index) => {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-teal-50 dark:hover:bg-teal-800/60 transition-colors duration-150";
+          row.innerHTML = `
+            <td class="p-3 whitespace-nowrap text-sm">${dp.postTitle}</td>
+            <td class="p-3 whitespace-nowrap text-sm">${dp.department}</td>
+            <td class="p-3 whitespace-nowrap text-sm">${dp.date}</td>
+            <td class="p-3 whitespace-nowrap text-sm">${dp.reach}</td>
+            <td class="p-3 whitespace-nowrap text-sm">
+              <button onclick="editDataPoint(${index})" class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 hover:font-semibold">Edit</button>
+              <button onclick="deleteDataPoint(${index})" class="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 ml-2 hover:font-semibold">Delete</button>
+            </td>
+          `;
+          dataTableBody.appendChild(row);
+        });
+      }
+
+      function updateAllChartsAndTable() {
+        updateLineChart(socialMediaChart, "Social Media");
+        updateLineChart(analyticsChart, "Analytics");
+        updateLineChart(contentCreationChart, "Content Creation");
+        updatePieChart();
+        updateTable();
+      }
+      
+      window.editDataPoint = (index) => {
+        const dp = dataPoints[index];
+        postTitleInput.value = dp.postTitle;
+        departmentInput.value = dp.department; 
+        postDateInput.value = dp.date;
+        reachInput.value = dp.reach;
+        currentEditIndex = index;
+        form.querySelector('button[type="submit"]').textContent = 'Update Data';
+        postTitleInput.focus();
+      };
+
+      window.deleteDataPoint = (index) => {
+        dataPoints.splice(index, 1);
+        if (currentEditIndex === index) { 
+            currentEditIndex = null;
+            form.reset();
+            form.querySelector('button[type="submit"]').textContent = 'Add Data';
+        } else if (currentEditIndex !== null && index < currentEditIndex) {
+            currentEditIndex--; 
+        }
+        updateAllChartsAndTable();
+      };
+
+      
+      applyTheme(initialTheme); 
+      themeToggle.addEventListener("click", toggleTheme);
+
+    </script>
+  </body>
+</html>

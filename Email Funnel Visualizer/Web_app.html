@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Funnel Visualizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-funnel@4.2.4/build/index.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, .card-title {
+      font-family: 'Poppins', sans-serif;
+    }
+    #funnelCanvas {
+      max-width: 100%;
+      height: auto;
+      transform-origin: top left;
+    }
+    .inline-edit-field {
+      margin-top: 0.25rem;
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #D1D5DB;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+    }
+    .inline-edit-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #4B5563;
+      display: block;
+      margin-bottom: 0.125rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen flex flex-col">
+  <div class="flex-1">
+    <header class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <div class="text-center">
+          <h1 class="text-2xl sm:text-3xl font-semibold">Email Funnel Visualizer</h1>
+          <p class="text-sm sm:text-base opacity-90">Design and visualize email marketing funnels</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 transition-transform hover:-translate-y-1">
+              <h2 class="card-title text-lg font-semibold text-purple-600 border-b-2 border-purple-600 pb-2 mb-4">Build Funnel</h2>
+              <form id="funnelForm">
+                <div class="mb-4">
+                  <label for="graphTitle" class="block text-sm font-medium text-gray-600">Funnel Title</label>
+                  <input type="text" id="graphTitle" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" value="Email Campaign Funnel" placeholder="e.g., Email Funnel">
+                </div>
+                <div class="mb-4">
+                  <label for="stageName" class="block text-sm font-medium text-gray-600">Stage Name</label>
+                  <input type="text" id="stageName" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Emails Opened">
+                </div>
+                <div class="mb-4">
+                  <label for="stageValue" class="block text-sm font-medium text-gray-600">Stage Value</label>
+                  <input type="number" id="stageValue" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" min="0" step="0.1" placeholder="e.g., 80">
+                </div>
+                <div class="mb-4">
+                  <label for="department" class="block text-sm font-medium text-gray-600">Department</label>
+                  <select id="department" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <option value="Email Marketing">Email Marketing</option>
+                    <option value="Analytics">Analytics</option>
+                    <option value="Content Marketing">Content Marketing</option>
+                    <option value="Sales">Sales</option>
+                  </select>
+                </div>
+                <div class="flex gap-4">
+                  <button type="submit" id="addDataBtn" class="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> Add Stage
+                  </button>
+                  <button type="button" id="resetBtn" class="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-trash"></i> Reset
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="md:col-span-2">
+            <div class="bg-white rounded-lg shadow-md p-6 transition-transform hover:-translate-y-1">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title text-lg font-semibold text-purple-600 border-b-2 border-purple-600 pb-2">Funnel Chart</h2>
+                <div class="flex gap-2">
+                  <button id="zoomIn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300"><i class="fas fa-plus"></i></button>
+                  <button id="zoomOut" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300"><i class="fas fa-minus"></i></button>
+                </div>
+              </div>
+              <div class="relative mx-2 sm:mx-4 overflow-hidden">
+                <canvas id="funnelCanvas" class="w-full"></canvas>
+              </div>
+              <div class="flex justify-center gap-4 mt-4" id="legend"></div>
+            </div>
+          </div>
+
+          <div class="md:col-span-3">
+            <div class="bg-white rounded-lg shadow-md p-6 transition-transform hover:-translate-y-1">
+              <h2 class="card-title text-lg font-semibold text-purple-600 border-b-2 border-purple-600 pb-2 mb-4">Stages</h2>
+              <div class="max-h-80 overflow-y-auto pr-2" id="dataList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-blue-600 text-white text-center py-3">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div>© 2025 Email Funnel Visualizer</div>
+      </div>
+    </footer>
+
+    <div id="notification" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-sm opacity-0 translate-y-20 transition-all">
+      <div id="notificationIcon" class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+        <i class="fas fa-check"></i>
+      </div>
+      <div>
+        <div id="notificationTitle" class="font-semibold text-sm">Success</div>
+        <div id="notificationMessage" class="text-sm text-gray-600">Action completed</div>
+      </div>
+      <button id="notificationClose" class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div id="modal" class="fixed inset-0 flex items-center justify-center invisible opacity-0 transition-all z-50">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div id="modalDialog" class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto transform scale-90 transition-transform">
+        <div class="flex justify-between items-center p-4 border-b border-gray-200">
+          <h3 id="modalTitle" class="text-base font-semibold">Confirm</h3>
+          <button id="modalCloseBtn" class="text-gray-400 hover:text-red-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4">
+          <p id="modalMessage" class="text-sm text-gray-600">Are you sure?</p>
+        </div>
+        <div class="flex justify-end gap-4 p-4 border-t border-gray-200">
+          <button id="modalCancel" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancel</button>
+          <button id="modalConfirm" class="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const colors = {
+      'Email Marketing': { main: '#2563eb', light: '#bfdbfe' },
+      'Analytics': { main: '#9333ea', light: '#e9d5ff' },
+      'Content Marketing': { main: '#15803d', light: '#bbf7d0' },
+      'Sales': { main: '#d97706', light: '#fed7aa' }
+    };
+
+    const form = document.getElementById('funnelForm');
+    const graphTitleInput = document.getElementById('graphTitle');
+    const stageNameInput = document.getElementById('stageName');
+    const stageValueInput = document.getElementById('stageValue');
+    const departmentInput = document.getElementById('department');
+    const resetBtn = document.getElementById('resetBtn');
+    const dataList = document.getElementById('dataList');
+    const legend = document.getElementById('legend');
+    const notification = document.getElementById('notification');
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationTitle = document.getElementById('notificationTitle');
+    const notificationMessage = document.getElementById('notificationMessage');
+    const notificationClose = document.getElementById('notificationClose');
+
+    const modal = document.getElementById('modal');
+    const modalDialog = document.getElementById('modalDialog');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    const canvas = document.getElementById('funnelCanvas');
+    let chart = null;
+
+    let funnelData = [];
+    let editIndex = null;
+    let zoom = 1;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      updateDataList();
+      updateLegend();
+    });
+
+    function loadSampleData() {
+      funnelData = [
+        { name: "Emails Sent", value: 10000, dept: "Email Marketing" },
+        { name: "Emails Delivered", value: 9200, dept: "Email Marketing" },
+        { name: "Emails Opened", value: 4000, dept: "Email Marketing" },
+        { name: "Links Clicked", value: 1800, dept: "Analytics" },
+        { name: "Website Visits", value: 1000, dept: "Analytics" },
+        { name: "Content Downloads", value: 500, dept: "Content Marketing" },
+        { name: "Leads Generated", value: 120, dept: "Sales" }
+      ];
+      editIndex = null;
+    }
+
+    function initChart() {
+      if (chart) chart.destroy();
+      chart = new Chart(canvas, {
+        type: 'funnel',
+        data: {
+          labels: funnelData.map(d => d.name),
+          datasets: [{
+            data: funnelData.map(d => d.value),
+            backgroundColor: funnelData.map(d => colors[d.dept]?.main || '#2563eb'),
+            hoverBackgroundColor: funnelData.map(d => lightenColor(colors[d.dept]?.main || '#2563eb', 20)),
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: () => graphTitleInput.value || 'Email Campaign Funnel',
+              font: { size: 16, family: 'Poppins', weight: 'bold' },
+              color: '#111827',
+              padding: { top: 10, bottom: 20 }
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: ctx => {
+                  const data = funnelData[ctx.dataIndex];
+                  return `${data.name}: ${data.value.toLocaleString()} (${data.dept})`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const zoomInBtn = document.getElementById('zoomIn');
+      const zoomOutBtn = document.getElementById('zoomOut');
+      if (!zoomInBtn.dataset.listenerAttached) {
+        zoomInBtn.addEventListener('click', () => {
+          zoom = Math.min(zoom + 0.2, 2);
+          canvas.style.transform = `scale(${zoom})`;
+        });
+        zoomOutBtn.addEventListener('click', () => {
+          zoom = Math.max(zoom - 0.2, 0.8);
+          canvas.style.transform = `scale(${zoom})`;
+        });
+        zoomInBtn.dataset.listenerAttached = 'true';
+        zoomOutBtn.dataset.listenerAttached = 'true';
+      }
+    }
+
+    function lightenColor(color, percent) {
+      const num = parseInt(color.slice(1), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = (num >> 16) + amt;
+      const G = (num >> 8 & 0x00FF) + amt;
+      const B = (num & 0x0000FF) + amt;
+      return `#${(0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+        (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+        (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1)}`;
+    }
+
+    function updateLegend() {
+      legend.innerHTML = '';
+      const depts = [...new Set(funnelData.map(item => item.dept))];
+      depts.forEach(dept => {
+        const color = colors[dept]?.main || '#2563eb';
+        legend.innerHTML += `
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <div class="w-3 h-3 rounded-sm" style="background: ${color}"></div>
+            <span>${dept}</span>
+          </div>`;
+      });
+      if (!depts.length) legend.innerHTML = '<div class="text-gray-400 text-sm">No stages</div>';
+    }
+
+    function getDepartmentOptionsHTML(selectedValue) {
+      let optionsHTML = '';
+      for (const deptKey in colors) {
+        optionsHTML += `<option value="${deptKey}" ${deptKey === selectedValue ? 'selected' : ''}>${deptKey}</option>`;
+      }
+      return optionsHTML;
+    }
+
+    function updateDataList() {
+      dataList.innerHTML = '';
+      if (!funnelData.length) {
+        dataList.innerHTML = `
+          <div class="text-center p-4 text-gray-400">
+            <i class="fas fa-envelope text-3xl mb-2 opacity-50"></i>
+            <div class="text-sm">No stages added</div>
+            <button id="sampleDataBtn" class="mt-2 bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 flex items-center gap-2 mx-auto">
+              <i class="fas fa-plus"></i> Add Sample Data
+            </button>
+          </div>`;
+        const sampleDataBtn = document.getElementById('sampleDataBtn');
+        if (sampleDataBtn) {
+            sampleDataBtn.onclick = () => {
+            loadSampleData();
+            initChart();
+            updateDataList();
+            updateLegend();
+            showNotification('Sample data added', 'success');
+          };
+        }
+        return;
+      }
+
+      funnelData.forEach((item, i) => {
+        const itemColor = colors[item.dept]?.main || '#2563eb';
+        if (i === editIndex) {
+          const deptOptions = getDepartmentOptionsHTML(item.dept);
+          dataList.innerHTML += `
+            <div class="p-3 bg-yellow-50 rounded-md mb-2 border-l-4 border-yellow-400 shadow-sm">
+              <div class="mb-2">
+                <label for="edit-name-${i}" class="inline-edit-label">Stage Name</label>
+                <input type="text" id="edit-name-${i}" value="${item.name}" class="inline-edit-field">
+              </div>
+              <div class="mb-2">
+                <label for="edit-value-${i}" class="inline-edit-label">Stage Value</label>
+                <input type="number" id="edit-value-${i}" value="${item.value}" min="0" step="0.1" class="inline-edit-field">
+              </div>
+              <div class="mb-3">
+                <label for="edit-dept-${i}" class="inline-edit-label">Department</label>
+                <select id="edit-dept-${i}" class="inline-edit-field">
+                  ${deptOptions}
+                </select>
+              </div>
+              <div class="flex gap-2">
+                <button class="flex-1 bg-green-600 text-white py-1.5 px-3 rounded-md hover:bg-green-700 text-sm flex items-center justify-center gap-1.5" onclick="saveInlineEdit(${i})">
+                  <i class="fas fa-save"></i> Save
+                </button>
+                <button class="flex-1 bg-gray-500 text-white py-1.5 px-3 rounded-md hover:bg-gray-600 text-sm flex items-center justify-center gap-1.5" onclick="cancelInlineEdit(${i})">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </div>`;
+        } else {
+          const tagClass = item.dept === 'Analytics' ? 'bg-purple-100 text-purple-600' :
+                          item.dept === 'Content Marketing' ? 'bg-green-100 text-green-600' :
+                          item.dept === 'Sales' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600';
+          dataList.innerHTML += `
+            <div class="p-3 bg-gray-50 rounded-md mb-2 border-l-4 shadow-sm" style="border-color: ${itemColor}">
+              <div class="flex justify-between items-center">
+                <div class="font-semibold text-sm text-gray-800">${item.name}</div>
+                <div class="flex gap-2">
+                  <button class="text-blue-600 hover:bg-blue-100 p-1 rounded-full w-7 h-7 flex items-center justify-center" onclick="startInlineEdit(${i})" title="Edit Stage">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="text-red-600 hover:bg-red-100 p-1 rounded-full w-7 h-7 flex items-center justify-center" onclick="deleteStage(${i})" title="Delete Stage">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="flex gap-2 text-xs text-gray-500 mt-1 items-center">
+                <span><i class="fas fa-chart-bar mr-1 opacity-70"></i>${item.value.toLocaleString()}</span>
+                <span class="opacity-50">•</span>
+                <span class="${tagClass} px-1.5 py-0.5 rounded text-xs font-medium">${item.dept}</span>
+              </div>
+            </div>`;
+        }
+      });
+    }
+
+    function showNotification(msg, type = 'success') {
+      notificationIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center';
+      if (type === 'success') {
+        notificationIcon.classList.add('bg-green-100', 'text-green-600');
+        notificationTitle.textContent = 'Success';
+        notificationIcon.innerHTML = `<i class="fas fa-check"></i>`;
+      } else if (type === 'error') {
+        notificationIcon.classList.add('bg-red-100', 'text-red-600');
+        notificationTitle.textContent = 'Error';
+        notificationIcon.innerHTML = `<i class="fas fa-exclamation-circle"></i>`;
+      } else {
+        notificationIcon.classList.add('bg-blue-100', 'text-blue-600');
+        notificationTitle.textContent = 'Info';
+        notificationIcon.innerHTML = `<i class="fas fa-info-circle"></i>`;
+      }
+      notificationMessage.textContent = msg;
+      notification.classList.remove('opacity-0', 'translate-y-20');
+      notification.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        notification.classList.remove('opacity-100', 'translate-y-0');
+        notification.classList.add('opacity-0', 'translate-y-20');
+      } , 3000);
+    }
+
+    notificationClose.addEventListener('click', () => {
+        notification.classList.remove('opacity-100', 'translate-y-0');
+        notification.classList.add('opacity-0', 'translate-y-20');
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = stageNameInput.value.trim();
+      const value = parseFloat(stageValueInput.value);
+      const dept = departmentInput.value;
+
+      if (!name) {
+        showNotification('Stage name required', 'error');
+        stageNameInput.focus();
+        return;
+      }
+      if (isNaN(value) || value < 0) {
+        showNotification('Valid positive value required', 'error');
+        stageValueInput.focus();
+        return;
+      }
+
+      funnelData.push({ name, value, dept });
+      showNotification('Stage added', 'success');
+
+      initChart();
+      updateDataList();
+      updateLegend();
+      stageNameInput.value = '';
+      stageValueInput.value = '';
+      departmentInput.value = 'Email Marketing';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if (!funnelData.length) {
+        showNotification('No stages to reset', 'info');
+        return;
+      }
+      showModal('Reset Stages', 'Are you sure you want to clear all stages?', () => {
+        funnelData = [];
+        editIndex = null;
+        graphTitleInput.value = 'Email Campaign Funnel';
+        stageNameInput.value = '';
+        stageValueInput.value = '';
+        departmentInput.value = 'Email Marketing';
+        initChart();
+        updateDataList();
+        updateLegend();
+        showNotification('All stages have been reset', 'info');
+      });
+    });
+
+    function showModal(title, msg, callback) {
+      modalTitle.textContent = title;
+      modalMessage.textContent = msg;
+      modalConfirm.onclick = () => {
+        hideModal();
+        if (callback) callback();
+      };
+      modal.classList.remove('invisible', 'opacity-0');
+      modalDialog.classList.remove('scale-90');
+      modalDialog.classList.add('scale-100');
+    }
+
+    function hideModal() {
+      modal.classList.add('opacity-0');
+      modalDialog.classList.remove('scale-100');
+      modalDialog.classList.add('scale-90');
+      setTimeout(() => modal.classList.add('invisible'), 150);
+    }
+
+    modalCancel.onclick = hideModal;
+    modalCloseBtn.onclick = hideModal;
+
+    window.startInlineEdit = i => {
+      editIndex = i;
+      updateDataList();
+    };
+
+    window.saveInlineEdit = i => {
+      const newName = document.getElementById(`edit-name-${i}`).value.trim();
+      const newValue = parseFloat(document.getElementById(`edit-value-${i}`).value);
+      const newDept = document.getElementById(`edit-dept-${i}`).value;
+
+      if (!newName) {
+        showNotification('Stage name required for update.', 'error');
+        document.getElementById(`edit-name-${i}`).focus();
+        return;
+      }
+      if (isNaN(newValue) || newValue < 0) {
+        showNotification('Valid positive value required for update.', 'error');
+        document.getElementById(`edit-value-${i}`).focus();
+        return;
+      }
+
+      funnelData[i] = { name: newName, value: newValue, dept: newDept };
+      editIndex = null;
+      initChart();
+      updateDataList();
+      updateLegend();
+      showNotification('Stage updated successfully!', 'success');
+    };
+
+    window.cancelInlineEdit = i => {
+      editIndex = null;
+      updateDataList();
+    };
+
+    window.deleteStage = i => {
+      const item = funnelData[i];
+      showModal('Delete Stage', `Are you sure you want to remove the stage "${item.name}"?`, () => {
+        funnelData.splice(i, 1);
+        if (editIndex === i) {
+          editIndex = null;
+        } else if (editIndex !== null && editIndex > i) {
+          editIndex--;
+        }
+        initChart();
+        updateDataList();
+        updateLegend();
+        showNotification('Stage removed', 'info');
+      });
+    };
+  </script>
+</body>
+</html>

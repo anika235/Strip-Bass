@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The $1K Styling Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .item-list-content {
+        transition:
+          max-height 0.3s ease-in-out,
+          padding 0.3s ease-in-out;
+        max-height: 0;
+        overflow: hidden;
+      }
+      .item-list-content.expanded {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        max-height: 280px;
+        overflow-y: auto;
+      }
+      .category-toggle svg {
+        transition: transform 0.3s ease-in-out;
+      }
+      .category-toggle.expanded svg {
+        transform: rotate(180deg);
+      }
+      .item-list-content.expanded::-webkit-scrollbar {
+        width: 8px;
+      }
+      .item-list-content.expanded::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      .dark .item-list-content.expanded::-webkit-scrollbar-track {
+        background: #4b5563;
+      }
+      .item-list-content.expanded::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+      }
+      .dark .item-list-content.expanded::-webkit-scrollbar-thumb {
+        background: #6b7280;
+      }
+      .item-list-content.expanded::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      .dark .item-list-content.expanded::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+      body {
+        transition:
+          background-color 0.3s ease-in-out,
+          color 0.3s ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-blue-100 to-purple-200 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen p-4 sm:p-6"
+  >
+    <div class="max-w-6xl mx-auto">
+      <div
+        class="mb-6 p-4 sm:p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md flex justify-between items-center border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl"
+      >
+        <h1
+          class="text-xl sm:text-2xl font-bold text-blue-700 dark:text-teal-300 transition-colors duration-200 hover:text-blue-800 dark:hover:text-teal-200"
+        >
+          🛍️ The $1K Styling Game
+        </h1>
+        <div class="flex items-center">
+          <span
+            class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >Light / Dark</span
+          >
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+            <div
+              class="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-teal-600 transition-all"
+            ></div>
+            <div
+              class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-7"
+            ></div>
+          </label>
+        </div>
+      </div>
+      <p
+        class="text-center mb-8 text-gray-700 dark:text-gray-300 text-base sm:text-lg"
+      >
+        Spend exactly $1000 on a full outfit!
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 space-y-6">
+          <div
+            class="rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+          >
+            <button
+              class="category-toggle w-full flex justify-between items-center p-4 sm:p-5 font-semibold text-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-700/70 rounded-t-xl focus:outline-none transition-colors duration-150"
+              data-target="tops-items"
+            >
+              <span>Tops</span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="tops-items"
+              class="item-list-content px-4 sm:px-5"
+            ></div>
+          </div>
+
+          <div
+            class="rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+          >
+            <button
+              class="category-toggle w-full flex justify-between items-center p-4 sm:p-5 font-semibold text-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-700/70 rounded-t-xl focus:outline-none transition-colors duration-150"
+              data-target="bottoms-items"
+            >
+              <span>Bottoms</span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="bottoms-items"
+              class="item-list-content px-4 sm:px-5"
+            ></div>
+          </div>
+
+          <div
+            class="rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+          >
+            <button
+              class="category-toggle w-full flex justify-between items-center p-4 sm:p-5 font-semibold text-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-700/70 rounded-t-xl focus:outline-none transition-colors duration-150"
+              data-target="accessories-items"
+            >
+              <span>Accessories</span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="accessories-items"
+              class="item-list-content px-4 sm:px-5"
+            ></div>
+          </div>
+        </div>
+
+        <div
+          class="md:col-span-1 p-6 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1"
+        >
+          <h2
+            class="text-xl sm:text-2xl font-semibold mb-4 text-center text-gray-800 dark:text-gray-100 transition-colors duration-200"
+          >
+            Your Cart
+          </h2>
+          <ul
+            id="cart"
+            class="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2"
+          ></ul>
+          <div class="border-t border-gray-300 dark:border-gray-600 pt-4">
+            <p
+              id="total"
+              class="text-lg font-bold text-gray-800 dark:text-gray-100"
+            >
+              Total: $0
+            </p>
+            <p id="message" class="text-sm mt-2 min-h-[20px]"></p>
+            <button
+              id="checkout"
+              class="mt-4 w-full bg-blue-600 text-white py-2.5 px-4 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none font-semibold"
+              disabled
+            >
+              Checkout
+            </button>
+            <button
+              id="reset-game-btn"
+              class="mt-3 w-full bg-red-500 text-white py-2.5 px-4 rounded-md hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg font-semibold"
+            >
+              Reset Game
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="success-modal"
+      class="fixed inset-0 bg-gray-900/75 dark:bg-black/75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center hidden z-[5000] p-4"
+    >
+      <div
+        class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-2xl text-center max-w-md w-full border border-white/20 dark:border-gray-700/50"
+      >
+        <div
+          class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-700/30 mb-4"
+        >
+          <svg
+            class="h-8 w-8 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+        </div>
+        <h3
+          class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3"
+        >
+          Congratulations!
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          You've styled a perfect $1000 outfit! Thanks for playing.
+        </p>
+        <button
+          id="close-modal-btn"
+          class="bg-blue-600 text-white py-2.5 px-6 rounded-md hover:bg-blue-700 dark:bg-teal-600 dark:hover:bg-teal-700 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg font-semibold"
+        >
+          Play Again
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const storeItems = [
+        { id: 1, name: "Silk Blouse", category: "Tops", price: 150 },
+        { id: 2, name: "Cashmere Sweater", category: "Tops", price: 200 },
+        { id: 3, name: "Cotton Shirt", category: "Tops", price: 80 },
+        { id: 11, name: "Graphic Tee", category: "Tops", price: 40 },
+        { id: 12, name: "Linen Tunic", category: "Tops", price: 110 },
+        { id: 13, name: "Wool Cardigan", category: "Tops", price: 170 },
+        { id: 21, name: "V-Neck Tee", category: "Tops", price: 30 },
+        { id: 22, name: "Polo Shirt", category: "Tops", price: 65 },
+        { id: 23, name: "Tank Top", category: "Tops", price: 25 },
+
+        { id: 4, name: "Designer Jeans", category: "Bottoms", price: 250 },
+        { id: 5, name: "Tailored Trousers", category: "Bottoms", price: 180 },
+        { id: 6, name: "Leather Skirt", category: "Bottoms", price: 300 },
+        { id: 14, name: "Chino Shorts", category: "Bottoms", price: 70 },
+        { id: 15, name: "Wide-Leg Pants", category: "Bottoms", price: 220 },
+        { id: 16, name: "Denim Skirt", category: "Bottoms", price: 90 },
+        { id: 24, name: "Cargo Pants", category: "Bottoms", price: 120 },
+        { id: 25, name: "Pleated Skirt", category: "Bottoms", price: 100 },
+        { id: 26, name: "Joggers", category: "Bottoms", price: 85 },
+
+        { id: 7, name: "Gold Necklace", category: "Accessories", price: 120 },
+        { id: 8, name: "Leather Belt", category: "Accessories", price: 90 },
+        { id: 9, name: "Silk Scarf", category: "Accessories", price: 60 },
+        { id: 10, name: "Sunglasses", category: "Accessories", price: 150 },
+        { id: 17, name: "Designer Watch", category: "Accessories", price: 350 },
+        { id: 18, name: "Beanie Hat", category: "Accessories", price: 30 },
+        { id: 19, name: "Leather Gloves", category: "Accessories", price: 100 },
+        { id: 20, name: "Statement Earrings", category: "Accessories", price: 75,},
+        { id: 27, name: "Fedora Hat", category: "Accessories", price: 80 },
+        { id: 28, name: "Tote Bag", category: "Accessories", price: 130 },
+        { id: 29, name: "Ankle Boots", category: "Accessories", price: 220 },
+      ];
+
+      let cart = [];
+
+      const cartUl = document.getElementById("cart");
+      const totalP = document.getElementById("total");
+      const messageP = document.getElementById("message");
+      const checkoutBtn = document.getElementById("checkout");
+      const resetBtn = document.getElementById("reset-game-btn");
+      const successModal = document.getElementById("success-modal");
+      const closeModalBtn = document.getElementById("close-modal-btn");
+      const themeToggle = document.getElementById("theme-toggle");
+
+      const categoryContainers = {
+        Tops: document.getElementById("tops-items"),
+        Bottoms: document.getElementById("bottoms-items"),
+        Accessories: document.getElementById("accessories-items"),
+      };
+
+      function setInitialTheme() {
+        if (
+          localStorage.theme === "dark" ||
+          (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+          themeToggle.checked = true;
+        } else {
+          document.documentElement.classList.remove("dark");
+          themeToggle.checked = false;
+        }
+      }
+
+      themeToggle.addEventListener("change", () => {
+        if (themeToggle.checked) {
+          document.documentElement.classList.add("dark");
+          localStorage.theme = "dark";
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.theme = "light";
+        }
+      });
+
+      function triggerConfetti() {
+        if (typeof confetti === "function") {
+          const duration = 2 * 1000;
+          const animationEnd = Date.now() + duration;
+          const defaults = {
+            startVelocity: 30,
+            spread: 360,
+            ticks: 60,
+            zIndex: 10000,
+          };
+
+          function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+          }
+
+          const interval = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(
+              Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+              }),
+            );
+            confetti(
+              Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+              }),
+            );
+          }, 250);
+        }
+      }
+
+      function renderStore() {
+        Object.values(categoryContainers).forEach(
+          (container) => (container.innerHTML = ""),
+        );
+
+        storeItems.forEach((item) => {
+          const itemDiv = document.createElement("div");
+          itemDiv.className =
+            "flex justify-between items-center p-3 bg-gray-100/70 dark:bg-gray-700/60 hover:bg-gray-200/80 dark:hover:bg-gray-600/70 rounded-md mb-2 last:mb-0 transition-colors duration-150";
+          itemDiv.innerHTML = `
+            <span class="text-gray-700 dark:text-gray-200 text-sm">${item.name} ($${item.price})</span>
+            <div>
+              <button class="store-add-btn bg-blue-600 hover:bg-blue-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-3 py-1 rounded text-xs font-medium transition-all duration-150 ease-in-out hover:scale-105" data-id="${item.id}">Add</button>
+              <button class="store-remove-btn bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-all duration-150 ease-in-out hover:scale-105 hidden" data-id="${item.id}">Remove</button>
+            </div>
+          `;
+          if (categoryContainers[item.category]) {
+            categoryContainers[item.category].appendChild(itemDiv);
+          }
+        });
+        updateAllStoreItemButtons();
+      }
+
+      function renderCart() {
+        cartUl.innerHTML = "";
+        cart.forEach((item) => {
+          const li = document.createElement("li");
+          li.className =
+            "flex justify-between items-center text-sm text-gray-700 dark:text-gray-300 py-1";
+          li.innerHTML = `
+            <span>${item.name} - $${item.price}</span>
+            <button class="cart-remove-btn bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-2 py-0.5 rounded text-xs font-medium transition-all duration-150 ease-in-out hover:scale-105" data-id="${item.id}">Remove</button>
+          `;
+          cartUl.appendChild(li);
+        });
+
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        totalP.textContent = `Total: $${total}`;
+
+        if (total === 1000) {
+          messageP.textContent = "Perfect! You can checkout now.";
+          messageP.className =
+            "text-sm text-green-600 dark:text-green-400 mt-2 min-h-[20px] font-medium";
+          checkoutBtn.disabled = false;
+        } else {
+          checkoutBtn.disabled = true;
+          if (total < 1000) {
+            messageP.textContent = `Add $${1000 - total} more to checkout.`;
+            messageP.className =
+              "text-sm text-red-600 dark:text-red-400 mt-2 min-h-[20px] font-medium";
+          } else {
+            messageP.textContent = `Remove $${total - 1000} to checkout.`;
+            messageP.className =
+              "text-sm text-red-600 dark:text-red-400 mt-2 min-h-[20px] font-medium";
+          }
+        }
+      }
+
+      function updateStoreItemButtonState(itemId, inCart) {
+        const addBtns = document.querySelectorAll(
+          `.store-add-btn[data-id="${itemId}"]`,
+        );
+        const removeBtns = document.querySelectorAll(
+          `.store-remove-btn[data-id="${itemId}"]`,
+        );
+        addBtns.forEach((btn) => btn.classList.toggle("hidden", inCart));
+        removeBtns.forEach((btn) => btn.classList.toggle("hidden", !inCart));
+      }
+
+      function updateAllStoreItemButtons() {
+        storeItems.forEach((item) => {
+          const isInCart = cart.some((cartItem) => cartItem.id === item.id);
+          updateStoreItemButtonState(item.id, isInCart);
+        });
+      }
+
+      function addItem(id) {
+        const item = storeItems.find((i) => i.id === id);
+        if (item && !cart.find((i) => i.id === id)) {
+          cart.push(item);
+          renderCart();
+          updateStoreItemButtonState(id, true);
+        }
+      }
+
+      function removeItem(id) {
+        cart = cart.filter((i) => i.id !== id);
+        renderCart();
+        updateStoreItemButtonState(id, false);
+      }
+
+      function resetGame() {
+        cart = [];
+        renderCart();
+        updateAllStoreItemButtons();
+
+        document
+          .querySelectorAll(".item-list-content.expanded")
+          .forEach((content) => {
+            content.classList.remove("expanded");
+            const button = content.previousElementSibling;
+            if (button && button.classList.contains("category-toggle")) {
+              button.classList.remove("expanded");
+            }
+          });
+        if (!successModal.classList.contains("hidden")) {
+          successModal.classList.add("hidden");
+        }
+        if (cart.length === 0) {
+          messageP.textContent = "";
+          messageP.className =
+            "text-sm text-gray-600 dark:text-gray-400 mt-2 min-h-[20px]";
+        }
+      }
+
+      document.addEventListener("click", (e) => {
+        const categoryToggle = e.target.closest(".category-toggle");
+        if (categoryToggle) {
+          const targetId = categoryToggle.dataset.target;
+          const itemListContent = document.getElementById(targetId);
+          if (itemListContent) {
+            categoryToggle.classList.toggle("expanded");
+            itemListContent.classList.toggle("expanded");
+          }
+        }
+
+        if (e.target.classList.contains("store-add-btn")) {
+          addItem(parseInt(e.target.dataset.id));
+        }
+        if (e.target.classList.contains("store-remove-btn")) {
+          removeItem(parseInt(e.target.dataset.id));
+        }
+        if (e.target.classList.contains("cart-remove-btn")) {
+          removeItem(parseInt(e.target.dataset.id));
+        }
+        if (e.target.id === "checkout") {
+          if (!checkoutBtn.disabled) {
+            triggerConfetti();
+            successModal.classList.remove("hidden");
+          }
+        }
+      });
+
+      resetBtn.addEventListener("click", resetGame);
+      closeModalBtn.addEventListener("click", () => {
+        successModal.classList.add("hidden");
+        resetGame();
+      });
+
+      successModal.addEventListener("click", (event) => {
+        if (event.target === successModal) {
+          successModal.classList.add("hidden");
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setInitialTheme();
+        renderStore();
+        renderCart();
+      });
+    </script>
+  </body>
+</html>

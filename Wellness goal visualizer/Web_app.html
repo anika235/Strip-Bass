@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wellness Goal Visualizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+    }
+    .goal-card:hover {
+      background-color: rgba(0,0,0,0.03);
+    }
+    .tooltip {
+      position: relative;
+      cursor: help;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 6px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      z-index: 50;
+    }
+    button {
+      transition: background-color 0.3s ease;
+    }
+    pre {
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    #cancelEditBtn {
+      background-color: #6b7280;
+    }
+    #cancelEditBtn:hover {
+      background-color: #4b5563;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-10 px-5">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-10">
+      <h1 id="visualizerHeader" class="text-4xl font-extrabold text-blue-700">Wellness Goals</h1>
+      <p class="text-gray-500 text-sm mt-2">Set, manage, and visualize your patient's wellness progress</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10">
+      <div class="bg-white p-8 rounded-2xl shadow-lg space-y-5 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-3">Add a Goal</h2>
+        <label class="block tooltip" data-tooltip="Set a custom title for your visualizer.">
+          <span class="text-sm font-medium">Visualizer Title</span>
+          <input id="title" type="text" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" value="Wellness Goals">
+        </label>
+        <label class="block tooltip" data-tooltip="Enter a descriptive label for the goal. E.g., 'Daily Steps'">
+          <span class="text-sm font-medium">Goal Label</span>
+          <input id="goalLabel" type="text" placeholder="E.g., Daily Steps" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+        </label>
+        <label class="block tooltip" data-tooltip="Enter a numeric target value between 0 and 100. E.g., 75">
+          <span class="text-sm font-medium">Goal Value (%)</span>
+          <input id="goalValue" type="number" min="0" max="100" placeholder="E.g., 75" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+        </label>
+        <label class="block tooltip" data-tooltip="Choose the department this goal belongs to.">
+          <span class="text-sm font-medium">Department</span>
+          <select id="department" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <option>Wellness</option>
+            <option>Analytics</option>
+            <option>Nutrition</option>
+            <option>Mental Health</option>
+          </select>
+        </label>
+        <label class="block tooltip" data-tooltip="Pick a display color for this goal. Click to choose.">
+          <span class="text-sm font-medium">Color</span>
+          <input type="color" id="colorPicker" value="#3b82f6" class="mt-1 w-full h-12 border border-gray-300 rounded-lg">
+        </label>
+        <div class="flex gap-4 pt-2">
+          <button id="addBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">Add Goal</button>
+          <button id="resetBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg">Reset</button>
+        </div>
+        <div class="flex gap-4">
+          <button id="undoBtn" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg">Undo</button>
+          <button id="cancelEditBtn" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg hidden">Cancel Edit</button>
+        </div>
+        <div class="flex gap-4">
+          <button id="exportBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg">Export JSON</button>
+          <input type="file" id="importFile" class="hidden">
+          <label for="importFile" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-center font-semibold py-3 rounded-lg cursor-pointer">Import JSON</label>
+        </div>
+        <div class="pt-4">
+          <p class="text-sm font-semibold text-gray-700 mb-1">Example JSON Format:</p>
+          <pre class="bg-gray-100 border border-gray-300 text-xs p-4 rounded-lg overflow-x-auto">
+[
+  {
+    "label": "Daily Exercise",
+    "value": 75,
+    "department": "Wellness",
+    "color": "#3b82f6"
+  },
+  {
+    "label": "Meditation",
+    "value": 60,
+    "department": "Mental Health",
+    "color": "#10b981"
+  }
+]
+          </pre>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <canvas id="chartCanvas" class="bg-white p-6 rounded-2xl shadow-md border border-gray-200"></canvas>
+        <div id="goalCards" class="space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const goals = JSON.parse(localStorage.getItem('goals')) || [];
+    let undoStack = [];
+    let editingGoalIndex = null;
+
+    const addBtn = document.getElementById('addBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const goalLabelInput = document.getElementById('goalLabel');
+    const goalValueInput = document.getElementById('goalValue');
+    const departmentInput = document.getElementById('department');
+    const colorPickerInput = document.getElementById('colorPicker');
+    const titleInput = document.getElementById('title');
+    const visualizerHeader = document.getElementById('visualizerHeader');
+
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    let chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          backgroundColor: [],
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: {
+            display: true,
+            text: titleInput.value || 'Wellness Goals',
+            font: {
+              size: 18
+            },
+            padding: {
+              top: 10,
+              bottom: 10
+            }
+          }
+        }
+      }
+    });
+
+    function updateChart() {
+      const currentTitle = titleInput.value || 'Wellness Goals';
+      chart.data.labels = goals.map(g => g.label);
+      chart.data.datasets[0].data = goals.map(g => g.value);
+      chart.data.datasets[0].backgroundColor = goals.map(g => g.color);
+      chart.options.plugins.title.text = currentTitle;
+      chart.update();
+      document.getElementById('goalCards').innerHTML = goals.map((g, i) => `
+        <div class="goal-card bg-white p-4 border border-gray-200 rounded-lg flex justify-between items-center shadow-sm">
+          <div>
+            <span class="font-semibold text-blue-700">${g.label}</span>
+            <span class="text-gray-500">(${g.value}%)</span>
+            <em class="ml-2 text-sm text-gray-400">[${g.department}]</em>
+          </div>
+          <div class="space-x-3">
+            <button onclick="editGoal(${i})" class="text-sm text-blue-600 hover:underline">Edit</button>
+            <button onclick="deleteGoal(${i})" class="text-sm text-red-600 hover:underline">Delete</button>
+          </div>
+        </div>
+      `).join('');
+      visualizerHeader.textContent = currentTitle;
+      localStorage.setItem('goals', JSON.stringify(goals));
+      document.getElementById('undoBtn').disabled = undoStack.length === 0;
+    }
+
+    function saveStateForUndo() {
+      undoStack.push(JSON.parse(JSON.stringify(goals)));
+    }
+    
+    function clearForm() {
+        goalLabelInput.value = '';
+        goalValueInput.value = '';
+        departmentInput.value = 'Wellness';
+        colorPickerInput.value = '#3b82f6';
+    }
+
+    function handleAddOrUpdateGoal() {
+      const label = goalLabelInput.value.trim();
+      const value = parseInt(goalValueInput.value);
+      const dept = departmentInput.value;
+      const color = colorPickerInput.value;
+
+      if (!label || isNaN(value) || value < 0 || value > 100) {
+        alert('Please enter valid goal data (Label, Value 0-100).');
+        return;
+      }
+
+      saveStateForUndo();
+
+      if (editingGoalIndex !== null) {
+        goals[editingGoalIndex] = { label, value, department: dept, color };
+        editingGoalIndex = null;
+        addBtn.textContent = 'Add Goal';
+        cancelEditBtn.classList.add('hidden');
+        document.getElementById('undoBtn').classList.remove('hidden');
+
+      } else {
+        goals.push({ label, value, department: dept, color });
+      }
+      
+      updateChart();
+      clearForm();
+    }
+
+    function deleteGoal(index) {
+      if (confirm(`Are you sure you want to delete the goal: "${goals[index].label}"?`)) {
+        saveStateForUndo();
+        goals.splice(index, 1);
+        if (editingGoalIndex === index) {
+            editingGoalIndex = null;
+            addBtn.textContent = 'Add Goal';
+            cancelEditBtn.classList.add('hidden');
+            document.getElementById('undoBtn').classList.remove('hidden');
+            clearForm();
+        }
+        updateChart();
+      }
+    }
+
+    function editGoal(index) {
+      const g = goals[index];
+      goalLabelInput.value = g.label;
+      goalValueInput.value = g.value;
+      departmentInput.value = g.department;
+      colorPickerInput.value = g.color;
+      
+      editingGoalIndex = index;
+      addBtn.textContent = 'Update Goal';
+      cancelEditBtn.classList.remove('hidden');
+      document.getElementById('undoBtn').classList.add('hidden');
+      goalLabelInput.focus();
+    }
+
+    function cancelEdit() {
+        editingGoalIndex = null;
+        addBtn.textContent = 'Add Goal';
+        cancelEditBtn.classList.add('hidden');
+        document.getElementById('undoBtn').classList.remove('hidden');
+        clearForm();
+    }
+
+    function resetAll() {
+      if (confirm('Are you sure you want to reset all goals? This action cannot be undone if no previous states exist.')) {
+        if (goals.length > 0) {
+            saveStateForUndo();
+        }
+        goals.length = 0;
+        localStorage.removeItem('goals');
+        if (editingGoalIndex !== null) {
+            cancelEdit();
+        }
+        updateChart();
+      }
+    }
+
+    function undoLastAction() {
+      if (undoStack.length > 0) {
+        const previousGoalsState = undoStack.pop();
+        goals.length = 0;
+        goals.push(...previousGoalsState);
+        if (editingGoalIndex !== null) {
+            cancelEdit();
+        }
+        updateChart();
+      } else {
+        alert("No actions to undo.");
+      }
+    }
+
+    function exportJSON() {
+      const dataStr = JSON.stringify(goals, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'wellness_goals.json';
+      link.click();
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const importedGoals = JSON.parse(e.target.result);
+          if (Array.isArray(importedGoals) && importedGoals.every(g => 'label' in g && 'value' in g && 'department' in g && 'color' in g)) {
+            saveStateForUndo();
+            goals.length = 0;
+            goals.push(...importedGoals);
+            if (editingGoalIndex !== null) {
+                cancelEdit();
+            }
+            updateChart();
+          } else {
+            alert('Invalid JSON format. Please ensure it is an array of goal objects with required properties.');
+          }
+        } catch (error) {
+          alert('Error parsing JSON file: ' + error.message);
+        }
+      };
+      reader.onerror = () => alert('Error reading file.');
+      reader.readAsText(file);
+    }
+
+    addBtn.onclick = handleAddOrUpdateGoal;
+    document.getElementById('resetBtn').onclick = resetAll;
+    document.getElementById('exportBtn').onclick = exportJSON;
+    document.getElementById('importFile').addEventListener('change', e => {
+        if (e.target.files.length > 0) {
+            importJSON(e.target.files[0]);
+        }
+        e.target.value = null;
+    });
+    titleInput.addEventListener('input', () => {
+      const newTitle = titleInput.value || 'Wellness Goals';
+      visualizerHeader.textContent = newTitle;
+      if (chart && chart.options.plugins.title) {
+        chart.options.plugins.title.text = newTitle;
+        chart.update();
+      }
+    });
+    document.getElementById('undoBtn').onclick = undoLastAction;
+    cancelEditBtn.onclick = cancelEdit;
+
+    updateChart();
+  </script>
+</body>
+</html>

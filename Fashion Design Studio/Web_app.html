@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fashion Design Studio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        transition:
+          background-color 0.3s ease-in-out,
+          color 0.3s ease-in-out;
+      }
+
+      .human-figure {
+        width: 280px;
+        height: 560px;
+        background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
+      .dark .human-figure {
+        background: linear-gradient(145deg, #374151 0%, #1f2937 100%);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .human-figure::before {
+        content: "";
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 50px;
+        background: #d1d5db;
+        border-radius: 50%;
+        box-shadow:
+          inset 0 -3px 6px rgba(0, 0, 0, 0.1),
+          0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .dark .human-figure::before {
+        background: #4b5563;
+        box-shadow:
+          inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+          0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .human-figure::after {
+        content: "";
+        position: absolute;
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 70px;
+        height: 25px;
+        background: #d1d5db;
+        border-radius: 12px 12px 8px 8px;
+        box-shadow:
+          inset 0 -3px 6px rgba(0, 0, 0, 0.1),
+          0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .dark .human-figure::after {
+        background: #4b5563;
+        box-shadow:
+          inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+          0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+      }
+      .dark .color-swatch {
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .color-swatch:hover {
+        transform: scale(1.15);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+      }
+      .dark .color-swatch:hover {
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .color-swatch.active {
+        border-color: #4f46e5;
+        transform: scale(1.2);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+      }
+      .dark .color-swatch.active {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.4);
+      }
+
+      .clothing-item {
+        position: absolute;
+        transition:
+          filter 0.3s ease,
+          transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        cursor: pointer;
+      }
+      .dark .clothing-item {
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+      }
+
+      .clothing-item svg {
+        transition:
+          color 0.3s ease,
+          transform 0.3s ease;
+      }
+
+      .clothing-item:hover {
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.2));
+        transform: translateY(-2px);
+      }
+      .dark .clothing-item:hover {
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.4));
+      }
+      .clothing-item:hover svg {
+        transform: scale(1.03) rotate(-0.5deg);
+      }
+
+      .modal-content-style {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .dark .modal-content-style {
+        background: rgba(31, 41, 55, 0.7);
+        border: 1px solid rgba(75, 85, 99, 0.5);
+      }
+
+      .saved-design-item {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+        transition: all 0.2s ease;
+      }
+      .dark .saved-design-item {
+        background: rgba(55, 65, 81, 0.8);
+        border-color: rgba(75, 85, 99, 0.7);
+      }
+
+      .saved-design-item:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 1);
+      }
+      .dark .saved-design-item:hover {
+        background: rgba(75, 85, 99, 1);
+      }
+
+      #notificationModal {
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+      }
+      #notificationModal.hidden {
+        opacity: 0;
+        transform: translateY(-20px);
+        pointer-events: none;
+      }
+      #notificationModal.success {
+        border-left-color: #22c55e;
+        background-color: #f0fdf4;
+        color: #166534;
+      }
+      .dark #notificationModal.success {
+        background-color: #052e16;
+        color: #6ee7b7;
+        border-left-color: #4ade80;
+      }
+      #notificationModal.warning {
+        border-left-color: #f59e0b;
+        background-color: #fffbeb;
+        color: #92400e;
+      }
+      .dark #notificationModal.warning {
+        background-color: #451a03;
+        color: #fcd34d;
+        border-left-color: #fbbf24;
+      }
+      #notificationModal.error {
+        border-left-color: #ef4444;
+        background-color: #fef2f2;
+        color: #991b1b;
+      }
+      .dark #notificationModal.error {
+        background-color: #450a0a;
+        color: #fca5a5;
+        border-left-color: #f87171;
+      }
+      #notificationModal.info {
+        border-left-color: #3b82f6;
+        background-color: #eff6ff;
+        color: #1e40af;
+      }
+      .dark #notificationModal.info {
+        background-color: #1e1b4b;
+        color: #93c5fd;
+        border-left-color: #60a5fa;
+      }
+
+      .accordion-content {
+        transition:
+          max-height 0.3s ease-in-out,
+          padding 0.3s ease-in-out,
+          opacity 0.3s ease-in-out;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+      }
+      .accordion-content.expanded {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        max-height: 300px;
+        overflow-y: auto;
+        opacity: 1;
+      }
+      .accordion-toggle svg {
+        transition: transform 0.3s ease-in-out;
+      }
+      .accordion-toggle.expanded svg {
+        transform: rotate(180deg);
+      }
+
+      .accordion-content.expanded::-webkit-scrollbar {
+        width: 8px;
+      }
+      .accordion-content.expanded::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      .dark .accordion-content.expanded::-webkit-scrollbar-track {
+        background: #4b5563;
+      }
+      .accordion-content.expanded::-webkit-scrollbar-thumb {
+        background: #a0aec0;
+        border-radius: 10px;
+      }
+      .dark .accordion-content.expanded::-webkit-scrollbar-thumb {
+        background: #718096;
+      }
+      .accordion-content.expanded::-webkit-scrollbar-thumb:hover {
+        background: #718096;
+      }
+      .dark .accordion-content.expanded::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+      }
+
+      @keyframes fadeInRight {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes fadeInDown {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeInLeft {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .animate-right {
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: fadeInRight 600ms ease-out forwards;
+      }
+      .animate-down {
+        opacity: 0;
+        transform: translateY(-20px);
+        animation: fadeInDown 600ms ease-out forwards;
+      }
+      .animate-left {
+        opacity: 0;
+        transform: translateX(20px);
+        animation: fadeInLeft 600ms ease-out forwards;
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans bg-gradient-to-br from-slate-100 to-sky-100 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen"
+  >
+    <header
+      class="animate-down p-4 sm:p-5 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border-b border-white/30 dark:border-gray-700/50 flex justify-between items-center sticky top-0 z-30"
+      style="animation-delay: 100ms"
+    >
+      <h1
+        class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400"
+      >
+        Fashion Design Studio
+      </h1>
+      <div class="flex items-center">
+        <span
+          class="mr-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300"
+          >Light / Dark</span
+        >
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+          <div
+            class="w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-indigo-600 transition-all"
+          ></div>
+          <div
+            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5"
+          ></div>
+        </label>
+      </div>
+    </header>
+
+    <div
+      class="mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6 lg:gap-8 w-full max-w-7xl justify-center items-start mt-4"
+    >
+      <aside
+        class="animate-right w-full lg:w-[400px] p-1.5 sm:p-2 rounded-xl shadow-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/30 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-2xl"
+        style="animation-delay: 300ms"
+      >
+        <div class="space-y-3">
+          <div
+            class="rounded-lg shadow-md bg-white/70 dark:bg-gray-700/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
+          >
+            <button
+              class="accordion-toggle w-full flex justify-between items-center p-3 sm:p-4 font-semibold text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 rounded-t-lg focus:outline-none transition-colors duration-150"
+              data-target="colorPaletteContent"
+            >
+              <span class="flex items-center">
+                <i class="mr-2 text-xl ti ti-palette"></i>Color Palette
+                <span
+                  id="currentFocusIndicator"
+                  class="ml-2 text-xs text-indigo-600 dark:text-indigo-400 font-normal"
+                ></span>
+              </span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="colorPaletteContent"
+              class="accordion-content px-3 sm:px-4"
+            >
+              <div
+                id="globalColorPalette"
+                class="grid grid-cols-6 gap-2 p-2 bg-slate-100 dark:bg-slate-700 rounded-lg"
+              >
+                <div class="color-swatch bg-red-500" data-color="#ef4444"></div>
+                <div
+                  class="color-swatch bg-orange-500"
+                  data-color="#f97316"
+                ></div>
+                <div
+                  class="color-swatch bg-amber-500"
+                  data-color="#f59e0b"
+                ></div>
+                <div
+                  class="color-swatch bg-yellow-400"
+                  data-color="#facc15"
+                ></div>
+                <div class="color-swatch bg-lime-500" data-color="#84cc16"></div>
+                <div
+                  class="color-swatch bg-green-500"
+                  data-color="#22c55e"
+                ></div>
+                <div
+                  class="color-swatch bg-emerald-500"
+                  data-color="#10b981"
+                ></div>
+                <div class="color-swatch bg-teal-500" data-color="#14b8a6"></div>
+                <div class="color-swatch bg-cyan-500" data-color="#06b6d4"></div>
+                <div class="color-swatch bg-sky-500" data-color="#0ea5e9"></div>
+                <div class="color-swatch bg-blue-600" data-color="#2563eb"></div>
+                <div
+                  class="color-swatch bg-indigo-500"
+                  data-color="#6366f1"
+                ></div>
+                <div
+                  class="color-swatch bg-violet-500"
+                  data-color="#8b5cf6"
+                ></div>
+                <div
+                  class="color-swatch bg-purple-600"
+                  data-color="#9333ea"
+                ></div>
+                <div
+                  class="color-swatch bg-fuchsia-500"
+                  data-color="#d946ef"
+                ></div>
+                <div class="color-swatch bg-pink-500" data-color="#ec4899"></div>
+                <div class="color-swatch bg-rose-500" data-color="#f43f5e"></div>
+                <div
+                  class="color-swatch bg-slate-400"
+                  data-color="#94a3b8"
+                ></div>
+                <div
+                  class="color-swatch bg-gray-800"
+                  data-color="#1f2937"
+                ></div>
+                <div
+                  class="color-swatch bg-neutral-500"
+                  data-color="#737373"
+                ></div>
+                <div
+                  class="color-swatch bg-stone-500"
+                  data-color="#78716c"
+                ></div>
+                <div class="color-swatch bg-red-800" data-color="#991b1b"></div>
+                <div class="color-swatch bg-blue-800" data-color="#1e40af"></div>
+                <div
+                  class="color-swatch bg-green-800"
+                  data-color="#166534"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="rounded-lg shadow-md bg-white/70 dark:bg-gray-700/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
+          >
+            <button
+              class="accordion-toggle w-full flex justify-between items-center p-3 sm:p-4 font-semibold text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 rounded-t-lg focus:outline-none transition-colors duration-150"
+              data-target="topSelectContent"
+            >
+              <span class="flex items-center">
+                <i class="mr-2 text-xl ti ti-shirt"></i>Top
+              </span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div id="topSelectContent" class="accordion-content px-3 sm:px-4">
+              <select
+                id="topSelect"
+                class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/80 dark:focus:ring-indigo-400/80 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                data-category="top"
+              >
+                <option value="none">None</option>
+                <option value="tshirt">T-Shirt</option>
+                <option value="tanktop">Tank Top</option>
+                <option value="shirt">Button Shirt</option>
+                <option value="sweater">Sweater</option>
+                <option value="dress">Dress</option>
+              </select>
+            </div>
+          </div>
+
+          <div
+            class="rounded-lg shadow-md bg-white/70 dark:bg-gray-700/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
+          >
+            <button
+              class="accordion-toggle w-full flex justify-between items-center p-3 sm:p-4 font-semibold text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 rounded-t-lg focus:outline-none transition-colors duration-150"
+              data-target="bottomSelectContent"
+            >
+              <span class="flex items-center">
+                <i class="mr-2 text-xl ti ti-hanger-2"></i>Bottom
+              </span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="bottomSelectContent"
+              class="accordion-content px-3 sm:px-4"
+            >
+              <select
+                id="bottomSelect"
+                class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/80 dark:focus:ring-indigo-400/80 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                data-category="bottom"
+              >
+                <option value="none">None</option>
+                <option value="jeans">Jeans</option>
+                <option value="shorts">Shorts</option>
+                <option value="pants">Pants</option>
+                <option value="skirt">Skirt</option>
+              </select>
+            </div>
+          </div>
+
+          <div
+            class="rounded-lg shadow-md bg-white/70 dark:bg-gray-700/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
+          >
+            <button
+              class="accordion-toggle w-full flex justify-between items-center p-3 sm:p-4 font-semibold text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 rounded-t-lg focus:outline-none transition-colors duration-150"
+              data-target="accessorySelectContent"
+            >
+              <span class="flex items-center">
+                <i class="mr-2 text-xl ti ti-tie"></i>Accessories
+              </span>
+              <svg
+                class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            <div
+              id="accessorySelectContent"
+              class="accordion-content px-3 sm:px-4"
+            >
+              <select
+                id="accessorySelect"
+                class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/80 dark:focus:ring-indigo-400/80 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                data-category="accessory"
+              >
+                <option value="none">None</option>
+                <option value="hat">Hat (Beanie)</option>
+                <option value="cap">Cap</option>
+                <option value="scarf">Scarf</option>
+                <option value="belt">Belt</option>
+                <option value="glasses">Glasses</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-3 px-2 sm:px-3">
+            <button
+              id="saveBtn"
+              class="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-md hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all duration-150 ease-in-out hover:scale-105 active:scale-100 font-semibold"
+            >
+              Save Design
+            </button>
+            <button
+              id="loadBtn"
+              class="w-full bg-slate-200 text-slate-700 py-2.5 px-4 rounded-md hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-all duration-150 ease-in-out hover:scale-105 active:scale-100 font-semibold"
+            >
+              Load Designs
+            </button>
+            <button
+              id="resetBtn"
+              class="w-full bg-red-500 text-white py-2.5 px-4 rounded-md hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-all duration-150 ease-in-out hover:scale-105 active:scale-100 font-semibold"
+            >
+              Reset Design
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main
+        class="animate-left flex-grow flex items-center justify-center p-4 lg:p-0"
+        style="animation-delay: 500ms"
+      >
+        <div class="human-figure">
+          <div
+            class="absolute top-[18%] left-1/2 -translate-x-1/2 w-[60%] h-[8%] bg-gradient-to-b from-black/10 dark:from-black/20 to-transparent rounded-full opacity-50 dark:opacity-40"
+          ></div>
+          <div
+            class="absolute top-[45%] left-1/2 -translate-x-1/2 w-[50%] h-[4%] bg-gradient-to-b from-black/10 dark:from-black/20 to-transparent rounded-full opacity-50 dark:opacity-40"
+          ></div>
+
+          <div id="tshirt" class="clothing-item hidden" style="top: 20%; left: 15%; width: 70%" data-category="top"> <svg viewBox="0 0 100 100" style="color: #ef4444"> <path d="M20 25 C20 20 25 15 30 15 L70 15 C75 15 80 20 80 25 L80 38 L92 45 L92 55 L80 50 L80 75 L20 75 L20 50 L8 55 L8 45 L20 38 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> </svg> </div>
+          <div id="tanktop" class="clothing-item hidden" style="top: 20%; left: 20%; width: 60%" data-category="top"> <svg viewBox="0 0 100 100" style="color: #f97316"> <path d="M30 15 Q30 10 35 10 L65 10 Q70 10 70 15 L75 40 L75 80 L25 80 L25 40 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> </svg> </div>
+          <div id="shirt" class="clothing-item hidden" style="top: 18%; left: 15%; width: 70%" data-category="top"> <svg viewBox="0 0 100 100" style="color: #2563eb"> <path d="M22 22 L78 22 L78 80 L22 80 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <path d="M22 25 L5 35 L5 50 L22 40 Z M78 25 L95 35 L95 50 L78 40 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <path d="M35 22 Q30 15 40 15 L60 15 Q70 15 65 22" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <line x1="50" y1="22" x2="50" y2="80" stroke="#fff" stroke-width="2"/> <circle cx="50" cy="35" r="1.5" fill="#fff"/> <circle cx="50" cy="50" r="1.5" fill="#fff"/> <circle cx="50" cy="65" r="1.5" fill="#fff"/> </svg> </div>
+          <div id="sweater" class="clothing-item hidden" style="top: 20%; left: 12%; width: 76%" data-category="top"> <svg viewBox="0 0 100 100" style="color: #22c55e"> <path d="M15 25 Q15 20 20 20 L80 20 Q85 20 85 25 L85 75 Q85 80 80 80 L20 80 Q15 80 15 75 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> <path d="M15 30 L0 40 L0 55 L15 50 Z M85 30 L100 40 L100 55 L85 50 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> <path d="M30 20 Q50 12 70 20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/> <rect x="15" y="75" width="70" height="5" fill="currentColor" stroke="#fff" stroke-width="0.5" opacity="0.7"/> <rect x="0" y="52" width="15" height="3" transform="rotate(15 0 52)" fill="currentColor" stroke="#fff" stroke-width="0.5" opacity="0.7"/> <rect x="85" y="52" width="15" height="3" transform="rotate(-15 100 52)" fill="currentColor" stroke="#fff" stroke-width="0.5" opacity="0.7"/> </svg> </div>
+          <div id="dress" class="clothing-item hidden" style="top: 19%; left: 15%; width: 70%; z-index: 3" data-category="top"> <svg viewBox="0 0 100 120" style="color: #ec4899"> <path d="M25 15 Q25 10 30 10 L70 10 Q75 10 75 15 L85 40 L80 115 Q75 120 50 120 Q25 120 20 115 L15 40 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> <path d="M25 15 L10 25 L10 35 L25 30Z M75 15 L90 25 L90 35 L75 30Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+
+          <div id="jeans" class="clothing-item hidden" style="top: 50%; left: 15%; width: 70%" data-category="bottom"> <svg viewBox="0 0 100 100" style="color: #1e3a8a"> <path d="M25 0 Q30 -5 50 -5 Q70 -5 75 0 L80 20 L70 98 Q65 105 50 105 Q35 105 30 98 L20 20 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <line x1="50" y1="-2" x2="50" y2="15" stroke="#fff" stroke-width="1.5"/> <line x1="50" y1="40" x2="50" y2="105" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+          <div id="shorts" class="clothing-item hidden" style="top: 50%; left: 15%; width: 70%" data-category="bottom"> <svg viewBox="0 0 100 60" style="color: #1f2937"> <path d="M25 0 Q30 -5 50 -5 Q70 -5 75 0 L80 15 L70 58 Q65 60 50 60 Q35 60 30 58 L20 15 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <line x1="50" y1="-2" x2="50" y2="10" stroke="#fff" stroke-width="1.5"/> <line x1="50" y1="25" x2="50" y2="60" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+          <div id="pants" class="clothing-item hidden" style="top: 50%; left: 15%; width: 70%" data-category="bottom"> <svg viewBox="0 0 100 100" style="color: #64748b"> <path d="M22 0 Q30 -5 50 -5 Q70 -5 78 0 L85 15 L75 98 Q70 105 50 105 Q30 105 25 98 L15 15 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <path d="M50 -5 L50 20" stroke="#fff" stroke-width="1.5"/> <path d="M40 -3 H60 M45 -5 H55" stroke="#fff" stroke-width="1" fill="none"/> <path d="M20 15 L25 40 M80 15 L75 40" stroke="#fff" stroke-width="1" fill="none"/> <line x1="50" y1="40" x2="50" y2="105" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+          <div id="skirt" class="clothing-item hidden" style="top: 50%; left: 12%; width: 76%" data-category="bottom"> <svg viewBox="0 0 100 70" style="color: #8b5cf6"> <path d="M20 0 L80 0 L90 68 Q85 70 50 70 Q15 70 10 68 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> </svg> </div>
+
+          <div id="hat" class="clothing-item hidden" style="top: 2%; left: 30%; width: 40%" data-category="accessory"> <svg viewBox="0 0 100 60" style="color: #ca8a04"> <path d="M15 30 C15 10 85 10 85 30 C85 50 70 60 50 60 C30 60 15 50 15 30 Z" fill="currentColor" stroke="#fff" stroke-width="2"/> <path d="M10 50 Q50 65 90 50" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"/> <circle cx="50" cy="15" r="5" fill="currentColor"/> </svg> </div>
+          <div id="cap" class="clothing-item hidden" style="top: 3%; left: 28%; width: 44%" data-category="accessory"> <svg viewBox="0 0 100 50" style="color: #0ea5e9"> <path d="M15 20 Q15 5 50 5 Q85 5 85 20 C85 35 75 40 50 40 C25 40 15 35 15 20 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> <path d="M50 40 Q80 40 95 30 L90 20 Q70 30 50 30 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+          <div id="scarf" class="clothing-item hidden" style="top: 22%; left: 25%; width: 50%; z-index: 10" data-category="accessory"> <svg viewBox="0 0 100 70" style="color: #ef4444"> <path d="M25 5 Q30 0 50 10 Q70 0 75 5 L85 40 Q70 55 50 50 Q30 55 15 40 Z M40 60 L35 70 L45 70 Z M60 60 L55 70 L65 70 Z" fill="currentColor" stroke="#fff" stroke-width="1.5"/> </svg> </div>
+          <div id="belt" class="clothing-item hidden" style="top: 46%; left: 15%; width: 70%; z-index: 5" data-category="accessory"> <svg viewBox="0 0 100 20" style="color: #1f2937"> <rect x="10" y="6" width="80" height="8" rx="2" fill="currentColor" stroke="#fff" stroke-width="1"/> <rect x="15" y="4" width="10" height="12" rx="2" fill="currentColor" stroke="#fff" stroke-width="1" style="filter: brightness(0.8)"/> </svg> </div>
+          <div id="glasses" class="clothing-item hidden" style="top: 12%; left: 28%; width: 44%; z-index: 15" data-category="accessory"> <svg viewBox="0 0 100 40" style="color: #334155"> <circle cx="30" cy="20" r="15" fill="currentColor" stroke="#fff" stroke-width="1.5" opacity="0.7"/> <circle cx="70" cy="20" r="15" fill="currentColor" stroke="#fff" stroke-width="1.5" opacity="0.7"/> <line x1="45" y1="20" x2="55" y2="20" stroke="currentColor" stroke-width="3"/> <path d="M15 15 Q5 5 0 10 M85 15 Q95 5 100 10" fill="none" stroke="currentColor" stroke-width="2"/> </svg> </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      id="modal"
+      class="fixed inset-0 bg-gray-900/75 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4 z-40"
+    >
+      <div
+        class="modal-content-style p-6 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3
+            class="text-xl font-bold text-gray-800 dark:text-gray-100"
+          >
+            Saved Designs
+          </h3>
+          <button
+            id="closeModal"
+            class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl transition-colors"
+          >
+            &times;
+          </button>
+        </div>
+        <div
+          id="savedDesigns"
+          class="space-y-3 overflow-y-auto pr-2 flex-grow"
+        ></div>
+        <p
+          id="noDesignsMessage"
+          class="text-center text-gray-500 dark:text-gray-400 py-4 hidden"
+        >
+          No designs saved yet.
+        </p>
+      </div>
+    </div>
+
+    <div
+      id="notificationModal"
+      class="fixed top-5 right-5 p-4 rounded-lg shadow-xl z-50 border-l-4 hidden max-w-sm"
+    >
+      <div class="flex items-center">
+        <p id="notificationMessage" class="flex-grow"></p>
+        <button
+          id="closeNotification"
+          class="ml-4 text-lg font-semibold hover:opacity-75 transition-opacity"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const elements = {
+          selects: {
+            top: document.getElementById("topSelect"),
+            bottom: document.getElementById("bottomSelect"),
+            accessory: document.getElementById("accessorySelect"),
+          },
+          globalColorSwatches: document.querySelectorAll(
+            "#globalColorPalette .color-swatch",
+          ),
+          clothingItemDivs: document.querySelectorAll(".clothing-item"),
+          clothingItems: {
+            tshirt: document.getElementById("tshirt"), tanktop: document.getElementById("tanktop"), shirt: document.getElementById("shirt"), sweater: document.getElementById("sweater"), dress: document.getElementById("dress"),
+            jeans: document.getElementById("jeans"), shorts: document.getElementById("shorts"), pants: document.getElementById("pants"), skirt: document.getElementById("skirt"),
+            hat: document.getElementById("hat"), cap: document.getElementById("cap"), scarf: document.getElementById("scarf"), belt: document.getElementById("belt"), glasses: document.getElementById("glasses"),
+          },
+          saveBtn: document.getElementById("saveBtn"), loadBtn: document.getElementById("loadBtn"), resetBtn: document.getElementById("resetBtn"),
+          modal: document.getElementById("modal"), savedDesigns: document.getElementById("savedDesigns"), closeModal: document.getElementById("closeModal"),
+          noDesignsMessage: document.getElementById("noDesignsMessage"),
+          notificationModal: document.getElementById("notificationModal"), notificationMessage: document.getElementById("notificationMessage"), closeNotification: document.getElementById("closeNotification"),
+          currentFocusIndicator: document.getElementById("currentFocusIndicator"),
+          themeToggle: document.getElementById("theme-toggle"),
+          accordionToggles: document.querySelectorAll(".accordion-toggle"),
+        };
+
+        const clothingCategories = {
+          top: ["tshirt", "tanktop", "shirt", "sweater", "dress"],
+          bottom: ["jeans", "shorts", "pants", "skirt"],
+          accessory: ["hat", "cap", "scarf", "belt", "glasses"],
+        };
+
+        let notificationTimeout;
+        let currentFocusCategory = null;
+
+        function setInitialTheme() {
+          if (
+            localStorage.theme === "dark" ||
+            (!("theme" in localStorage) &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches)
+          ) {
+            document.documentElement.classList.add("dark");
+            elements.themeToggle.checked = true;
+          } else {
+            document.documentElement.classList.remove("dark");
+            elements.themeToggle.checked = false;
+          }
+        }
+
+        elements.themeToggle.addEventListener("change", () => {
+          if (elements.themeToggle.checked) {
+            document.documentElement.classList.add("dark");
+            localStorage.theme = "dark";
+          } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.theme = "light";
+          }
+        });
+
+        elements.accordionToggles.forEach((toggle) => {
+          toggle.addEventListener("click", () => {
+            const targetId = toggle.dataset.target;
+            const content = document.getElementById(targetId);
+            if (content) {
+              toggle.classList.toggle("expanded");
+              content.classList.toggle("expanded");
+            }
+          });
+          if (toggle.dataset.target === "colorPaletteContent") {
+             toggle.click();
+          }
+        });
+
+
+        function updateFocusIndicator() {
+            if (currentFocusCategory) {
+                const activeItem = elements.selects[currentFocusCategory].value;
+                const categoryName = currentFocusCategory.charAt(0).toUpperCase() + currentFocusCategory.slice(1);
+                if (activeItem !== 'none') {
+                    const selectedOption = elements.selects[currentFocusCategory].querySelector(`option[value="${activeItem}"]`);
+                    elements.currentFocusIndicator.textContent = `(${categoryName}: ${selectedOption ? selectedOption.textContent : activeItem})`;
+                } else {
+                    elements.currentFocusIndicator.textContent = `(${categoryName})`;
+                }
+            } else {
+                elements.currentFocusIndicator.textContent = "(Select item to color)";
+            }
+        }
+
+
+        function showNotification(message, type = "success") {
+          clearTimeout(notificationTimeout);
+          elements.notificationMessage.textContent = message;
+          elements.notificationModal.className = 'fixed top-5 right-5 p-4 rounded-lg shadow-xl z-50 border-l-4 max-w-sm';
+          elements.notificationModal.classList.add(type);
+          elements.notificationModal.classList.remove("hidden");
+
+          notificationTimeout = setTimeout(() => {
+            elements.notificationModal.classList.add("hidden");
+          }, 3000);
+        }
+
+        elements.closeNotification.addEventListener("click", () => {
+          clearTimeout(notificationTimeout);
+          elements.notificationModal.classList.add("hidden");
+        });
+
+        function setActiveColorSwatch(colorToActivate) {
+            elements.globalColorSwatches.forEach(s => s.classList.remove("active"));
+            if (colorToActivate) {
+                const swatchToActivate = Array.from(elements.globalColorSwatches).find(s => s.dataset.color === colorToActivate);
+                if (swatchToActivate) {
+                    swatchToActivate.classList.add("active");
+                }
+            }
+        }
+
+        function applyColorToFocusedItem(color) {
+          if (!currentFocusCategory) {
+            showNotification("Select an item category (Top, Bottom, or Accessory) first to apply color.", "info");
+            return;
+          }
+          const selectedItemValue = elements.selects[currentFocusCategory].value;
+          if (selectedItemValue !== "none" && elements.clothingItems[selectedItemValue]) {
+            const svg = elements.clothingItems[selectedItemValue].querySelector("svg");
+            if (svg) svg.style.color = color;
+          } else if (selectedItemValue === "none" && currentFocusCategory) {
+             showNotification(`Please select a specific ${currentFocusCategory} item before choosing a color.`, "warning");
+          }
+        }
+
+        elements.globalColorSwatches.forEach((swatch) => {
+          swatch.addEventListener("click", () => {
+            setActiveColorSwatch(swatch.dataset.color);
+            applyColorToFocusedItem(swatch.dataset.color);
+          });
+        });
+
+        function handleClothingSelect(type, value) {
+          currentFocusCategory = type;
+          updateFocusIndicator();
+
+          clothingCategories[type].forEach((itemId) => {
+            if (elements.clothingItems[itemId]) {
+              elements.clothingItems[itemId].classList.add("hidden");
+            }
+          });
+
+          if (value !== "none" && elements.clothingItems[value]) {
+            elements.clothingItems[value].classList.remove("hidden");
+            const itemSvg = elements.clothingItems[value].querySelector("svg");
+            const currentColor = itemSvg ? itemSvg.style.color : null;
+
+            if (currentColor && currentColor !== "") {
+                setActiveColorSwatch(currentColor);
+            } else {
+                const activeGlobalSwatch = document.querySelector("#globalColorPalette .color-swatch.active");
+                if (activeGlobalSwatch) {
+                    applyColorToFocusedItem(activeGlobalSwatch.dataset.color);
+                }
+            }
+          } else {
+          }
+        }
+
+        Object.keys(elements.selects).forEach((type) => {
+          elements.selects[type].addEventListener("change", (e) => {
+            handleClothingSelect(type, e.target.value);
+          });
+          elements.selects[type].addEventListener("focus", (e) => {
+            currentFocusCategory = e.target.dataset.category;
+            updateFocusIndicator();
+            const selectedItemValue = e.target.value;
+            if (selectedItemValue !== "none" && elements.clothingItems[selectedItemValue]) {
+                const itemSvg = elements.clothingItems[selectedItemValue].querySelector("svg");
+                const currentColor = itemSvg ? itemSvg.style.color : null;
+                if (currentColor) setActiveColorSwatch(currentColor);
+            } else {
+            }
+          });
+        });
+
+        elements.clothingItemDivs.forEach(itemDiv => {
+            itemDiv.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const category = itemDiv.dataset.category;
+                const itemId = itemDiv.id;
+
+                if (category && elements.selects[category].value === itemId) {
+                    currentFocusCategory = category;
+                    updateFocusIndicator();
+                    const itemSvg = itemDiv.querySelector("svg");
+                    if (itemSvg && itemSvg.style.color) {
+                        setActiveColorSwatch(itemSvg.style.color);
+                    }
+                }
+            });
+        });
+
+
+        function getAppliedColorForType(type) {
+          const selectedItemValue = elements.selects[type].value;
+          if (selectedItemValue !== "none" && elements.clothingItems[selectedItemValue]) {
+            const svg = elements.clothingItems[selectedItemValue].querySelector("svg");
+            return svg && svg.style.color ? svg.style.color : (svg ? getComputedStyle(svg).color : null);
+          }
+          return null;
+        }
+
+        elements.saveBtn.addEventListener("click", () => {
+          if (elements.selects.top.value === "none" && elements.selects.bottom.value === "none" && elements.selects.accessory.value === "none") {
+            showNotification("Please select at least one item to save a design.", "warning");
+            return;
+          }
+          const design = {
+            top: elements.selects.top.value, bottom: elements.selects.bottom.value, accessory: elements.selects.accessory.value,
+            colors: { top: getAppliedColorForType("top"), bottom: getAppliedColorForType("bottom"), accessory: getAppliedColorForType("accessory") },
+          };
+          const saved = JSON.parse(localStorage.getItem("designs") || "[]");
+          saved.push(design);
+          localStorage.setItem("designs", JSON.stringify(saved));
+          showNotification("Design saved successfully!", "success");
+        });
+
+        elements.loadBtn.addEventListener("click", () => {
+          elements.savedDesigns.innerHTML = "";
+          const saved = JSON.parse(localStorage.getItem("designs") || "[]");
+          elements.noDesignsMessage.classList.toggle("hidden", saved.length > 0);
+
+          saved.forEach((design, index) => {
+            if (!design || typeof design.colors !== "object" || design.colors === null) {
+              console.warn(`Skipping malformed design at index ${index}`); return;
+            }
+            const div = document.createElement("div");
+            div.className = "saved-design-item p-3 border dark:border-gray-600 rounded-lg cursor-pointer hover:shadow-md flex justify-between items-center";
+            let itemSummary = `<p class="font-medium text-gray-700 dark:text-gray-200">Design #${index + 1}</p>`;
+            let colorBubbles = '<div class="flex gap-1.5 mt-1.5">';
+            if (design.colors.top && design.top !== "none") colorBubbles += `<div class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-500" style="background:${design.colors.top}" title="Top: ${design.top}"></div>`;
+            if (design.colors.bottom && design.bottom !== "none") colorBubbles += `<div class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-500" style="background:${design.colors.bottom}" title="Bottom: ${design.bottom}"></div>`;
+            if (design.colors.accessory && design.accessory !== "none") colorBubbles += `<div class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-500" style="background:${design.colors.accessory}" title="Accessory: ${design.accessory}"></div>`;
+            colorBubbles += '</div>';
+            div.innerHTML = itemSummary + colorBubbles;
+
+            div.addEventListener("click", () => {
+              ["top", "bottom", "accessory"].forEach((type) => {
+                elements.selects[type].value = "none";
+                handleClothingSelect(type, "none");
+              });
+              setActiveColorSwatch(null);
+              currentFocusCategory = null;
+
+              let lastActiveCategory = null;
+              Object.keys(design).forEach((key) => {
+                if (key !== "colors" && elements.selects[key]) {
+                  elements.selects[key].value = design[key];
+                  handleClothingSelect(key, design[key]);
+                  if (design.colors[key] && design[key] !== "none" && elements.clothingItems[design[key]]) {
+                    const itemSvg = elements.clothingItems[design[key]].querySelector("svg");
+                    if(itemSvg) itemSvg.style.color = design.colors[key];
+                  }
+                  if (design[key] !== 'none') lastActiveCategory = key;
+                }
+              });
+
+              if(lastActiveCategory) {
+                currentFocusCategory = lastActiveCategory;
+                const lastItemValue = design[lastActiveCategory];
+                if (lastItemValue !== 'none' && design.colors[lastActiveCategory]) {
+                    setActiveColorSwatch(design.colors[lastActiveCategory]);
+                }
+              } else {
+                currentFocusCategory = null;
+                setActiveColorSwatch(null);
+              }
+              updateFocusIndicator();
+              elements.modal.classList.add("hidden");
+              showNotification("Design loaded!", "success");
+            });
+            elements.savedDesigns.appendChild(div);
+          });
+          elements.modal.classList.remove("hidden");
+        });
+
+        elements.closeModal.addEventListener("click", () => {
+          elements.modal.classList.add("hidden");
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !elements.modal.classList.contains('hidden')) {
+                elements.modal.classList.add('hidden');
+            }
+        });
+        elements.modal.addEventListener('click', (event) => {
+            if (event.target === elements.modal) {
+                elements.modal.classList.add('hidden');
+            }
+        });
+
+
+        elements.resetBtn.addEventListener("click", () => {
+          ["top", "bottom", "accessory"].forEach((type) => {
+            elements.selects[type].value = "none";
+            handleClothingSelect(type, "none");
+          });
+          setActiveColorSwatch(null);
+          currentFocusCategory = null;
+          updateFocusIndicator();
+          showNotification("Design has been reset.", "info");
+        });
+
+        setInitialTheme();
+        ["top", "bottom", "accessory"].forEach((type) => {
+          handleClothingSelect(type, "none");
+        });
+        updateFocusIndicator();
+      });
+    </script>
+  </body>
+</html>
